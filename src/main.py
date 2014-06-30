@@ -16,9 +16,9 @@ def load(excelfile, output):
         orig = prData(excelfile, sheet)
         
         for k, inst in enumerate(orig._data):
-            value = inst[key].lower().strip()
-            
-            
+            for key in header:
+                value = inst[key].lower().strip()
+                print value
    
     sys.stdout = SavedStdOut
           
