@@ -2,6 +2,7 @@ from OrigReader import prData
 import sys
 import re
 import fio
+import xml.etree.ElementTree as ET
 
 def HasSummary(orig, header, summarykey):
     key = header[0]
@@ -15,7 +16,7 @@ def HasSummary(orig, header, summarykey):
             return False
     return False
 
-def getSummary(orig, header, summarykey):
+def getTASummary(orig, header, summarykey):
     if not HasSummary(orig, header, summarykey):
         return None
     
@@ -31,38 +32,46 @@ def getSummary(orig, header, summarykey):
                 summary.append(value)
     return summary
 
-def getPOISummaryNum(orig, header, summarykey):
-    key = header[2]
-    count = 0
+def getStudentSummary(orig, header, summarykey, type='POI'):
+    '''
+    return a dictionary of the students' summary, with the student id as a key
+    '''
+    summary = {}
+    
+    if type=='POI':
+        key = header[2]
+    elif type=='MP':
+        key = header[3]
+    elif type=='LP':
+        key = header[4]
+    else:
+        return None
+    
     for k, inst in enumerate(orig._data):
         try:
             value = inst['ID'].lower().strip()
             if len(value) > 0:
-                if len(inst[key].lower().strip()) > 0:
-                    count = count + 1
+                content = inst[key].lower().strip()
+                if content == 'blank': continue
+                
+                if len(content) > 0:
+                    summary[value] = content
             else:
                 break
         except Exception:
-            return 0
-    return count-1
+            return summary
+    return summary
 
-def getMPSummaryNum(orig, header, summarykey):
-    key = header[3]
-    count = 0
-    for k, inst in enumerate(orig._data):
-        try:
-            value = inst['ID'].lower().strip()
-            if len(value) > 0:
-                if len(inst[key].lower().strip()) > 0:
-                    count = count + 1
-            else:
-                break
-        except Exception:
-            return 0
-    return count-1
- 
-def getLPSummaryNum(orig, header, summarykey):
-    key = header[4]
+def getStudentSummaryNum(orig, header, summarykey):
+    if type=='POI':
+        key = header[2]
+    elif type=='MP':
+        key = header[3]
+    elif type=='LP':
+        key = header[4]
+    else:
+        return 0
+    
     count = 0
     for k, inst in enumerate(orig._data):
         try:
@@ -118,9 +127,9 @@ def getOverview(excelfile, output):
         row.append(HasSummary(orig, header, summarykey))
         row.append(getStudentNum(orig, header, summarykey))
         row.append(getMaleNum(orig, header, summarykey))
-        row.append(getPOISummaryNum(orig, header, summarykey))
-        row.append(getMPSummaryNum(orig, header, summarykey))
-        row.append(getLPSummaryNum(orig, header, summarykey))
+        row.append(getStudentSummaryNum(orig, header, summarykey, type='POI'))
+        row.append(getStudentSummaryNum(orig, header, summarykey, type='MP'))
+        row.append(getStudentSummaryNum(orig, header, summarykey, type="LP"))
         
         for k, inst in enumerate(orig._data):
             for key in header:
@@ -151,7 +160,7 @@ def getSummaryOverview(excelfile, output):
             row.append(0)
             row.append(0)
         else:
-            summary = getSummary(orig, header, summarykey)
+            summary = getTASummary(orig, header, summarykey)
             for sum in summary:
                 points = sum.split('\n')
                 row.append(len(points))
@@ -162,11 +171,128 @@ def getSummaryOverview(excelfile, output):
     
 def load(excelfile, output):    
     getOverview(excelfile, output)
+
+def WriteDocsent(excelfile, folder):
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    #sheets = range(0,25)
+    sheets = range(0,25)
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        orig = prData(excelfile, sheet)
         
+        for type in ['POI', 'MP', 'LP']:
+            summary = getStudentSummary(orig, header, summarykey, type=type)
+            DID = str(week) + '_' + type
+            
+            path = folder + str(week)+ '/'
+            fio.newPath(path)
+            path = path + type + '/'
+            fio.newPath(path)
+            path = path + 'docsent/'
+            fio.newPath(path)
+            filename = path + DID + '.docsent'
+            
+            #create a XML file
+            root = ET.Element(tag='DOCSENT', attrib = {'DID':DID, 'LANG':"ENG"})
+            root.tail = '\n'
+            tree = ET.ElementTree(root)
+            
+            for SNO, value in enumerate(summary.values()):
+                node = ET.Element(tag='S', attrib={'PAR':'1', 'RSNT':str(SNO), 'SNO':str(SNO)})
+                node.text = value
+                node.tail = '\n'
+                root.append(node)
+            
+            tree.write(filename)
+
+def WriteCluster(excelfile, folder):
+    sheets = range(0,25)
+    
+    for type in ['POI', 'MP', 'LP']:
+        for sheet in sheets:
+            week = sheet + 1
+            path = folder + str(week)+ '/'
+            fio.newPath(path)
+            
+            path = path + type + '/'
+            fio.newPath(path)
+            filename = path + type + '.cluster'
+            
+            #create a XML file
+            root = ET.Element(tag='CLUSTER', attrib = {'LANG':"ENG"})
+            root.tail = '\n'
+            tree = ET.ElementTree(root)
+        
+            DID = str(sheet+1) + '_' + type
+            
+            node = ET.Element(tag='D', attrib={'DID':str(DID)})
+            node.tail = '\n'
+            root.append(node)
+        
+            tree.write(filename)
+            
+def Write2Mead(excelfile, datadir):
+    #assume one week is a one document
+    #WriteDocsent(excelfile, datadir)
+    WriteCluster(excelfile, datadir)
+
+def formatSummaryOutput(excelfile, datadir, output):
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    sheets = range(0,25)
+    
+    datahead = ['Week', '# of sentence POI', '# of sentence POI', '# of sentence POI']
+    
+    head = ['Week', 'TA:POI', 'TA:MP','TA:LP', 'S:POI', 'S:MP','S:LP',]
+    body = []
+    
+    for sheet in sheets:
+        row = []
+        week = sheet + 1
+        row.append(week)
+        
+        orig = prData(excelfile, sheet)
+        summary = getTASummary(orig, header, summarykey)
+        if summary == None:
+            row.append("")
+            row.append("")
+            row.append("")
+        else:
+            for sum in summary:
+                if len(sum) != 0:
+                    sum = sum.replace("\r", ";")
+                    sum = sum.replace("\n", ";")
+                print week, len(sum), sum
+                row.append(sum)
+                
+        for type in ['POI', 'MP', 'LP']:
+            path = datadir + str(week)+ '/'
+            filename = path + type + '.summary'
+            
+            lines = fio.readfile(filename)
+            sum = " ".join(lines)
+            sum = sum.replace("\r", ";")
+            sum = sum.replace("\n", ";")
+            row.append(sum)
+            print week, len(sum), sum
+        
+        body.append(row)
+            
+    fio.writeMatrix(output, body, head)
+    
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     output = "../data/2011Spring_overivew.txt"
     summaryoutput = "../data/2011Spring_summary.txt"
     
-    load(excelfile, output)
-    getSummaryOverview(excelfile, summaryoutput)
+    datadir = "../../mead/data/2011Spring/"
+    
+    #load(excelfile, output)
+    #getSummaryOverview(excelfile, summaryoutput)
+    
+    #Write2Mead(excelfile, datadir)
+    formatSummaryOutput(excelfile, datadir, output='../../mead/data/2011Spring/2011Spring.txt')
