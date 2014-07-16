@@ -207,6 +207,33 @@ def WriteDocsent(excelfile, folder):
                 root.append(node)
             
             tree.write(filename)
+            
+def WriteStudentResponseAverageWords(excelfile, output):
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    #sheets = range(0,25)
+    sheets = range(0,25)
+    
+    body = []
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        orig = prData(excelfile, sheet)
+        
+        row = []
+        for type in ['POI', 'MP', 'LP']:
+            summary = getStudentSummary(orig, header, summarykey, type=type)
+            
+            count = 0
+            
+            for s in summary.values():
+                count = count + len(s.split())
+            
+            count = count / len(summary)
+            row.append(count)
+        body.append(row)
+    
+    fio.writeMatrix(output, body, ['POI', 'MP', 'LP'])
 
 def WriteCluster(excelfile, folder):
     sheets = range(0,25)
@@ -306,7 +333,27 @@ def getWordCount(summary, output):
         newhead.append("WC_"+head[i])
     
     fio.writeMatrix(output, data, newhead)
+
+def getMeadAverageWordCount(summary, output):
+    head, body = fio.readMatrix(summary, True)
     
+    data = []
+    
+    for row in body:
+        newrow = []
+        for i in range(len(head)):
+            if i<=3: continue
+            newrow.append( len(row[i].split())/3 )
+        
+        data.append(newrow)
+    
+    newhead = []
+    for i in range(len(head)):
+        if i<=3: continue
+        newhead.append(head[i])
+    
+    fio.writeMatrix(output, data, newhead)
+        
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     output = "../data/2011Spring_overivew.txt"
@@ -315,11 +362,13 @@ if __name__ == '__main__':
     datadir = "../../mead/data/2011Spring/"
     
     formatedsummary = '../../mead/data/2011Spring/2011Spring.txt'
-    wordcount = '../../mead/data/2011Spring/2011Spring_wordcount.txt'
+    wordcount = '../data/2011Spring_mead_avaregewordcount.txt'
     
     #load(excelfile, output)
     #getSummaryOverview(excelfile, summaryoutput)
     
     #Write2Mead(excelfile, datadir)
     #formatSummaryOutput(excelfile, datadir, output=formatedsummary)
-    getWordCount(formatedsummary, wordcount)
+    #getWordCount(formatedsummary, wordcount)
+    getMeadAverageWordCount(formatedsummary, wordcount)
+    #WriteStudentResponseAverageWords(excelfile, '../data/averageword.txt')
