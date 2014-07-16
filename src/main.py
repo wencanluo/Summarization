@@ -240,6 +240,9 @@ def Write2Mead(excelfile, datadir):
     WriteCluster(excelfile, datadir)
 
 def formatSummaryOutput(excelfile, datadir, output):
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
     summarykey = "Top Answers"
     
@@ -266,7 +269,7 @@ def formatSummaryOutput(excelfile, datadir, output):
                 if len(sum) != 0:
                     sum = sum.replace("\r", ";")
                     sum = sum.replace("\n", ";")
-                print week, len(sum), sum
+                #print week, len(sum), sum
                 row.append(sum)
                 
         for type in ['POI', 'MP', 'LP']:
@@ -278,11 +281,31 @@ def formatSummaryOutput(excelfile, datadir, output):
             sum = sum.replace("\r", ";")
             sum = sum.replace("\n", ";")
             row.append(sum)
-            print week, len(sum), sum
+            #print week, len(sum), sum
         
         body.append(row)
             
     fio.writeMatrix(output, body, head)
+
+def getWordCount(summary, output):
+    head, body = fio.readMatrix(summary, True)
+    
+    data = []
+    
+    for row in body:
+        newrow = []
+        for i in range(len(head)):
+            if i==0: continue
+            newrow.append( len(row[i].split()) )
+        
+        data.append(newrow)
+    
+    newhead = []
+    for i in range(len(head)):
+        if i==0: continue
+        newhead.append("WC_"+head[i])
+    
+    fio.writeMatrix(output, data, newhead)
     
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
@@ -291,8 +314,12 @@ if __name__ == '__main__':
     
     datadir = "../../mead/data/2011Spring/"
     
+    formatedsummary = '../../mead/data/2011Spring/2011Spring.txt'
+    wordcount = '../../mead/data/2011Spring/2011Spring_wordcount.txt'
+    
     #load(excelfile, output)
     #getSummaryOverview(excelfile, summaryoutput)
     
     #Write2Mead(excelfile, datadir)
-    formatSummaryOutput(excelfile, datadir, output='../../mead/data/2011Spring/2011Spring.txt')
+    #formatSummaryOutput(excelfile, datadir, output=formatedsummary)
+    getWordCount(formatedsummary, wordcount)
