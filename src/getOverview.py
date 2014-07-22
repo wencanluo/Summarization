@@ -55,10 +55,9 @@ def getSummaryOverview(excelfile, output):
             row.append(0)
             row.append(0)
         else:
-            summary = getTASummary(orig, header, summarykey)
-            for sum in summary:
-                points = sum.split('\n')
-                row.append(len(points))
+            for type in ['POI', 'MP', 'LP']:
+                summary = getTASummary(orig, header, summarykey, type)
+                row.append(len(summary))
         
         body.append(row)
 

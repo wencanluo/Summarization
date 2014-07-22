@@ -5,6 +5,7 @@ import fio
 import xml.etree.ElementTree as ET
 
 from Survey import *
+from singledocumentsummarization import WriteTASummary
 
 def WriteDocsent(excelfile, folder):
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
@@ -45,7 +46,6 @@ def WriteDocsent(excelfile, folder):
                 tree.write(filename)
                 #print filename
             
-
 def WriteCluster(excelfile, folder):
     sheets = range(0,25)
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
@@ -81,34 +81,8 @@ def WriteCluster(excelfile, folder):
 def Write2Mead(excelfile, datadir):
     #assume one student's response is a one document
     WriteDocsent(excelfile, datadir)
-    #WriteCluster(excelfile, datadir)
-    #WriteTASummary(excelfile, datadir)
-
-def WriteTASummary(excelfile, datadir):
-    reload(sys)
-    sys.setdefaultencoding('utf8')
-    
-    summarykey = "Top Answers"
-    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
-    sheets = range(0,25)
-    types = ['POI', 'MP', 'LP']
-    
-    for sheet in sheets:
-        week = sheet + 1
-        path = datadir + str(week)+ '/'
-        fio.newPath(path)
-
-        orig = prData(excelfile, sheet)
-        summaries = getTASummary(orig, header, summarykey)
-        if summaries == None: continue
-        
-        for i in range(len(summaries)):
-            summary = summaries[i]
-            type = types[i]
-            filename = path + type + '.ref.summary'
-            print filename
-            
-            fio.saveText(summary, filename)
+    WriteCluster(excelfile, datadir)
+    WriteTASummary(excelfile, datadir)
         
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"

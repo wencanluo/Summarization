@@ -83,16 +83,13 @@ def WriteTASummary(excelfile, datadir):
         fio.newPath(path)
 
         orig = prData(excelfile, sheet)
-        summaries = getTASummary(orig, header, summarykey)
-        if summaries == None: continue
-        
-        for i in range(len(summaries)):
-            summary = summaries[i]
-            type = types[i]
+        for type in types:
+            summary = getTASummary(orig, header, summarykey, type)
+            
             filename = path + type + '.ref.summary'
             print filename
             
-            fio.saveText(summary, filename)
+            fio.savelist(summary, filename)
 
 def Write2Mead(excelfile, datadir):
     #assume one week is a one document
@@ -104,5 +101,8 @@ if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     datadir = "../../mead/data/2011Spring/"
     
+    fio.deleteFolder(datadir)
     Write2Mead(excelfile, datadir)
+    
+    #Wrong Mead Summary
     

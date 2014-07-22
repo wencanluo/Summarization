@@ -15,20 +15,57 @@ def HasSummary(orig, header, summarykey):
             return False
     return False
 
-def getTASummary(orig, header, summarykey):
-    if not HasSummary(orig, header, summarykey):
-        return None
+def NormalizedTASummary(summary):
+    summary = summary.strip()
+    g = re.search('^\d+\)(.*)\[\d+\]$', summary)
+    if g != None:
+        summary = g.group(1).strip()
     
-    keys = ['Point of Interest', 'Muddiest Point', 'Learning Point']
+    g = re.search('^(.*)\[\d+\]$', summary)
+    if g != None:
+        summary = g.group(1).strip()
+    
+    g = re.search('^\d+\)(.*)$', summary)
+    if g != None:
+        summary = g.group(1).strip()
+    
+    return summary.strip()
+
+def NormalizeMeadSummary(summary):
+    summary = summary.strip()
+    g = re.search('^\[\d+\](.*)$', summary)
+    if g != None:
+        summary = g.group(1).strip()
+    
+    return summary.strip()
+
+def getTASummary(orig, header, summarykey, type='POI'):
+    '''
+    Get TA's summary from the excel
+    return a list of sentences
+    '''
+    if not HasSummary(orig, header, summarykey):
+        return []
+    
+    if type=='POI':
+        keyword = header[2]
+    elif type=='MP':
+        keyword = header[3]
+    elif type=='LP':
+        keyword = header[4]
+    else:
+        return []
+    
     key = header[0]
     
     summary = []
     for k, inst in enumerate(orig._data):
         value = inst[key].lower().strip()
         if value == summarykey.lower():
-            for keyword in keys:
-                value = inst[keyword].strip()
-                summary.append(value)
+            value = inst[keyword].strip()
+            summaries = value.split("\n")
+            for sum in summaries:
+                summary.append(NormalizedTASummary(sum))
     return summary
 
 def getStudentSummary(orig, header, summarykey, type='POI'):
@@ -52,8 +89,8 @@ def getStudentSummary(orig, header, summarykey, type='POI'):
             if value == 'top answers': continue
             
             if len(value) > 0:
-                content = inst[key].lower().strip()
-                if content == 'blank': continue
+                content = inst[key].strip()
+                if content.lower() == 'blank': continue
                 
                 if len(content) > 0:
                     summary[value] = content
@@ -111,7 +148,30 @@ def getStudentNum(orig, header, summarykey):
         except Exception:
             return 0
     return count-1
+
+def getMeadSummary(datadir, type):
+    sheets = range(0,12)
+    
+    summaries = []
+    
+    for sheet in sheets:
+        row = []
+        week = sheet + 1
+        row.append(week)
+                    
+        path = datadir + str(week)+ '/'
+        filename = path + type + '.summary'
         
+        lines = fio.readfile(filename)
+        summary = []
+        for line in lines:
+            summary.append(NormalizeMeadSummary(line))
+        
+        summaries.append(summary)
+    
+    return summaries
+        
+            
 if __name__ == '__main__':
     pass
     
