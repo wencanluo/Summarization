@@ -150,6 +150,7 @@ def getStudentNum(orig, header, summarykey):
     return count-1
 
 def getMeadSummary(datadir, type):
+    #return a list of summaries, week by week. The summary for each week is also a list
     sheets = range(0,12)
     
     summaries = []

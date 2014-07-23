@@ -18,7 +18,7 @@ def formatSummaryOutput(excelfile, datadir, output):
     
     datahead = ['Week', '# of sentence POI', '# of sentence POI', '# of sentence POI']
     
-    head = ['Week', 'TA:POI', 'TA:MP','TA:LP', 'S:POI', 'S:MP','S:LP',]
+    head = ['Week', 'TA:POI', 'S:POI','TA:MP','S:MP','TA:LP', 'S:LP',]
     body = []
     
     for sheet in sheets:
@@ -45,7 +45,7 @@ def formatSummaryOutput(excelfile, datadir, output):
     fio.writeMatrix(output, body, head)
 
 def GetRougeScore(datadir, output):
-    sheets = range(0,11)
+    sheets = range(0,12)
     types = ['POI', 'MP', 'LP']
     scores = ['ROUGE-2', 'ROUGE-SUX']
     
@@ -116,7 +116,8 @@ def getTAWordCountDistribution(excelfile, output):
                 counts[type][summary]  = len(summary.split())
     
     for type in ['POI', 'MP', 'LP']:
-        fio.PrintList(counts[type].values(), sep='\t')
+        print np.max(counts[type].values()),'\t',np.min(counts[type].values()),'\t',np.mean(counts[type].values()),'\t',np.median(counts[type].values()),'\t',np.std(counts[type].values())
+        #fio.PrintList(counts[type].values(), sep='\t')
         #fio.PrintDict(counts[type], True)
         #print
 
@@ -129,8 +130,10 @@ def getMeadAverageWordCount(summary, output):
             for summary in weeksummary:
                 counts[type][summary]=len(summary.split())
     
+    fio.PrintList(["Type", "Max", "Min", "Mean", "Median", "Std"], "\t")
     for type in ['POI', 'MP', 'LP']:
-        fio.PrintList(counts[type].values(), sep='\t')
+        #fio.PrintList(counts[type].values(), sep=',')
+        print type,'\t',np.max(counts[type].values()),'\t',np.min(counts[type].values()),'\t',np.mean(counts[type].values()),'\t',np.median(counts[type].values()),'\t',np.std(counts[type].values())
 
 def WriteStudentResponseAverageWords(excelfile, output):
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
@@ -160,7 +163,7 @@ def WriteStudentResponseAverageWords(excelfile, output):
             
     fio.writeMatrix(output, body, ['Week', 'POI', '', 'MP', '', 'LP', '']) 
 
-def WriteStudentResponseWordCountDistribution(excelfile, output):
+def getStudentResponseWordCountDistribution(excelfile, output):
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
     summarykey = "Top Answers"
     
@@ -182,11 +185,54 @@ def WriteStudentResponseWordCountDistribution(excelfile, output):
             
     for type in ['POI', 'MP', 'LP']:
     #for type in ['LP']:
-        print np.max(counts[type].values()),'\t',np.min(counts[type].values()),'\t',np.mean(counts[type].values()),'\t',np.std(counts[type].values())
+        print np.max(counts[type].values()),'\t',np.min(counts[type].values()),'\t',np.mean(counts[type].values()),'\t',np.median(counts[type].values()),'\t',np.std(counts[type].values())
         #fio.PrintList(counts[type].values(), sep=',')
         #fio.PrintDict(counts[type], True)
         #print
-          
+
+def CheckKeyword(keyword, sentences):
+    for s in sentences:
+        if s.lower().find(keyword.lower()) != -1:
+            return True
+    return False
+    
+def TASummaryCoverage(excelfile, datadir, output):
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    sheets = range(0,12)
+    
+    datahead = ['Week', '# of sentence POI', '# of sentence POI', '# of sentence POI']
+    
+    head = ['Week', 'TA:POI', 'S:POI','TA:MP','S:MP','TA:LP', 'S:LP',]
+    body = []
+    
+    dict = {'POI':[0,0], 'MP':[0,0], 'LP':[0,0]}
+    
+    for sheet in sheets:
+        row = []
+        week = sheet + 1
+        row.append(week)
+            
+        for type in ['POI', 'MP', 'LP']:
+            orig = prData(excelfile, sheet)
+        
+            studentSummaries = getStudentSummary(orig, header, summarykey, type)
+            
+            ta_summaries = getTASummary(orig, header, summarykey, type)
+            dict[type][0] = dict[type][0] + len(ta_summaries)
+            
+            for summary in ta_summaries:
+                if CheckKeyword(summary, studentSummaries.values()):
+                    dict[type][1] = dict[type][1] + 1
+    
+    fio.PrintList(["Type", "# of points", "# of response points", "coverage ratio"])
+    for type in ['POI', 'MP', 'LP']:
+        print type, "\t", dict[type][0], "\t", dict[type][1], "\t", float(dict[type][1])/dict[type][0]
+    
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     output = "../data/2011Spring_overivew.txt"
@@ -212,7 +258,7 @@ if __name__ == '__main__':
     #getWordCount(formatedsummary, TAwordcount)
     #getMeadAverageWordCount(formatedsummary, '../data/2011Spring_mead_avaregewordcount.txt')
     #WriteStudentResponseAverageWords(excelfile, '../data/averageword.txt')
-    #WriteStudentResponseWordCountDistribution(excelfile, '../data/studentword_distribution.txt')
+    #getStudentResponseWordCountDistribution(excelfile, '../data/studentword_distribution.txt')
     #GetRougeScore(datadir_multiple, rougescore_multiple)
-    GetRougeScore(datadir, rougescore)
-    
+    #GetRougeScore(datadir, rougescore)
+    TASummaryCoverage(excelfile, datadir, output="../data/coverage.txt")
