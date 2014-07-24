@@ -4,6 +4,8 @@ import re
 import fio
 import xml.etree.ElementTree as ET
 import numpy as np
+from collections import defaultdict
+import NLTKWrapper
 
 from Survey import *
                     
@@ -195,6 +197,18 @@ def CheckKeyword(keyword, sentences):
         if s.lower().find(keyword.lower()) != -1:
             return True
     return False
+
+def getNgram(summary, n):
+    ngrams = []
+    
+    #tokens = summary.split()
+    tokens = NLTKWrapper.wordtokenizer(summary)
+    N = len(tokens)
+    for i in range(N):
+        if i+n > N: continue
+        ngram = tokens[i:i+n]
+        ngrams.append(" ".join(ngram))
+    return ngrams
     
 def TASummaryCoverage(excelfile, datadir, output):
     reload(sys)
@@ -210,28 +224,44 @@ def TASummaryCoverage(excelfile, datadir, output):
     head = ['Week', 'TA:POI', 'S:POI','TA:MP','S:MP','TA:LP', 'S:LP',]
     body = []
     
-    dict = {'POI':[0,0], 'MP':[0,0], 'LP':[0,0]}
+    MaxNgram = 5
+    dict = {'POI':{}, 'MP':{}, 'LP':{}}
+    
+    uncoveried = defaultdict(float)
+    
+    for type in ['POI', 'MP', 'LP']:
+        for n in range(MaxNgram):
+            dict[type][n+1] = [0,0]
     
     for sheet in sheets:
         row = []
         week = sheet + 1
         row.append(week)
-            
+        
         for type in ['POI', 'MP', 'LP']:
             orig = prData(excelfile, sheet)
         
             studentSummaries = getStudentSummary(orig, header, summarykey, type)
             
             ta_summaries = getTASummary(orig, header, summarykey, type)
-            dict[type][0] = dict[type][0] + len(ta_summaries)
             
             for summary in ta_summaries:
-                if CheckKeyword(summary, studentSummaries.values()):
-                    dict[type][1] = dict[type][1] + 1
-    
-    fio.PrintList(["Type", "# of points", "# of response points", "coverage ratio"])
+                for n in range(MaxNgram):
+                    ngrams = getNgram(summary, n+1)
+                    dict[type][n+1][0] = dict[type][n+1][0] + len(ngrams)
+                    
+                    for token in ngrams:
+                        if CheckKeyword(token, studentSummaries.values()):
+                            dict[type][n+1][1] = dict[type][n+1][1] + 1
+                        else:
+                            uncoveried[token.lower()] = uncoveried[token.lower()] + 1
+        
+    fio.PrintList(["Type", "N", "# of points", "# of response points", "coverage ratio"])
     for type in ['POI', 'MP', 'LP']:
-        print type, "\t", dict[type][0], "\t", dict[type][1], "\t", float(dict[type][1])/dict[type][0]
+        for n in range(MaxNgram):
+            print type, "\t", n+1, "\t", dict[type][n+1][0], "\t", dict[type][n+1][1], "\t", float(dict[type][n+1][1])/dict[type][n+1][0]
+    
+    fio.PrintDict(uncoveried, True)
     
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
@@ -262,3 +292,4 @@ if __name__ == '__main__':
     #GetRougeScore(datadir_multiple, rougescore_multiple)
     #GetRougeScore(datadir, rougescore)
     TASummaryCoverage(excelfile, datadir, output="../data/coverage.txt")
+    #print getNgram("1 2 3 4 5 6", 6)
