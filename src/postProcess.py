@@ -46,33 +46,44 @@ def formatSummaryOutput(excelfile, datadir, output):
             
     fio.writeMatrix(output, body, head)
 
-def GetRougeScore(datadir, output):
-    sheets = range(0,12)
-    types = ['POI', 'MP', 'LP']
-    scores = ['ROUGE-2', 'ROUGE-SUX']
-    
-    header = ['week', 'R2', 'R-SU4', 'R2', 'R-SU4', 'R2', 'R-SU4']
-    
-    body = []
-    for sheet in sheets:
-        week = sheet + 1
-        path = datadir + str(week)+ '/'
-        fio.newPath(path)
+def GetRougeScore(datadir, models, outputdir):
+    for model in models:
+        sheets = range(0,12)
+        types = ['POI', 'MP', 'LP']
+        scores = ['ROUGE-1','ROUGE-2', 'ROUGE-SUX']
+        
+        header = ['week', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
+        
+        body = []
+        for sheet in sheets:
+            week = sheet + 1
+            path = datadir + model + '/' + str(week)+ '/'
+            fio.newPath(path)
+            
+            row = []
+            row.append(week)
+            for type in types:
+                for scorename in scores:
+                    filename = path + type + "_OUT_"+scorename+".csv"
+                    lines = fio.readfile(filename)
+                    try:
+                        scorevalues = lines[1].split(',')
+                        score = scorevalues[3].strip()
+                        row.append(score)
+                    except Exception:
+                        print filename, scorename, lines
+            body.append(row)
+        
+        #get average
         
         row = []
-        row.append(week)
-        for type in types:
-            for scorename in scores:
-                filename = path + type + "_OUT_"+scorename+".csv"
-                lines = fio.readfile(filename)
-                try:
-                    scorevalues = lines[1].split(',')
-                    score = scorevalues[3].strip()
-                    row.append(score)
-                except Exception:
-                    print filename, scorename, lines
+        row.append("average")
+        for i in range(1, len(header)):
+            scores = [float(xx[i]) for xx in body]
+            row.append(np.mean(scores))
         body.append(row)
-    fio.writeMatrix(output, body, header)
+        
+        fio.writeMatrix(outputdir + "rouge." + model + ".txt", body, header)
            
 def getWordCount(summary, output):
     head, body = fio.readMatrix(summary, True)
@@ -137,7 +148,7 @@ def getMeadAverageWordCount(summary, output):
         #fio.PrintList(counts[type].values(), sep=',')
         print type,'\t',np.max(counts[type].values()),'\t',np.min(counts[type].values()),'\t',np.mean(counts[type].values()),'\t',np.median(counts[type].values()),'\t',np.std(counts[type].values())
 
-def WriteStudentResponseAverageWords(excelfile, output):
+def getStudentResponseAverageWords(excelfile, output):
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
     summarykey = "Top Answers"
     
@@ -155,9 +166,10 @@ def WriteStudentResponseAverageWords(excelfile, output):
         row.append(week)
         
         for type in ['POI', 'MP', 'LP']:
-            summary = getStudentSummary(orig, header, summarykey, type=type)
-            for s in summary.values():
-                counts[type][s] = len(s.split())
+            summaries = getStudentResponse(orig, header, summarykey, type=type)
+            for summaryList in summaries.values():
+                for s in summaryList:
+                    counts[type][s] = len(s.split())
         
             row.append(np.mean(counts[type].values()))
             row.append(np.std(counts[type].values()))
@@ -181,9 +193,10 @@ def getStudentResponseWordCountDistribution(excelfile, output):
         
         row = []
         for type in ['POI', 'MP', 'LP']:
-            summary = getStudentSummary(orig, header, summarykey, type=type)
-            for s in summary.values():
-                counts[type][s] = len(s.split())
+            summaries = getStudentResponse(orig, header, summarykey, type=type)
+            for summaryList in summaries.values():
+                for s in summaryList:
+                    counts[type][s] = len(s.split())
             
     for type in ['POI', 'MP', 'LP']:
     #for type in ['LP']:
@@ -241,7 +254,12 @@ def TASummaryCoverage(excelfile, datadir, output):
         for type in ['POI', 'MP', 'LP']:
             orig = prData(excelfile, sheet)
         
-            studentSummaries = getStudentSummary(orig, header, summarykey, type)
+            student_summaries = getStudentResponse(orig, header, summarykey, type)
+            student_summaryList = []
+            
+            for summaryList in student_summaries.values():
+                for s in summaryList:
+                    student_summaryList.append(s)
             
             ta_summaries = getTASummary(orig, header, summarykey, type)
             
@@ -251,7 +269,7 @@ def TASummaryCoverage(excelfile, datadir, output):
                     dict[type][n+1][0] = dict[type][n+1][0] + len(ngrams)
                     
                     for token in ngrams:
-                        if CheckKeyword(token, studentSummaries.values()):
+                        if CheckKeyword(token, student_summaryList):
                             dict[type][n+1][1] = dict[type][n+1][1] + 1
                         else:
                             uncoveried[token.lower()] = uncoveried[token.lower()] + 1
@@ -287,9 +305,11 @@ if __name__ == '__main__':
     #getTAWordCountDistribution(excelfile, TAwordcount)
     #getWordCount(formatedsummary, TAwordcount)
     #getMeadAverageWordCount(formatedsummary, '../data/2011Spring_mead_avaregewordcount.txt')
-    #WriteStudentResponseAverageWords(excelfile, '../data/averageword.txt')
+    #getStudentResponseAverageWords(excelfile, '../data/averageword.txt')
     #getStudentResponseWordCountDistribution(excelfile, '../data/studentword_distribution.txt')
     #GetRougeScore(datadir_multiple, rougescore_multiple)
+    GetRougeScore(datadir = "../../mead/data/", models = ['2011Spring', 'RandombaselineK3', 'RandombaselineK2', 'RandombaselineK1', 'LongestbaselineK3', 'LongestbaselineK2', 'LongestbaselineK1', 'ShortestbaselineK3', 'ShortestbaselineK2', 'ShortestbaselineK1'], outputdir = "../data/" )
+    #GetRougeScore(datadir = "../../mead/data/", model = "2011Spring", outputdir = "../data/" )
     #GetRougeScore(datadir, rougescore)
-    TASummaryCoverage(excelfile, datadir, output="../data/coverage.txt")
+    #TASummaryCoverage(excelfile, datadir, output="../data/coverage.txt")
     #print getNgram("1 2 3 4 5 6", 6)

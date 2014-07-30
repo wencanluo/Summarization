@@ -19,7 +19,7 @@ def WriteDocsent(excelfile, folder):
         orig = prData(excelfile, sheet)
         
         for type in ['POI', 'MP', 'LP']:
-            summaries = getStudentSummary(orig, header, summarykey, type=type)
+            summaries = getStudentResponse(orig, header, summarykey, type=type)
             DID = str(week) + '_' + type
             
             path = folder + str(week)+ '/'
@@ -29,22 +29,20 @@ def WriteDocsent(excelfile, folder):
             path = path + 'docsent/'
             fio.newPath(path)
             
-
             for k, v in summaries.items():
-                filename = path + DID+'_'+str(k) + '.docsent'
-                
                 #create a XML file
                 root = ET.Element(tag='DOCSENT', attrib = {'DID':DID+'_'+str(k), 'LANG':"ENG"})
                 root.tail = '\n'
                 tree = ET.ElementTree(root)
-            
-                node = ET.Element(tag='S', attrib={'PAR':'1', 'RSNT':'1', 'SNO':'1'})
-                node.text = v
-                node.tail = '\n'
-                root.append(node)
-            
+                filename = path + DID+'_'+str(k) + '.docsent'
+                    
+                for RSNT, value in enumerate(v):
+                    node = ET.Element(tag='S', attrib={'PAR':'1', 'RSNT': str(RSNT+1), 'SNO':str(RSNT+1)})
+                    node.text = value
+                    node.tail = '\n'
+                    root.append(node)
+                
                 tree.write(filename)
-                #print filename
             
 def WriteCluster(excelfile, folder):
     sheets = range(0,25)
@@ -69,7 +67,7 @@ def WriteCluster(excelfile, folder):
             DID = str(sheet+1) + '_' + type
             
             orig = prData(excelfile, sheet)
-            summaries = getStudentSummary(orig, header, summarykey, type)
+            summaries = getStudentResponse(orig, header, summarykey, type)
             
             for k, v in summaries.items():
                 node = ET.Element(tag='D', attrib={'DID':DID+'_'+str(k)})
@@ -88,5 +86,6 @@ if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     datadir = "../../mead/data/2011SpringMutiple/"
     
+    fio.deleteFolder(datadir)
     Write2Mead(excelfile, datadir)
     

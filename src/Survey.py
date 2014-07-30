@@ -2,6 +2,7 @@ from OrigReader import prData
 import sys
 import re
 import fio
+import NLTKWrapper
                     
 def HasSummary(orig, header, summarykey):
     key = header[0]
@@ -68,11 +69,36 @@ def getTASummary(orig, header, summarykey, type='POI'):
                 summary.append(NormalizedTASummary(sum))
     return summary
 
-def getStudentSummary(orig, header, summarykey, type='POI'):
+def WriteTASummary(excelfile, datadir):
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
+    summarykey = "Top Answers"
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    sheets = range(0,12)
+    types = ['POI', 'MP', 'LP']
+    
+    for sheet in sheets:
+        week = sheet + 1
+        path = datadir + str(week)+ '/'
+        fio.newPath(path)
+
+        orig = prData(excelfile, sheet)
+        for type in types:
+            summary = getTASummary(orig, header, summarykey, type)
+            
+            filename = path + type + '.ref.summary'
+            print filename
+            
+            #only save the first 3 points
+            fio.savelist(summary, filename)
+            
+def getStudentResponse(orig, header, summarykey, type='POI'):
     '''
     return a dictionary of the students' summary, with the student id as a key
+    The value is a list with each sentence an entry
     '''
-    summary = {}
+    summaries = {}
     
     if type=='POI':
         key = header[2]
@@ -83,6 +109,9 @@ def getStudentSummary(orig, header, summarykey, type='POI'):
     else:
         return None
     
+    filters = ["?", "[blank]", 'n/a', 'blank'] #a classifier to predict whether the student has problem
+    #filters = []
+    
     for k, inst in enumerate(orig._data):
         try:
             value = inst['ID'].lower().strip()
@@ -90,15 +119,15 @@ def getStudentSummary(orig, header, summarykey, type='POI'):
             
             if len(value) > 0:
                 content = inst[key].strip()
-                if content.lower() == 'blank': continue
-                
-                if len(content) > 0:
-                    summary[value] = content
+                if content.lower() in filters: continue
+                if len(content) > 0:                    
+                    summary = NLTKWrapper.splitSentence(content)
+                    summaries[value] = summary
             else:
                 break
         except Exception:
-            return summary
-    return summary
+            return summaries
+    return summaries
 
 def getStudentSummaryNum(orig, header, summarykey, type='POI'):
     if type=='POI':

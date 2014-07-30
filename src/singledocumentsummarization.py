@@ -18,7 +18,7 @@ def WriteDocsent(excelfile, folder):
         orig = prData(excelfile, sheet)
         
         for type in ['POI', 'MP', 'LP']:
-            summary = getStudentSummary(orig, header, summarykey, type=type)
+            summaries = getStudentResponse(orig, header, summarykey, type=type)
             DID = str(week) + '_' + type
             
             path = folder + str(week)+ '/'
@@ -34,11 +34,14 @@ def WriteDocsent(excelfile, folder):
             root.tail = '\n'
             tree = ET.ElementTree(root)
             
-            for SNO, value in enumerate(summary.values()):
-                node = ET.Element(tag='S', attrib={'PAR':'1', 'RSNT':str(SNO), 'SNO':str(SNO)})
-                node.text = value
-                node.tail = '\n'
-                root.append(node)
+            sno_id = 1
+            for par, summaryList in enumerate(summaries.values()):
+                for RSNT, value in enumerate(summaryList):
+                    node = ET.Element(tag='S', attrib={'PAR':str(par+1), 'RSNT':str(RSNT+1), 'SNO':str(sno_id)})
+                    node.text = value
+                    node.tail = '\n'
+                    root.append(node)
+                    sno_id = sno_id + 1
             
             tree.write(filename)
             
@@ -91,7 +94,7 @@ def WriteTASummary(excelfile, datadir):
             
             fio.savelist(summary, filename)
 
-def Write2Mead(excelfile, datadir):
+def Write2Mead(excelfile, datadir, K=3):
     #assume one week is a one document
     WriteDocsent(excelfile, datadir)
     WriteCluster(excelfile, datadir)

@@ -14,13 +14,22 @@
 <node CREATED="1406035389564" ID="ID_1836295094" MODIFIED="1406035394611" TEXT="Chunk-based"/>
 </node>
 <node CREATED="1405993260097" ID="ID_1576374933" MODIFIED="1405993266911" POSITION="right" TEXT="TODO">
-<node CREATED="1405993393662" ID="ID_1261495524" MODIFIED="1406035353956" TEXT="whether the TA&apos;s summary is part of the responses or not"/>
+<node CREATED="1405993393662" ID="ID_1261495524" MODIFIED="1406645064641" TEXT="whether the TA&apos;s summary is part of the responses or not">
+<icon BUILTIN="button_ok"/>
+</node>
 <node CREATED="1405993223043" ID="ID_1190685590" MODIFIED="1406037658179" TEXT="distribution of the length">
 <icon BUILTIN="button_ok"/>
 </node>
-<node CREATED="1405993199304" ID="ID_1652435561" MODIFIED="1405993205495" TEXT="word compression"/>
-<node CREATED="1405993205853" ID="ID_72798418" MODIFIED="1405993222576" TEXT="why mead prefer long sentences"/>
-<node CREATED="1405993237479" ID="ID_1605116847" MODIFIED="1405993249379" TEXT="examples"/>
+<node CREATED="1405993199304" ID="ID_1652435561" MODIFIED="1406645068321" TEXT="word compression">
+<icon BUILTIN="button_ok"/>
 </node>
+<node CREATED="1405993205853" ID="ID_72798418" MODIFIED="1406645070651" TEXT="why mead prefer long sentences">
+<icon BUILTIN="button_ok"/>
+</node>
+<node CREATED="1405993237479" ID="ID_1605116847" MODIFIED="1406645073191" TEXT="examples">
+<icon BUILTIN="button_ok"/>
+</node>
+</node>
+<node CREATED="1406654923856" ID="ID_1421542627" MODIFIED="1406654924347" POSITION="right" TEXT="#a classifier to predict whether the student has problem"/>
 </node>
 </map>
