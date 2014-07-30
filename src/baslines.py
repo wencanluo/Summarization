@@ -25,8 +25,6 @@ def getRandomSummary(excelfile, folder, K=3):
             for summaryList in student_summaries.values():
                 for s in summaryList:
                     student_summaryList.append(s)
-                    
-            DID = str(week) + '_' + type
             
             path = folder + str(week)+ '/'
             fio.newPath(path)
@@ -38,6 +36,7 @@ def getRandomSummary(excelfile, folder, K=3):
             
             for i in range(K):
                 randomSummary.append("[" + str(i+1) + "]  " + student_summaryList[ranges[i]])
+                #randomSummary.append(student_summaryList[ranges[i]])
             
             fio.savelist(randomSummary, filename)
             
@@ -59,8 +58,6 @@ def getLongestSummary(excelfile, folder, K=3):
             for summaryList in student_summaries.values():
                 for s in summaryList:
                     student_summaryDict[s] = len(s.split())
-                    
-            DID = str(week) + '_' + type
             
             path = folder + str(week)+ '/'
             fio.newPath(path)
@@ -91,8 +88,6 @@ def getShortestSummary(excelfile, folder, K=3):
             for summaryList in student_summaries.values():
                 for s in summaryList:
                     student_summaryDict[s] = len(s.split())
-                    
-            DID = str(week) + '_' + type
             
             path = folder + str(week)+ '/'
             fio.newPath(path)
@@ -148,6 +143,7 @@ if __name__ == '__main__':
     fio.deleteFolder(datadir)
     RandomSummary(excelfile, datadir, K=3)
     
+    """
     datadir = "../../mead/data/RandombaselineK2/"
     fio.deleteFolder(datadir)
     RandomSummary(excelfile, datadir, K=2)
@@ -179,5 +175,6 @@ if __name__ == '__main__':
     datadir = "../../mead/data/ShortestbaselineK1/"
     fio.deleteFolder(datadir)
     ShortestSummary(excelfile, datadir, K=1)
+    """
     
     

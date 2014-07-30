@@ -31,5 +31,6 @@
 </node>
 </node>
 <node CREATED="1406654923856" ID="ID_1421542627" MODIFIED="1406654924347" POSITION="right" TEXT="#a classifier to predict whether the student has problem"/>
+<node CREATED="1406742387264" ID="ID_1893680281" MODIFIED="1406742392056" POSITION="right" TEXT="phrase clustering"/>
 </node>
 </map>

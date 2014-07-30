@@ -129,6 +129,15 @@ def getStudentResponse(orig, header, summarykey, type='POI'):
             return summaries
     return summaries
 
+def getStudentResponseList(orig, header, summarykey, type='POI'):
+    student_summaries = getStudentResponse(orig, header, summarykey, type)
+    student_summaryList = []
+    
+    for summaryList in student_summaries.values():
+        for s in summaryList:
+            student_summaryList.append(s)
+    return student_summaryList
+                    
 def getStudentSummaryNum(orig, header, summarykey, type='POI'):
     if type=='POI':
         key = header[2]

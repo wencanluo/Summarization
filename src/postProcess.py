@@ -210,18 +210,6 @@ def CheckKeyword(keyword, sentences):
         if s.lower().find(keyword.lower()) != -1:
             return True
     return False
-
-def getNgram(summary, n):
-    ngrams = []
-    
-    #tokens = summary.split()
-    tokens = NLTKWrapper.wordtokenizer(summary)
-    N = len(tokens)
-    for i in range(N):
-        if i+n > N: continue
-        ngram = tokens[i:i+n]
-        ngrams.append(" ".join(ngram))
-    return ngrams
     
 def TASummaryCoverage(excelfile, datadir, output):
     reload(sys)
@@ -265,7 +253,7 @@ def TASummaryCoverage(excelfile, datadir, output):
             
             for summary in ta_summaries:
                 for n in range(MaxNgram):
-                    ngrams = getNgram(summary, n+1)
+                    ngrams = NLTKWrapper.getNgram(summary, n+1)
                     dict[type][n+1][0] = dict[type][n+1][0] + len(ngrams)
                     
                     for token in ngrams:
@@ -308,7 +296,8 @@ if __name__ == '__main__':
     #getStudentResponseAverageWords(excelfile, '../data/averageword.txt')
     #getStudentResponseWordCountDistribution(excelfile, '../data/studentword_distribution.txt')
     #GetRougeScore(datadir_multiple, rougescore_multiple)
-    GetRougeScore(datadir = "../../mead/data/", models = ['2011Spring', 'RandombaselineK3', 'RandombaselineK2', 'RandombaselineK1', 'LongestbaselineK3', 'LongestbaselineK2', 'LongestbaselineK1', 'ShortestbaselineK3', 'ShortestbaselineK2', 'ShortestbaselineK1'], outputdir = "../data/" )
+    #GetRougeScore(datadir = "../../mead/data/", models = ['2011Spring', 'RandombaselineK3', 'RandombaselineK2', 'RandombaselineK1', 'LongestbaselineK3', 'LongestbaselineK2', 'LongestbaselineK1', 'ShortestbaselineK3', 'ShortestbaselineK2', 'ShortestbaselineK1'], outputdir = "../data/" )
+    GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_bigram','ShallowSummary_weightedngram','ShallowSummary_unigram', 'ShallowSummary_ngram'], outputdir = "../data/" )
     #GetRougeScore(datadir = "../../mead/data/", model = "2011Spring", outputdir = "../data/" )
     #GetRougeScore(datadir, rougescore)
     #TASummaryCoverage(excelfile, datadir, output="../data/coverage.txt")
