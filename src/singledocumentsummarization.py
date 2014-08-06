@@ -71,29 +71,6 @@ def WriteCluster(excelfile, folder):
         
             tree.write(filename)
             
-def WriteTASummary(excelfile, datadir):
-    reload(sys)
-    sys.setdefaultencoding('utf8')
-    
-    summarykey = "Top Answers"
-    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
-    sheets = range(0,25)
-    types = ['POI', 'MP', 'LP']
-    
-    for sheet in sheets:
-        week = sheet + 1
-        path = datadir + str(week)+ '/'
-        fio.newPath(path)
-
-        orig = prData(excelfile, sheet)
-        for type in types:
-            summary = getTASummary(orig, header, summarykey, type)
-            
-            filename = path + type + '.ref.summary'
-            print filename
-            
-            fio.savelist(summary, filename)
-
 def Write2Mead(excelfile, datadir, K=3):
     #assume one week is a one document
     WriteDocsent(excelfile, datadir)

@@ -12,7 +12,7 @@ print "stopwords:", len(stopwords)
 
 stopwords = stopwords + ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']
 
-def getKeyNgram(student_summaryList, K, remove_stop = False, N = 5, weighted = False, M=1):
+def getKeyNgram(student_summaryList, K, remove_stop = False, N = 5, weighted = False, M=1, save2file=None):
     #K is the number of words to be extracted
     #N is the max number of Ngram
     key_ngrams = []
@@ -41,7 +41,8 @@ def getKeyNgram(student_summaryList, K, remove_stop = False, N = 5, weighted = F
                 Ndict[ngram] = n
     keys = sorted(dict, key=dict.get, reverse = True)
     
-    fio.SaveDict(dict, "log.txt", SortbyValueflag = True)
+    if save2file != None:
+        fio.SaveDict(dict, save2file, SortbyValueflag = True)
     
     total_word = 0
     word_count = 0
@@ -53,23 +54,23 @@ def getKeyNgram(student_summaryList, K, remove_stop = False, N = 5, weighted = F
         
     return key_ngrams
             
-def getKeyPhrases(student_summaryList, K, method='ngram'):
+def getKeyPhrases(student_summaryList, K, method='ngram', save2file=None):
     if method == 'ngram':
-        return getKeyNgram(student_summaryList, K, remove_stop = False)
+        return getKeyNgram(student_summaryList, K, remove_stop = False, save2file=save2file)
     if method == 'unigram':
-        return getKeyNgram(student_summaryList, K, remove_stop = False, N=1)
+        return getKeyNgram(student_summaryList, K, remove_stop = False, N=1, save2file=save2file)
     if method == 'weightedngram':
-        return getKeyNgram(student_summaryList, K, remove_stop = False, N=5, weighted = True)
+        return getKeyNgram(student_summaryList, K, remove_stop = False, N=5, weighted = True, save2file=save2file)
     if method == "bigram":
-        return getKeyNgram(student_summaryList, K, remove_stop = False, N=2, weighted = False, M=2)
+        return getKeyNgram(student_summaryList, K, remove_stop = False, N=2, weighted = False, M=2, save2file=save2file)
     if method == 'ngram_remove_stop':
-        return getKeyNgram(student_summaryList, K, remove_stop = True)
+        return getKeyNgram(student_summaryList, K, remove_stop = True, save2file=save2file)
     if method == 'unigram_remove_stop':
-        return getKeyNgram(student_summaryList, K, remove_stop = True, N=1)
+        return getKeyNgram(student_summaryList, K, remove_stop = True, N=1, save2file=save2file)
     if method == 'weightedngram_remove_stop':
-        return getKeyNgram(student_summaryList, K, remove_stop = True, N=5, weighted = True)
+        return getKeyNgram(student_summaryList, K, remove_stop = True, N=5, weighted = True, save2file=save2file)
     if method == "bigram_remove_stop":
-        return getKeyNgram(student_summaryList, K, remove_stop = True, N=2, weighted = False, M=2)
+        return getKeyNgram(student_summaryList, K, remove_stop = True, N=2, weighted = False, M=2, save2file=save2file)
     return None
                             
 def getShallowSummary(excelfile, folder, K=30, method='ngram'):
@@ -94,11 +95,10 @@ def getShallowSummary(excelfile, folder, K=30, method='ngram'):
             
             longestSummary = []
             
-            longestSummary = getKeyPhrases(student_summaryList, K, method)
+            longestSummary = getKeyPhrases(student_summaryList, K, method, save2file=filename + ".keys")
             
             fio.savelist(longestSummary, filename)
                         
-
 def ShallowSummary(excelfile, datadir, K=30, method='ngram'):
     getShallowSummary(excelfile, datadir, K, method)
     WriteTASummary(excelfile, datadir)
@@ -142,19 +142,19 @@ if __name__ == '__main__':
 #     fio.deleteFolder(datadir)
 #     ShallowSummary(excelfile, datadir, K=60, method='bigram')
     
-    datadir = "../../mead/data/ShallowSummary_ngram_remove_stop/"  
-    fio.deleteFolder(datadir)
-    ShallowSummary(excelfile, datadir, K=30, method='ngram_remove_stop')
-     
+#     datadir = "../../mead/data/ShallowSummary_ngram_remove_stop/"  
+#     fio.deleteFolder(datadir)
+#     ShallowSummary(excelfile, datadir, K=30, method='ngram_remove_stop')
+#      
     datadir = "../../mead/data/ShallowSummary_unigram_remove_stop/"  
     fio.deleteFolder(datadir)
     ShallowSummary(excelfile, datadir, K=30, method='unigram_remove_stop')
- 
-    datadir = "../../mead/data/ShallowSummary_weightedngram_remove_stop/"  
-    fio.deleteFolder(datadir)
-    ShallowSummary(excelfile, datadir, K=30, method='weightedngram_remove_stop')
-     
-    datadir = "../../mead/data/ShallowSummary_bigram_remove_stop/"  
-    fio.deleteFolder(datadir)
-    ShallowSummary(excelfile, datadir, K=30, method='bigram_remove_stop')
+#  
+#     datadir = "../../mead/data/ShallowSummary_weightedngram_remove_stop/"  
+#     fio.deleteFolder(datadir)
+#     ShallowSummary(excelfile, datadir, K=30, method='weightedngram_remove_stop')
+#      
+#     datadir = "../../mead/data/ShallowSummary_bigram_remove_stop/"  
+#     fio.deleteFolder(datadir)
+#     ShallowSummary(excelfile, datadir, K=30, method='bigram_remove_stop')
     

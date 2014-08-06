@@ -47,7 +47,7 @@ class SennaWord:
 			return self.srl_role[0]
 		else:
 			return "-"
-		
+				
 	def __str__(self):
 		s = ""
 		s = s + self.token + "\t"
@@ -121,6 +121,35 @@ class SennaSentence:
 		for word in self.words:
 			words = words + word.token + " "
 		return words.strip()
+	
+	def getNPrases(self):
+		NP = []
+		
+		tmp = []
+		start = False
+		for word in self.words:
+			if word.chk == 'S-NP': #single word NP phrase
+				NP.append(word.token)
+				tmp = []
+				start = False
+				
+			elif word.chk == 'B-NP': # begin
+				start = True
+				tmp = []
+				tmp.append(word.token)
+			elif word.chk == 'I-NP': # inside
+				assert(start)
+				tmp.append(word.token)
+			elif word.chk == 'E-NP': # end
+				assert(start)
+				tmp.append(word.token)
+				NP.append(" ".join(tmp))
+				tmp = []
+				start = False	
+			else:
+				assert(~start)
+			
+		return NP
 	
 	def getPos(self):
 		"""

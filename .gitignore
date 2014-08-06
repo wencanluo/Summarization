@@ -2,3 +2,5 @@
 /.pydevproject
 /src/*.pyc
 /data/senna
+/data/TopicS
+/data/*.txt
