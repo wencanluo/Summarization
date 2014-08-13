@@ -6,8 +6,10 @@ from collections import defaultdict
 from Survey import *
 import random
 import NLTKWrapper
+import tfidf
 
-stopwords = [line.lower().strip() for line in fio.readfile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
+stopwordfilename = "../../ROUGE-1.5.5/data/smart_common_words.txt"
+stopwords = [line.lower().strip() for line in fio.readfile(stopwordfilename)]
 print "stopwords:", len(stopwords)
 
 stopwords = stopwords + ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']
@@ -44,17 +46,9 @@ def getKeyNgram(student_summaryList, K, remove_stop = False, N = 5, weighted = F
     if save2file != None:
         fio.SaveDict(dict, save2file, SortbyValueflag = True)
     
-    total_word = 0
-    word_count = 0
-    for key in keys:
-        word_count = Ndict[key]
-        total_word = total_word + word_count
-        if total_word <= K:
-            key_ngrams.append(key)
-        
-    return key_ngrams
+    return dict
             
-def getKeyPhrases(student_summaryList, K, method='ngram', save2file=None):
+def getKeyPhrases(student_summaryList, K, method='ngram', save2file=None, tfidfdir = None):
     if method == 'ngram':
         return getKeyNgram(student_summaryList, K, remove_stop = False, save2file=save2file)
     if method == 'unigram':
@@ -73,7 +67,7 @@ def getKeyPhrases(student_summaryList, K, method='ngram', save2file=None):
         return getKeyNgram(student_summaryList, K, remove_stop = True, N=2, weighted = False, M=2, save2file=save2file)
     return None
                             
-def getShallowSummary(excelfile, folder, K=30, method='ngram'):
+def getShallowSummary(excelfile, folder, K=30, method='ngram', tfidfdir=None):
     #K is the number of words per points
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
     summarykey = "Top Answers"
@@ -93,14 +87,76 @@ def getShallowSummary(excelfile, folder, K=30, method='ngram'):
             fio.newPath(path)
             filename = path + type + '.summary'
             
-            longestSummary = []
+            Summary = []
             
-            longestSummary = getKeyPhrases(student_summaryList, K, method, save2file=filename + ".keys")
+            if method == 'unigram_tfidf':
+                dict = fio.LoadDict(tfidfdir + str(week)+ '_' + type + ".keys")
+            else:
+                dict = getKeyPhrases(student_summaryList, K, method, save2file=filename + ".keys", tfidfdir=tfidfdir)
             
-            fio.savelist(longestSummary, filename)
+            keys = sorted(dict, key=dict.get, reverse = True)
+            total_word = 0
+            word_count = 0
+            for key in keys:
+                word_count = len(key.split())
+                total_word = total_word + word_count
+                if total_word <= K:
+                    Summary.append(key)
+            
+            fio.savelist(Summary, filename)
+            
+def writeText(excelfile, folder):
+    #K is the number of words per points
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    #sheets = range(0,25)
+    sheets = range(0,12)
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        orig = prData(excelfile, sheet)
+        
+        for type in ['POI', 'MP', 'LP']:
+            print excelfile, sheet, type
+            student_summaryList = getStudentResponseList(orig, header, summarykey, type)
+
+            fio.newPath(folder)
+            path = folder + str(week)+ '_'
+            filename = path + type + '.txt'
+            
+            fio.savelist(student_summaryList, filename)
+
+def computeTFIDF(folder):
+    for type in ['POI', 'MP', 'LP']:
+        my_tfidf = tfidf.TfIdf(stopword_filename=stopwordfilename)
+        
+        sheets = range(0,12)
+        for i, sheet in enumerate(sheets):
+            week = i + 1        
+           
+            path = folder + str(week)+ '_'
+            filename = path + type + '.txt'
+            
+            wordstring = " ".join(NLTKWrapper.getWordList(filename))
+            my_tfidf.add_input_document(wordstring)
+        
+        for i, sheet in enumerate(sheets):
+            week = i + 1        
+            path = folder + str(week)+ '_'
+            filename = path + type + '.txt'
+            
+            wordstring = " ".join(NLTKWrapper.getWordList(filename))
+            dict = my_tfidf.get_doc_keywords(wordstring)
+            
+            fio.SaveDict(dict, path + type + '.keys', SortbyValueflag = True)
+
+def getTFIDF(excelfile, datadir):
+    writeText(excelfile, datadir)
+    computeTFIDF(datadir)
                         
-def ShallowSummary(excelfile, datadir, K=30, method='ngram'):
-    getShallowSummary(excelfile, datadir, K, method)
+def ShallowSummary(excelfile, datadir, K=30, method='ngram', tfidfdir=None):
+    getShallowSummary(excelfile, datadir, K, method, tfidfdir)
     WriteTASummary(excelfile, datadir)
 
 def getStudentResponses4Senna(excelfile, datadir):
@@ -123,6 +179,9 @@ if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     
     sennadatadir = "../data/senna/"
+    tfidfdir = "../data/tfidf/"
+    #fio.deleteFolder(tfidfdir)
+    getTFIDF(excelfile, tfidfdir)
     
     #getStudentResponses4Senna(excelfile, sennadatadir)
     
@@ -146,9 +205,13 @@ if __name__ == '__main__':
 #     fio.deleteFolder(datadir)
 #     ShallowSummary(excelfile, datadir, K=30, method='ngram_remove_stop')
 #      
-    datadir = "../../mead/data/ShallowSummary_unigram_remove_stop/"  
+#     datadir = "../../mead/data/ShallowSummary_unigram_remove_stop/"  
+#     fio.deleteFolder(datadir)
+#     ShallowSummary(excelfile, datadir, K=30, method='unigram_remove_stop')
+    
+    datadir = "../../mead/data/ShallowSummary_unigram_tfidf/"  
     fio.deleteFolder(datadir)
-    ShallowSummary(excelfile, datadir, K=30, method='unigram_remove_stop')
+    ShallowSummary(excelfile, datadir, K=30, method='unigram_tfidf', tfidfdir = tfidfdir)
 #  
 #     datadir = "../../mead/data/ShallowSummary_weightedngram_remove_stop/"  
 #     fio.deleteFolder(datadir)
@@ -157,4 +220,6 @@ if __name__ == '__main__':
 #     datadir = "../../mead/data/ShallowSummary_bigram_remove_stop/"  
 #     fio.deleteFolder(datadir)
 #     ShallowSummary(excelfile, datadir, K=30, method='bigram_remove_stop')
+
+    print 'done'
     

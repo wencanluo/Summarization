@@ -27,6 +27,17 @@ def getNgram(sentence, n):
         ngrams.append(" ".join(ngram))
     return ngrams
 
+def getWordList(file):
+    f = open(file,'r')
+    lines = f.readlines()
+    f.close()
+    
+    words = []
+    for line in lines:
+        tokens = wordtokenizer(line)
+        words = words + tokens
+    
+    return words
 
 if __name__ == '__main__':
     print splitSentence("[1] I love you. [2] Sent 2. [3] sentence 3")

@@ -300,7 +300,8 @@ if __name__ == '__main__':
     #GetRougeScore(datadir = "../../mead/data/", models = ['TopicWordStem', 'ShallowSummary_bigram_remove_stop','ShallowSummary_weightedngram_remove_stop','ShallowSummary_unigram_remove_stop', 'ShallowSummary_ngram_remove_stop'], outputdir = "../data/" )
     #'ShallowbasedExtrativeSummary_topicS', 'ShallowbasedExtrativeSummary_unigram'
     #ShallowSummary_NPhraseHard ShallowSummary_NPhraseSoft
-    GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_NPhraseHard'], outputdir = "../data/" )
+    #'ShallowSummary_unigram_tfidf'
+    GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_nphard', 'ShallowSummary_npsoft', 'ShallowSummary_greedyComparerWNLin'], outputdir = "../data/" )
     #GetRougeScore(datadir = "../../mead/data/", model = "2011Spring", outputdir = "../data/" )
     #GetRougeScore(datadir, rougescore)
     #TASummaryCoverage(excelfile, datadir, output="../data/coverage.txt")
