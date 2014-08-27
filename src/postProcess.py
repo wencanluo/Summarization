@@ -84,6 +84,52 @@ def GetRougeScore(datadir, models, outputdir):
         body.append(row)
         
         fio.writeMatrix(outputdir + "rouge." + model + ".txt", body, header)
+        
+def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
+    for model in models:
+        sheets = range(0,12)
+        types = ['POI', 'MP', 'LP']
+        scores = ['ROUGE-1','ROUGE-2', 'ROUGE-SUX']
+        
+        header = ['lamda', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
+        averagebody = []
+        
+        for r in ['0', '0.2', '0.4', '0.6', '0.8', '1.0']:
+            body = []
+            for sheet in sheets:
+                week = sheet + 1
+                path = datadir + model + '/' + str(week)+ '/'
+                fio.newPath(path)
+                
+                row = []
+                row.append(week)
+                for type in types:
+                    for scorename in scores:
+                        filename = path + type + "." + str(r) + "_OUT_"+scorename+".csv"
+                        lines = fio.readfile(filename)
+                        try:
+                            scorevalues = lines[1].split(',')
+                            score = scorevalues[3].strip()
+                            row.append(score)
+                        except Exception:
+                            print filename, scorename, lines
+                body.append(row)
+            
+            #get average
+            
+            row = []
+            row.append("average")
+            arow = []
+            arow.append('mmr_lambda_'+r)
+            for i in range(1, len(header)):
+                ave = [float(xx[i]) for xx in body]
+                row.append(np.mean(ave))
+                arow.append(np.mean(ave))
+            body.append(row)
+            averagebody.append(arow)
+  
+            fio.writeMatrix(outputdir + "rouge." + model + '.' + r + ".txt", body, header)
+        fio.writeMatrix(outputdir + "rouge." + model + ".txt", averagebody, header)
            
 def getWordCount(summary, output):
     head, body = fio.readMatrix(summary, True)
@@ -301,7 +347,10 @@ if __name__ == '__main__':
     #'ShallowbasedExtrativeSummary_topicS', 'ShallowbasedExtrativeSummary_unigram'
     #ShallowSummary_NPhraseHard ShallowSummary_NPhraseSoft
     #'ShallowSummary_unigram_tfidf'
-    GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_nphard', 'ShallowSummary_npsoft', 'ShallowSummary_greedyComparerWNLin'], outputdir = "../data/" )
+    #'ShallowSummary_nphard', 'ShallowSummary_npsoft', 'ShallowSummary_greedyComparerWNLin'
+    #'ShallowSummary_WeightedgreedyComparerWNLin', 'ShallowSummary_WeightedoptimumComparerWNLin', 'ShallowSummary_WeightedoptimumComparerLSATasa', 'ShallowSummary_WeighteddependencyComparerWnLeskTanim', 'ShallowSummary_WeightedlsaComparer', 'ShallowSummary_WeightedbleuComparer', 'ShallowSummary_WeightedcmComparer', 'ShallowSummary_WeightedlexicalOverlapComparer'
+    GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_AdjNounPhrase_Hard_NoSingleNoun', 'ShallowSummary_AdjNounPhrase_Hard_WithSingleNoun', 'ShallowSummary_AdjNounPhrase_Soft_NoSingleNoun', 'ShallowSummary_AdjNounPhrase_Soft_WithSingleNoun'], outputdir = "../data/" )
+    #GetRougeScoreMMR(datadir = "../../mead/data/", models = ['2011SpringReranker'], outputdir = "../data/")
     #GetRougeScore(datadir = "../../mead/data/", model = "2011Spring", outputdir = "../data/" )
     #GetRougeScore(datadir, rougescore)
     #TASummaryCoverage(excelfile, datadir, output="../data/coverage.txt")

@@ -29,14 +29,18 @@ def getStemDict(words):
         dict[token] = 1
     return dict
 
-def getWeight(np1, np2, matrix, headdict):
+def getWeight(np1, np2, matrix, headdict, weighted = True):
     
     if np1 not in headdict: return 0
     if np2 not in headdict: return 0
     
     index1 = headdict[np1]
     index2 = headdict[np2]
-    return float(matrix[index1][index2])
+    
+    if weighted:
+        return float(matrix[index1][index2])*len(np1.split())
+    else:
+        return float(matrix[index1][index2])
 
 def getNPDict(student_summaryList, sennafile, save2file=None,  matrix=None, headdict=None):
     np_phrase = defaultdict(float)
@@ -58,7 +62,7 @@ def getNPDict(student_summaryList, sennafile, save2file=None,  matrix=None, head
                 
             for key in np_phrase.keys():
                 if key == NP: continue
-                overlap_count = getWeight(key, NP, matrix, headdict)
+                overlap_count = getWeight(NP, key, matrix, headdict)
                 np_phrase[NP] = np_phrase[NP] + overlap_count
                 np_phrase[key] = np_phrase[key] + overlap_count
 
@@ -132,8 +136,8 @@ if __name__ == '__main__':
     weigthdir = "../data/np/"
     
     #for method in ['nphard', 'npsoft',  'greedyComparerWNLin']:
-    for method in ['greedyComparerWNLin']:
-        datadir = "../../mead/data/ShallowSummary_" + method + '/'
+    for method in ['greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'bleuComparer', 'cmComparer', 'lsaComparer', 'lexicalOverlapComparer']:
+        datadir = "../../mead/data/ShallowSummary_Weighted" + method + '/'
         fio.deleteFolder(datadir)
         ShallowSummary(excelfile, datadir, sennadatadir, K=30, weigthdir=weigthdir, method = method)
  
