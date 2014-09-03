@@ -157,6 +157,48 @@ class SennaSentence:
 			
 		return NP
 	
+	def getSyntaxNP(self):
+		NP = []
+		
+		#print self.getWords()
+		
+		stack = []
+		tmp = []
+		
+		hasNP = False
+		for word in self.words:
+			Added = False
+			
+			for i, ch in enumerate(word.psg):
+				if ch == '(':
+					if not hasNP: continue
+					stack.append(ch)
+				elif ch == ')':
+					if not hasNP: continue
+					
+					stack.pop()
+					if len(stack) == 0: #empty, the NP is done
+						if not Added: 
+							tmp.append(word.token)
+							Added = True
+						NP.append(" ".join(tmp))
+						tmp = []
+						hasNP = False
+				else:
+					if hasNP: 
+						if not Added: #add the word only once
+							tmp.append(word.token)
+							Added = True
+						continue
+					
+					if word.psg[i-1:].startswith('(NP'):
+						hasNP = True
+						stack.append('(')
+						tmp.append(word.token)
+						Added = True
+		
+		return NP
+	
 	def getAdjNounPrases(self):
 		AdjNoun = []
 		

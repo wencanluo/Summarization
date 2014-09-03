@@ -1,7 +1,9 @@
 /.project
 /.pydevproject
 /src/*.pyc
+/data/np
 /data/senna
+/data/tfidf
 /data/TopicS
 /data/*.txt
-/data/tfidf
+
