@@ -1,8 +1,11 @@
 #!/usr/bin/env python
+#file: NLTKWrapper.py
 
 import nltk
 import nltk.data
 import porter
+
+punctuations = ".?!:;-()[]'\"/,"
 
 def splitSentence(paragraph):
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
