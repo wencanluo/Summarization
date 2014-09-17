@@ -12,6 +12,31 @@ from Survey import *
 import jsdText
 import util
 
+def getKeyPhrase(student_summaryList, sennafile, save2file=None):
+    dict = defaultdict(float)
+    dict2 = {}
+    
+    #read senna file
+    sentences = SennaParser.SennaParse(sennafile)
+    
+    #get POS
+    for s in sentences:
+        words, tags = s.getPrases()
+        
+        #wordNgrams, tagNgrams = NLTKWrapper.getNgramTokened(words, 3, tags)
+        wordNgrams = [" ".join(words)]
+        tagNgrams = [" ".join(tags)]
+        
+        for i, tag in enumerate(tagNgrams):
+            dict[tag] = dict[tag] + 1
+            dict2[tag] = wordNgrams[i]
+    
+    if save2file != None:
+        fio.SaveDict(dict, save2file, SortbyValueflag = True)
+        fio.SaveDict(dict2, save2file + '.word', SortbyValueflag = False)
+        
+    return dict
+
 def getKeyPOS(student_summaryList, sennafile, save2file=None):
     dict = defaultdict(float)
     dict2 = {}
@@ -41,7 +66,10 @@ def getKeyPOS(student_summaryList, sennafile, save2file=None):
 def getPOS(summaryList, sennafile, save2file=None):
     return getKeyPOS(summaryList, sennafile, save2file=save2file)
 
-def getTAPOS(excelfile, sennadir, outputdir):
+def getPhrase(summaryList, sennafile, save2file=None):
+    return getKeyPhrase(summaryList, sennafile, save2file=save2file)
+                     
+def getTASyntax(excelfile, sennadir, outputdir, syntax='pos'):
     reload(sys)
     sys.setdefaultencoding('utf8')
     
@@ -66,20 +94,29 @@ def getTAPOS(excelfile, sennadir, outputdir):
             path = outputdir
             fio.newPath(path)
             
-            filename = path + '/ta.' + str(week) +'.' + type + ".pos" 
-            getPOS(summaryList, sennafile, save2file=filename + ".keys")           
+            filename = path + '/ta.' + str(week) +'.' + type + "." + syntax
             
-def getTAPOSDistribution(sennadir, output):
+            if syntax == 'pos':
+                getPOS(summaryList, sennafile, save2file=filename + ".keys")
+            elif syntax == 'phrase':
+                getPhrase(summaryList, sennafile, save2file=filename + ".keys")   
+            
+def getTASyntaxDistribution(sennadir, output, syntax = 'pos'):
     sheets = range(0,12)
     
     dicts = {}
+    
+    worddict = {}
     
     totaldict = defaultdict(float)
     for type in ['POI', 'MP', 'LP']:
         dict = {}
         for sheet in sheets:
             week = sheet + 1
-            filename = sennadir + '/ta.' + str(week) +'.' + type + ".pos.keys"
+            filename = sennadir + '/ta.' + str(week) +'.' + type + "." + syntax +".keys"
+            wordfile = sennadir + '/ta.' + str(week) +'.' + type + "." + syntax +".keys.word"
+            wdict = fio.LoadDict(wordfile)
+            worddict = util.UnionDict(worddict, wdict)
             
             tmp = fio.LoadDict(filename, 'float')
             dict = util.UnionDict(dict, tmp)
@@ -89,9 +126,11 @@ def getTAPOSDistribution(sennadir, output):
         
         dicts[type] = dict
     
+    #fio.SaveDict(worddict, output + ".word")
+    
     keys = sorted(totaldict, key=totaldict.get, reverse=True)
     
-    header = ['pos', 'POI', 'MP', 'LP']
+    header = [syntax, 'POI', 'MP', 'LP', 'example']
     body = []
     for key in keys:
         row = []
@@ -102,6 +141,9 @@ def getTAPOSDistribution(sennadir, output):
                 row.append(dicts[type][key])
             else:
                 row.append(0)
+        
+        row.append(worddict[key])
+        
         body.append(row)
     
     fio.writeMatrix(output, body, header)
@@ -190,6 +232,6 @@ if __name__ == '__main__':
     #getTAWordCountDistribution(excelfile, prefix)
     #getJSD(prefix, "../data/ta_jsd.txt")
     #getTATextForSenna(excelfile, sennadir)
-    getTAPOS(excelfile, sennadir, sennadir)
-    getTAPOSDistribution(sennadir, '../data/ta_pos_distribution.txt')
+    getTASyntax(excelfile, sennadir, sennadir, 'phrase')
+    getTASyntaxDistribution(sennadir, '../data/ta_phrase_distribution.txt', 'phrase')
     print "done"

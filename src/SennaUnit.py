@@ -158,34 +158,37 @@ class SennaSentence:
 		return NP
 	
 	def getPrases(self):
-		phrases = []
+		tags = []
 		words = []
 		
 		tmp = []
-		start = False
 		for word in self.words:
 			if word.chk.startswith('S-'): #single word phrase
-				NP.append(word.token)
-				tmp = []
-				start = False
+				tag = word.chk[2:]
 				
-			elif word.chk == 'B-NP': # begin
-				start = True
+				tags.append(tag)
+				words.append(word.token)
+				
+				tmp = []
+				
+			elif word.chk.startswith('B-'): # begin
+				tag = word.chk[2:]
 				tmp = []
 				tmp.append(word.token)
-			elif word.chk == 'I-NP': # inside
-				assert(start)
+			elif word.chk.startswith('I-'): # inside
+				tag = word.chk[2:]
 				tmp.append(word.token)
-			elif word.chk == 'E-NP': # end
-				assert(start)
+			elif word.chk.startswith('E-'): # end
+				tag = word.chk[2:]
 				tmp.append(word.token)
-				NP.append(" ".join(tmp))
+				
+				tags.append(tag)
+				words.append(" ".join(tmp))
 				tmp = []
-				start = False	
-			else:
-				assert(~start)
+			else: #O
+				pass
 			
-		return NP
+		return words, tags
 	
 	def getSyntaxNP(self):
 		NP = []

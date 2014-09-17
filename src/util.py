@@ -23,7 +23,10 @@ def UnionDict(d1, d2):
     
     for k, v in d2.items():
         if k in dict:
-            dict[k] = dict[k] + v
+            if type(v) != type(""):
+                dict[k] = dict[k] + v
+            else:
+                dict[k] = v
         else:
             dict[k] = v
         

@@ -30,6 +30,31 @@ def getNgram(sentence, n, punct = True):
         ngrams.append(" ".join(ngram))
     return ngrams
 
+def getNgramTokened(word, n, tag = None):
+    #n is the number of grams, such as 1 means unigram
+    ngram_tags = []
+    ngram_words = []
+    
+    if tag != None:
+        assert(len(tag) == len(word))
+    
+    #tokens = summary.split()
+    N = len(word)
+    for i in range(N):
+        if i+n > N: continue
+        
+        if tag != None:
+            ngram_tag = tag[i:i+n]
+            ngram_tags.append(" ".join(ngram_tag))
+            
+        ngram_word = word[i:i+n]
+        ngram_words.append(" ".join(ngram_word))
+    
+    if tag != None:
+        return ngram_words, ngram_tags 
+    
+    return ngram_words
+
 def getWordList(file):
     f = open(file,'r')
     lines = f.readlines()
