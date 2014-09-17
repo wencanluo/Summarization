@@ -18,6 +18,16 @@ def normalize(X):
         return X
     return None
         
+def UnionDict(d1, d2):
+    dict = d1
+    
+    for k, v in d2.items():
+        if k in dict:
+            dict[k] = dict[k] + v
+        else:
+            dict[k] = v
+        
+    return dict
 
 if __name__=="__main__":
     print normalize({1:1,2:2,3:4})

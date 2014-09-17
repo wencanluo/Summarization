@@ -48,7 +48,7 @@ def SennaParse(filename):
 	@return: list, Each item is a SennaSentence
 	"""
 	lines = fio.readfile(filename)
-	print "nLine=", len(lines)
+	#print "nLine=", len(lines)
 	sys.stdout.flush()
 
 	nCount = 0
@@ -57,7 +57,7 @@ def SennaParse(filename):
 		line = line.strip()
 		if len(line) == 0: #the last sentence is finished
 			nCount = nCount + 1
-	print "nCount=", nCount
+	#print "nCount=", nCount
 	sys.stdout.flush()
 	
 	sentences = [None]*nCount

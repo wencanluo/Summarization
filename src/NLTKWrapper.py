@@ -17,12 +17,12 @@ def wordtokenizer(s, punct = True):
     else:
         return nltk.word_tokenize(s)
 
-def getNgram(sentence, n):
+def getNgram(sentence, n, punct = True):
     #n is the number of grams, such as 1 means unigram
     ngrams = []
     
     #tokens = summary.split()
-    tokens = wordtokenizer(sentence)
+    tokens = wordtokenizer(sentence, punct)
     N = len(tokens)
     for i in range(N):
         if i+n > N: continue
