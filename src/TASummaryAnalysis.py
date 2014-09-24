@@ -171,7 +171,7 @@ def getTATextForSenna(excelfile, sennadir):
             filename = sennadir + 'senna.' + str(week) + '.ta.'+type+'.input'
             fio.savelist(summaryList, filename)
                                     
-def getTAWordCountDistribution(excelfile, output):
+def getWordCountDistribution(excelfile, output, summarydir):
     reload(sys)
     sys.setdefaultencoding('utf8')
     
@@ -182,6 +182,7 @@ def getTAWordCountDistribution(excelfile, output):
     
     datahead = ['Week', '# of sentence POI', '# of sentence POI', '# of sentence POI']
     
+    #TA
     counts = {'POI':{}, 'MP':{}, 'LP':{}}
     for sheet in sheets:
         row = []
@@ -203,35 +204,136 @@ def getTAWordCountDistribution(excelfile, output):
                     
     
     for type in ['POI', 'MP', 'LP']:
-        filename = output + "_" + type + '.txt'
+        filename = output + "_" + type + '.TA.txt'
         fio.SaveDict(counts[type], filename, True)
+    
+    #Feedback    
+    counts = {'POI':{}, 'MP':{}, 'LP':{}}
+    for sheet in sheets:
+        row = []
+        week = sheet + 1
+        
+        orig = prData(excelfile, sheet)
+        
+        for type in ['POI', 'MP', 'LP']:
+            summaryList = getStudentResponseList(orig, header, summarykey, type)
+            for summary in summaryList:
+                unigram = NLTKWrapper.getNgram(summary, 1)
+                
+                for word in unigram:
+                    word = word.lower()
+                    if word in NLTKWrapper.punctuations: continue
+                    if word not in counts[type]:
+                        counts[type][word] = 0
+                    counts[type][word] = counts[type][word] + 1
+                    
+    
+    for type in ['POI', 'MP', 'LP']:
+        filename = output + "_" + type + '.Students.txt'
+        fio.SaveDict(counts[type], filename, True)
+        
+    
+    #summary
+    Models = {'2011Spring':'Mead',
+              'ShallowSummary_unigram_remove_stop':"Shallow-Unigram",
+              'ShallowSummary_NPhraseHard':'Shallow-NP-Hard',
+              'ShallowSummary_NPhraseSoft':'Shallow-NP-Soft', 
+              'ShallowSummary_SyntaxNPhraseHard':'Shallow-SyntaxNP-Hard', 
+              'ShallowSummary_SyntaxNPhraseSoft':'Shallow-SyntaxNP-Soft', 
+              'ShallowSummary_ClusteringNPhraseSoft':'Shallow-ClusterNP-Soft',
+              'ShallowbasedExtrativeSummary_topicS':'Extractive-TopicS', 
+              'ShallowbasedExtrativeSummary_unigram':'Extractive-Unigram',
+              }
+    
+    for model in Models:
+        counts = {'POI':{}, 'MP':{}, 'LP':{}}
+        for type in ['POI', 'MP', 'LP']:
+            summaryList = getMeadSummaryList(summarydir + model + '/', type)
+            for summary in summaryList:
+                unigram = NLTKWrapper.getNgram(summary, 1)
+                
+                for word in unigram:
+                    word = word.lower()
+                    if word in NLTKWrapper.punctuations: continue
+                    if word not in counts[type]:
+                        counts[type][word] = 0
+                    counts[type][word] = counts[type][word] + 1
+
+        for type in ['POI', 'MP', 'LP']:
+            filename = output + "_" + type + '.'+Models[model]+'.txt'
+            fio.SaveDict(counts[type], filename, True)
 
 def getJSD(inputdirpredix, output):
-    dicts = {}
-    for type in ['POI', 'MP', 'LP']:
-        filename = inputdirpredix + "_" + type + '.txt'
-        dict = fio.LoadDict(filename, 'float')
-        dicts[type] = dict
     
-    header = ['','POI', 'MP', 'LP']
+    Models = ["Students", "TA", "Mead", "Shallow-Unigram", "Shallow-NP-Hard", "Shallow-NP-Soft", "Shallow-SyntaxNP-Hard", "Shallow-SyntaxNP-Soft", "Shallow-ClusterNP-Soft", "Extractive-TopicS", "Extractive-Unigram", ]
+    
+    
+    types = [('POI','MP'), ('POI', 'LP'), ('MP', 'LP')]
+    header = ["JSD("+type1+','+type2+')' for type1, type2 in types]
+    header = [""] + header
+    header = header + ['Flag']
+    
     body = []
-    for type1 in ['POI', 'MP', 'LP']:
+    for model in Models:
+        
+        dicts = {}
+        for type in ['POI', 'MP', 'LP']:
+            filename = inputdirpredix + "_" + type + "." + model +'.txt'
+            dict = fio.LoadDict(filename, 'float')
+            dicts[type] = dict
+
         row = []
-        row.append(type1)
-        for type2 in ['POI', 'MP', 'LP']:    
+        row.append(model)
+        for type1, type2 in types:
             row.append(jsdText.JSDDict(dicts[type1], dicts[type2]))
         
+        flag = True
+        
+        if row[1] >= row[3]: flag = False
+        if row[3] >= row[2]: flag = False
+        
+        row.append(flag)
+            
         body.append(row)
-    
+        
     fio.writeMatrix(output, body, header)
+
+
+def ExtractNonWord(inputdirpredix, output):
+    Models = ["Students", "TA"]
+
+    dicts = {}
+    
+    for model in Models:
+        for type in ['POI', 'MP', 'LP']:
+            filename = inputdirpredix + "_" + type + "." + model +'.txt'
+            dict = fio.LoadDict(filename, 'float')
+            dicts[type] = dict
+
+    dict = {}
+    for type in ['POI', 'MP', 'LP']:
+        util.UnionDict(dict, dicts[type])
+    
+    wordlist = [word.strip().lower() for word in fio.readfile('wordsEn.txt')]
+    
+    VOC = {}
+    for key in dict:
+        if key not in wordlist:
+            VOC[key] = dict[key]
+    
+    fio.SaveDict(VOC, output, True)
         
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
-    prefix = '../data/ta_word_distribution'
+    prefix = '../data/word_distribution/wd'
     sennadir = '../data/senna/'
-    #getTAWordCountDistribution(excelfile, prefix)
-    #getJSD(prefix, "../data/ta_jsd.txt")
+    summarydir = '../../mead/data/'
+    #getWordCountDistribution(excelfile, prefix, summarydir)
+    #getJSD(prefix, "../data/jsd.txt")
     #getTATextForSenna(excelfile, sennadir)
-    getTASyntax(excelfile, sennadir, sennadir, 'phrase')
-    getTASyntaxDistribution(sennadir, '../data/ta_phrase_distribution.txt', 'phrase')
+    #getTASyntax(excelfile, sennadir, sennadir, 'phrase')
+    #getTASyntaxDistribution(sennadir, '../data/ta_phrase_distribution.txt', 'phrase')
+    
+    ExtractNonWord(prefix, '../data/voc.txt')
+    
     print "done"

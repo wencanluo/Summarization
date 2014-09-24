@@ -210,6 +210,32 @@ def getMeadSummary(datadir, type):
     
     return summaries
         
+def getMeadSummaryList(datadir, type):
+    #return a list of summaries, week by week. The summary for each week is also a list
+    sheets = range(0,12)
+    
+    summaries = []
+    for sheet in sheets:
+        row = []
+        week = sheet + 1
+        row.append(week)
+                    
+        path = datadir + str(week)+ '/'
+        filename = path + type + '.summary'
+        
+        lines = fio.readfile(filename)
+        summary = []
+        for line in lines:
+            summary.append(NormalizeMeadSummary(line))
+        
+        summaries.append(summary)
+    
+    summaryList = []
+    for summaries in summaries:
+        for summary in summaries:
+            summaryList.append(summary)
+        
+    return summaryList
             
 if __name__ == '__main__':
     pass
