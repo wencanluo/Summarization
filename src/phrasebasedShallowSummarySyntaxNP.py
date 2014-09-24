@@ -127,7 +127,22 @@ def getShallowSummary(excelfile, folder, sennadatadir, K=30):
 def ShallowSummary(excelfile, datadir, sennadatadir, K=30):
     getShallowSummary(excelfile, datadir, sennadatadir, K)
     WriteTASummary(excelfile, datadir)
+
+def ExtractedSyntaxNP(datadir, outdir):
+    sheets = range(0,12)
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
         
+        for type in ['POI', 'MP', 'LP']:
+            file = datadir + str(week)+ '/' + type + '.summary.keys'
+            
+            dict = fio.LoadDict(file, 'float')
+            keys = sorted(dict, key=dict.get, reverse = True)
+            
+            output = outdir + str(week)+ '/' + type + '.key'
+            fio.savelist(keys, output)
+            
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     
@@ -135,7 +150,11 @@ if __name__ == '__main__':
     
     datadir = "../../mead/data/ShallowSummary_SyntaxNPhraseSoft/" 
     #datadir = "../../mead/data/ShallowSummary_SyntaxNPhraseHard/"   
-    fio.deleteFolder(datadir)
-    ShallowSummary(excelfile, datadir, sennadatadir, K=30)
-
+    #fio.deleteFolder(datadir)
+    #ShallowSummary(excelfile, datadir, sennadatadir, K=30)
+    
+    outdir = "../data/np/"
+    ExtractedSyntaxNP(datadir, outdir)
+    
+    print "done"
     

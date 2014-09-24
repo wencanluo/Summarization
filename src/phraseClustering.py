@@ -38,13 +38,13 @@ def toStemMatrix(NPs):
         
     return header, data
 
-def getPhraseCluster(phrasedir):
+def getPhraseCluster(phrasedir, posfix='.key'):
     sheets = range(0,12)
     
     for sheet in sheets:
         week = sheet + 1
         for type in ['POI', 'MP', 'LP']:
-            filename = phrasedir + '/' + str(week) +'/' + type + ".key"
+            filename = phrasedir + '/' + str(week) +'/' + type + posfix
             
             NPs = fio.readfile(filename)
             NPs = [NP.strip() for NP in NPs]
@@ -109,5 +109,7 @@ if __name__ == '__main__':
 
     phrasedir = "../data/np/"
     getPhraseCluster(phrasedir)
+    
+    print "done"
     
  
