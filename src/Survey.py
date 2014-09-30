@@ -93,7 +93,7 @@ def WriteTASummary(excelfile, datadir):
             #only save the first 3 points
             fio.savelist(summary, filename)
             
-def getStudentResponse(orig, header, summarykey, type='POI'):
+def getStudentResponse(orig, header, summarykey=None, type='POI'):
     '''
     return a dictionary of the students' summary, with the student id as a key
     The value is a list with each sentence an entry
@@ -200,6 +200,8 @@ def getMeadSummary(datadir, type):
                     
         path = datadir + str(week)+ '/'
         filename = path + type + '.summary'
+        
+        if not fio.isExist(filename): continue
         
         lines = fio.readfile(filename)
         summary = []

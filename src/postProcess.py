@@ -314,14 +314,29 @@ def TASummaryCoverage(excelfile, datadir, output):
             print type, "\t", n+1, "\t", dict[type][n+1][0], "\t", dict[type][n+1][1], "\t", float(dict[type][n+1][1])/dict[type][n+1][0]
     
     fio.PrintDict(uncoveried, True)
+
+def ExtractedSyntaxNP(datadir, outdir):
+    sheets = range(0,12)
     
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        
+        for type in ['POI', 'MP', 'LP']:
+            file = datadir + str(week)+ '/' + type + '.summary.keys'
+            
+            dict = fio.LoadDict(file, 'float')
+            keys = sorted(dict, key=dict.get, reverse = True)
+            
+            output = outdir + str(week)+ '/' + type + '.key'
+            fio.savelist(keys, output)
+                
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     output = "../data/2011Spring_overivew.txt"
     summaryoutput = "../data/2011Spring_summary.txt"
     
-    datadir = "../../mead/data/2011Spring/"
-    datadir_multiple = "../../mead/data/2011SpringMutiple/"
+    
+    #datadir_multiple = "../../mead/data/2011SpringMutiple/"
     
     #formatedsummary = '../data/2011Spring_Mead_multiplesummary.txt'
     formatedsummary = '../data/2011Spring_Mead_summary.txt'
@@ -351,11 +366,16 @@ if __name__ == '__main__':
     #'ShallowSummary_WeightedgreedyComparerWNLin', 'ShallowSummary_WeightedoptimumComparerWNLin', 'ShallowSummary_WeightedoptimumComparerLSATasa', 'ShallowSummary_WeighteddependencyComparerWnLeskTanim', 'ShallowSummary_WeightedlsaComparer', 'ShallowSummary_WeightedbleuComparer', 'ShallowSummary_WeightedcmComparer', 'ShallowSummary_WeightedlexicalOverlapComparer'
     #'ShallowSummary_AdjNounPhrase_Hard_NoSingleNoun', 'ShallowSummary_AdjNounPhrase_Hard_WithSingleNoun', 'ShallowSummary_AdjNounPhrase_Soft_NoSingleNoun', 'ShallowSummary_AdjNounPhrase_Soft_WithSingleNoun'
     #'ShallowSummary_SyntaxNPhraseHard', 'ShallowSummary_SyntaxNPhraseSoft'
-    #'ShallowSummary_ClusteringNPhraseSoft'
-    GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_ClusteringSyntaxNPhraseSoft'], outputdir = "../data/" )
+    #'ShallowSummary_ClusteringNPhraseSoft', ShallowSummary_ClusteringSyntaxNPhraseSoft
+    GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_ClusteringNPhraseSoftKMedoid'], outputdir = "../data/" )
     #GetRougeScoreMMR(datadir = "../../mead/data/", models = ['2011SpringReranker'], outputdir = "../data/")
     #GetRougeScore(datadir = "../../mead/data/", model = "2011Spring", outputdir = "../data/" )
     #GetRougeScore(datadir, rougescore)
     #TASummaryCoverage(excelfile, datadir, output="../data/coverage.txt")
     #print getNgram("1 2 3 4 5 6", 6)
+    
+    datadir = "../../mead/data/ShallowSummary_NPhraseSoft/"
+    outdir = "../data/np/"
+    #ExtractedSyntaxNP(datadir, outdir)
+    
     print "done"

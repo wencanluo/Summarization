@@ -41,6 +41,7 @@ def getKeyNgram(student_summaryList, sennafile, save2file=None, soft = True):
     
     #get NP phrases
     for s in sentences:
+        #NPs = s.getNPrases()
         NPs = s.getSyntaxNP()
         
         for NP in NPs:
@@ -82,7 +83,7 @@ def getKeyNgram(student_summaryList, sennafile, save2file=None, soft = True):
 def getKeyPhrases(student_summaryList, sennafile, save2file=None):
     return getKeyNgram(student_summaryList, sennafile, save2file=save2file)
                             
-def getShallowSummary(excelfile, folder, sennadatadir, K=30):
+def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30):
     #K is the number of words per points
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
     summarykey = "Top Answers"
@@ -104,39 +105,45 @@ def getShallowSummary(excelfile, folder, sennadatadir, K=30):
             
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
             
+            clustersfile = clusterdir + '/' + str(week) +'/' + type + ".cluster.kmeans"
+            cluster = fio.LoadDict(clustersfile)
+            
             Summary = []
             dict = getKeyPhrases(student_summaryList, sennafile, save2file=filename + ".keys")
             
             keys = sorted(dict, key=dict.get, reverse = True)
+            
+            added_cluster = []
+            
             total_word = 0
             word_count = 0
             for key in keys:
-                skip = False
-                for s in Summary:
-                    if getOverlap(getStemDict(s), getStemDict(key)) > 0: #duplicate removing
-                        skip = True
-                        continue
-                if skip: continue
+                assert(key in cluster)
+                id = cluster[key]
+                if id in added_cluster:continue
+                
                 word_count = len(key.split())
                 total_word = total_word + word_count
                 if total_word <= K:
                     Summary.append(key)
+                    
+                    added_cluster.append(id)
             
             fio.savelist(Summary, filename)
                         
-def ShallowSummary(excelfile, datadir, sennadatadir, K=30):
-    getShallowSummary(excelfile, datadir, sennadatadir, K)
+def ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30):
+    getShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K)
     WriteTASummary(excelfile, datadir)
-            
+        
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     
     sennadatadir = "../data/senna/"
+    clusterdir = "../data/np/"
     
-    datadir = "../../mead/data/ShallowSummary_SyntaxNPhraseSoft/" 
-    #datadir = "../../mead/data/ShallowSummary_SyntaxNPhraseHard/"   
-    #fio.deleteFolder(datadir)
-    #ShallowSummary(excelfile, datadir, sennadatadir, K=30)
-        
-    print "done"
+    #datadir = "../../mead/data/ShallowSummary_NPhraseSoft/" 
+    datadir = "../../mead/data/ShallowSummary_ClusteringSyntaxNPhraseSoft/"   
+    fio.deleteFolder(datadir)
+    ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30)
+
     
