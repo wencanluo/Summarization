@@ -82,7 +82,7 @@ def getKeyNgram(student_summaryList, sennafile, save2file=None, soft = True):
 def getKeyPhrases(student_summaryList, sennafile, save2file=None):
     return getKeyNgram(student_summaryList, sennafile, save2file=save2file)
                             
-def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30):
+def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=None, ratio=None):
     #K is the number of words per points
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
     summarykey = "Top Answers"
@@ -104,7 +104,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30):
             
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
             
-            clustersfile = clusterdir + '/' + str(week) +'/' + type + ".cluster.kmedoids"
+            clustersfile = clusterdir + '/' + str(week) +'/' + type + ".cluster.kmedoids."+ str(ratio) + "." +method
             body = fio.readMatrix(clustersfile, False)
             
             NPs = [row[0] for row in body]
@@ -139,8 +139,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30):
             
             fio.savelist(Summary, filename)
                         
-def ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30):
-    getShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K)
+def ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=None, ratio=None):
+    getShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K, method, ratio)
     WriteTASummary(excelfile, datadir)
         
 if __name__ == '__main__':
@@ -149,9 +149,14 @@ if __name__ == '__main__':
     sennadatadir = "../data/senna/"
     clusterdir = "../data/np/"
     
-    #datadir = "../../mead/data/ShallowSummary_NPhraseSoft/" 
-    datadir = "../../mead/data/ShallowSummary_ClusteringNPhraseSoftKMedoid/"   
-    fio.deleteFolder(datadir)
-    ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30)
+    for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+    #for ratio in ["sqrt"]:
+        for method in ['greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']: #'bleuComparer', 'cmComparer', 'lsaComparer',
+        #for method in ['lexicalOverlapComparer']:
+            datadir = "../../mead/data/ShallowSummary_ClusteringNPhraseSoftKMedoid_"+str(ratio)+"_"+method+"/"   
+            fio.deleteFolder(datadir)
+            ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=method, ratio=ratio)
+            
+    print "done"
 
     

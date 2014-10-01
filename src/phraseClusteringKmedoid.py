@@ -8,45 +8,34 @@ import random
 import NLTKWrapper
 import SennaParser
 import porter
-
+import math
 import phrasebasedShallowSummary
 
 import ClusterWrapper
 
-K = 10
-
-def toStemMatrix(NPs):
-    dicts = []
-    
-    for NP in NPs:
-        dict = phrasebasedShallowSummary.getStemDict(NP)
-        dicts.append(dict)
-    
-    keys = []
-    
-    for dict in dicts:
-        keys = keys + dict.keys()
-    
-    keys = set(keys)
-    
-    header = keys
-    data = []
-    
-    for dict in dicts:
-        row = [1 if key in dict else 0 for key in keys]
-        data.append(row)
-        
-    return header, data
-
-def getPhraseCluster(phrasedir, distance='lexicalOverlapComparer'):
+def getPhraseCluster(phrasedir, distance='lexicalOverlapComparer', Kratio=None):
     sheets = range(0,12)
     
     for sheet in sheets:
         week = sheet + 1
         for type in ['POI', 'MP', 'LP']:
             weightfilename = phrasedir + str(week)+ '/' + type + '.' + distance
+            print weightfilename
+            
             NPs, matrix = fio.readMatrix(weightfilename, hasHead = True)
             
+            #change the similarity to distance
+            for i, row in enumerate(matrix):
+                for j, col in enumerate(row):
+                    matrix[i][j] = 1 - float(matrix[i][j]) if matrix[i][j] != "NaN" else 0
+            
+            V = len(NPs)
+            if Kratio == None:
+                K = int(math.sqrt(V))
+            else:
+                K = int(Kratio*V)
+            
+            K=10    
             clusterid = ClusterWrapper.KMedoidCluster(matrix, K)
             
 #             sorted_lists = sorted(zip(NPs, clusterid), key=lambda x: x[1])
@@ -64,8 +53,11 @@ def getPhraseCluster(phrasedir, distance='lexicalOverlapComparer'):
                 #row.append(dict[id])
                 
                 body.append(row)
-                
-            file = phrasedir + '/' + str(week) +'/' + type + ".cluster.kmedoids"
+            
+            if Kratio == None:    
+                file = phrasedir + '/' + str(week) +'/' + type + ".cluster.kmedoids." + "sqrt" + "." +distance
+            else:
+                file = phrasedir + '/' + str(week) +'/' + type + ".cluster.kmedoids." + str(Kratio) + "." +distance
             fio.writeMatrix(file, body, header = None)
             
 #             dict2 = {}
@@ -99,7 +91,13 @@ if __name__ == '__main__':
 #         ShallowSummary(excelfile, datadir, sennadatadir, K=30, weigthdir=weigthdir, method = method)
 
     phrasedir = "../data/np/"
-    getPhraseCluster(phrasedir)
+    
+    #for ratio in [None, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+    for ratio in [None]:
+        #for method in ['greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']: #'bleuComparer', 'cmComparer', 'lsaComparer',
+        for method in ['lexicalOverlapComparer']:
+            getPhraseCluster(phrasedir, method, ratio)
+            print method
     
     print "done"
     

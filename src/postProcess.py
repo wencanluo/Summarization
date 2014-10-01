@@ -329,7 +329,34 @@ def ExtractedSyntaxNP(datadir, outdir):
             
             output = outdir + str(week)+ '/' + type + '.key'
             fio.savelist(keys, output)
-                
+
+def CombineKMethod(datadir, output):
+    Header = ['method', 'lambda', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
+    newbody = []
+    
+    for method in ['greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']: 
+        for ratio in ["sqrt", 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+            filename = datadir + "rouge.ShallowSummary_ClusteringNPhraseSoftKMedoid_" + str(ratio) + "_"+ method + ".txt"
+            head, body = fio.readMatrix(filename, hasHead=True)
+            
+            row = []
+            row.append(method)
+            row.append(ratio)
+            row = row + body[-1][1:]
+            
+            newbody.append(row)
+            
+    #get the max
+    row = []
+    row.append("max")
+    row.append("")
+    for i in range(2, len(Header)):
+        scores = [float(xx[i]) for xx in newbody]
+        row.append(np.max(scores))
+    newbody.append(row)
+    
+    fio.writeMatrix(output, newbody, Header)
+                    
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     output = "../data/2011Spring_overivew.txt"
@@ -367,15 +394,22 @@ if __name__ == '__main__':
     #'ShallowSummary_AdjNounPhrase_Hard_NoSingleNoun', 'ShallowSummary_AdjNounPhrase_Hard_WithSingleNoun', 'ShallowSummary_AdjNounPhrase_Soft_NoSingleNoun', 'ShallowSummary_AdjNounPhrase_Soft_WithSingleNoun'
     #'ShallowSummary_SyntaxNPhraseHard', 'ShallowSummary_SyntaxNPhraseSoft'
     #'ShallowSummary_ClusteringNPhraseSoft', ShallowSummary_ClusteringSyntaxNPhraseSoft
-    GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_ClusteringNPhraseSoftKMedoid'], outputdir = "../data/" )
+    
+    #GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_ClusteringNPhraseSoftKMedoid'], outputdir = "../data/" )
+    
     #GetRougeScoreMMR(datadir = "../../mead/data/", models = ['2011SpringReranker'], outputdir = "../data/")
     #GetRougeScore(datadir = "../../mead/data/", model = "2011Spring", outputdir = "../data/" )
     #GetRougeScore(datadir, rougescore)
     #TASummaryCoverage(excelfile, datadir, output="../data/coverage.txt")
     #print getNgram("1 2 3 4 5 6", 6)
     
-    datadir = "../../mead/data/ShallowSummary_NPhraseSoft/"
-    outdir = "../data/np/"
+    #datadir = "../../mead/data/ShallowSummary_NPhraseSoft/"
+    #outdir = "../data/np/"
     #ExtractedSyntaxNP(datadir, outdir)
+    for ratio in ["sqrt", 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+        for method in ['greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']: #'bleuComparer', 'cmComparer', 'lsaComparer',
+            GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_ClusteringNPhraseSoftKMedoid_' + str(ratio)+"_"+method], outputdir = "../data/" )
+    
+    CombineKMethod("../data/", "../data/KmetroidKMethod.txt")
     
     print "done"
