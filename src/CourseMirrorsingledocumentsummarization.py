@@ -8,8 +8,8 @@ import CourseMirrorSurvey
 
 course = "CS2001"
 #course = "CS2610"
-maxWeekDict = {"CS2610": 5, 
-               "CS2001": 1}
+maxWeekDict = {"CS2610": 7, 
+               "CS2001": 2}
 
 maxWeek = maxWeekDict[course]
                     
@@ -21,6 +21,8 @@ def WriteDocsent(excelfile, folder):
         
         for type in ['POI', 'MP', 'LP']:
             summaries = CourseMirrorSurvey.getStudentResponse(excelfile, course, week, type=type)
+            if len(summaries) == 0: continue
+            
             DID = str(week) + '_' + type
             
             path = folder + str(week)+ '/'
@@ -46,6 +48,7 @@ def WriteDocsent(excelfile, folder):
                     sno_id = sno_id + 1
             
             tree.write(filename)
+            print filename
             
 def WriteCluster(excelfile, folder):
     sheets = range(0,maxWeek)
@@ -79,12 +82,15 @@ def Write2Mead(excelfile, datadir, K=3):
     WriteCluster(excelfile, datadir)
     #WriteTASummary(excelfile, datadir)
    
-if __name__ == '__main__':
-    
-    excelfile = "../data/CourseMIRROR Reflections.xls"
-    datadir = "../../mead/data/"+course+"_Mead/"
-    fio.deleteFolder(datadir)
-    Write2Mead(excelfile, datadir)
-    
+if __name__ == '__main__':    
+    for c in ["CS2001", "CS2610"]:
+        course = c
+        maxWeek = maxWeekDict[course]
+        
+        excelfile = "../data/reflections.json"
+        datadir = "../../mead/data/"+course+"_Mead/"
+        fio.deleteFolder(datadir)
+        Write2Mead(excelfile, datadir)
+        
     print "done"
     

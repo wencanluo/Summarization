@@ -158,22 +158,6 @@ def getTFIDF(excelfile, datadir):
 def ShallowSummary(excelfile, datadir, K=30, method='ngram', tfidfdir=None):
     getShallowSummary(excelfile, datadir, K, method, tfidfdir)
     WriteTASummary(excelfile, datadir)
-
-def getStudentResponses4Senna(excelfile, datadir):
-    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
-    summarykey = "Top Answers"
-    
-    #sheets = range(0,25)
-    sheets = range(0,12)
-    
-    for i, sheet in enumerate(sheets):
-        week = i + 1
-        orig = prData(excelfile, sheet)
-        
-        for type in ['POI', 'MP', 'LP']:
-            student_summaryList = getStudentResponseList(orig, header, summarykey, type)
-            filename = datadir + "senna." + str(week) + "." + type + ".input"
-            fio.savelist(student_summaryList, filename)
         
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"

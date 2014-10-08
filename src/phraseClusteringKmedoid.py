@@ -12,28 +12,120 @@ import math
 import phrasebasedShallowSummary
 
 import ClusterWrapper
+import SennaParser
 
-def getPhraseCluster(phrasedir, distance='lexicalOverlapComparer', Kratio=None):
+stopwords = [line.lower().strip() for line in fio.readfile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
+punctuations = ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']
+
+def isMalformed(phrase):
+    N = len(phrase.split())
+    if N == 1: #single stop words
+        if phrase in stopwords: return True
+    
+    if len(phrase) > 0:
+        if phrase[0] in punctuations: return True
+    
+    return False
+
+def getNPs(sennafile, MalformedFlilter=False):
+    np_phrase = []
+    
+    #read senna file
+    sentences = SennaParser.SennaParse(sennafile)
+    
+    #get NP phrases
+    for s in sentences:
+        NPs = s.getNPrases()
+        
+        for NP in NPs:
+            NP = NP.lower()
+            
+            if MalformedFlilter:
+                if isMalformed(NP): continue
+            
+            np_phrase.append(NP)
+        
+    return np_phrase
+
+def getPhraseClusterAll(sennafile, weightfile, output, ratio=None, MalformedFlilter=False):
+    
+    NPCandidates = getNPs(sennafile, MalformedFlilter)
+    
+    NPs, matrix = fio.readMatrix(weightfile, hasHead = True)
+    
+    #change the similarity to distance
+    for i, row in enumerate(matrix):
+        for j, col in enumerate(row):
+            if matrix[i][j] == "NaN":
+                matrix[i][j] = 1.0
+            else:
+                try:
+                    if float(matrix[i][j]) < 0:
+                        print "<0", weightfile, i, j, matrix[i][j]
+                        matrix[i][j] = 0
+                    if float(matrix[i][j]) > 100:
+                        print ">100", weightfile, i, j, matrix[i][j]
+                        matrix[i][j] = 100
+                    matrix[i][j] = 1.0 / math.pow(math.e, float(matrix[i][j]))
+                except OverflowError as e:
+                    print e
+                    exit()
+
+    index = {}
+    for i, NP in enumerate(NPs):
+        index[NP] = i
+    
+    newMatrix = []
+    
+    for NP1 in NPCandidates:
+        assert(NP1 in index)
+        i = index[NP1]
+        
+        row = []
+        for NP2 in NPCandidates:
+            j = index[NP2]
+            row.append(matrix[i][j])
+            
+        newMatrix.append(row)
+    
+    V = len(NPCandidates)
+    if ratio == "sqrt":
+        K = int(math.sqrt(V))
+    else:
+        K = int(ratio*V)
+    
+    clusterid = ClusterWrapper.KMedoidCluster(newMatrix, K)
+     
+    body = []   
+    for NP, id in zip(NPCandidates, clusterid):
+        row = []
+        row.append(NP)
+        row.append(id)
+        body.append(row)    
+    
+    fio.writeMatrix(output, body, header = None)
+    
+def getPhraseCluster(phrasedir, method='lexicalOverlapComparer', ratio=None):
     sheets = range(0,12)
     
     for sheet in sheets:
         week = sheet + 1
         for type in ['POI', 'MP', 'LP']:
-            weightfilename = phrasedir + str(week)+ '/' + type + '.' + distance
+            weightfilename = phrasedir + str(week)+ '/' + type + '.' + method
             print weightfilename
             
             NPs, matrix = fio.readMatrix(weightfilename, hasHead = True)
             
-            #change the similarity to distance
+            #change the similarity to method
             for i, row in enumerate(matrix):
                 for j, col in enumerate(row):
                     matrix[i][j] = 1 - float(matrix[i][j]) if matrix[i][j] != "NaN" else 0
             
             V = len(NPs)
-            if Kratio == None:
+            if ratio == None:
                 K = int(math.sqrt(V))
             else:
-                K = int(Kratio*V)
+                K = int(ratio*V)
             
             K=10    
             clusterid = ClusterWrapper.KMedoidCluster(matrix, K)
@@ -54,10 +146,10 @@ def getPhraseCluster(phrasedir, distance='lexicalOverlapComparer', Kratio=None):
                 
                 body.append(row)
             
-            if Kratio == None:    
-                file = phrasedir + '/' + str(week) +'/' + type + ".cluster.kmedoids." + "sqrt" + "." +distance
+            if ratio == None:    
+                file = phrasedir + '/' + str(week) +'/' + type + ".cluster.kmedoids." + "sqrt" + "." +method
             else:
-                file = phrasedir + '/' + str(week) +'/' + type + ".cluster.kmedoids." + str(Kratio) + "." +distance
+                file = phrasedir + '/' + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method
             fio.writeMatrix(file, body, header = None)
             
 #             dict2 = {}

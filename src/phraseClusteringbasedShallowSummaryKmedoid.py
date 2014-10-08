@@ -149,10 +149,10 @@ if __name__ == '__main__':
     sennadatadir = "../data/senna/"
     clusterdir = "../data/np/"
     
-    for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
-    #for ratio in ["sqrt"]:
-        for method in ['greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']: #'bleuComparer', 'cmComparer', 'lsaComparer',
-        #for method in ['lexicalOverlapComparer']:
+    #for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+    for ratio in ["sqrt"]:
+        #for method in ['greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']: #'bleuComparer', 'cmComparer', 'lsaComparer',
+        for method in ['npsoft']:
             datadir = "../../mead/data/ShallowSummary_ClusteringNPhraseSoftKMedoid_"+str(ratio)+"_"+method+"/"   
             fio.deleteFolder(datadir)
             ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=method, ratio=ratio)

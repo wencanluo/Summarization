@@ -8,6 +8,7 @@ import random
 import NLTKWrapper
 import SennaParser
 import porter
+import phraseClusteringKmedoid
 
 stopwords = [line.lower().strip() for line in fio.readfile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
 print "stopwords:", len(stopwords)
@@ -72,10 +73,12 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             fio.newPath(path)
             filename = path + type + '.summary'
             
+            #produce the cluster file on the fly
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
-            
-            clustersfile = clusterdir + '/' + str(week) +'/' + type + ".cluster.kmedoids."+ str(ratio) + "." +method
-            body = fio.readMatrix(clustersfile, False)
+            output = clusterdir + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method
+            weightfile = clusterdir + str(week)+ '/' + type + '.' + method
+            phraseClusteringKmedoid.getPhraseClusterAll(sennafile, weightfile, output, ratio)
+            body = fio.readMatrix(output, False)
             
             NPs = [row[0] for row in body]
             
@@ -84,28 +87,24 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
                 cluster[row[0]] = int(row[1])
             
             Summary = []
-            dict = getKeyPhrases(student_summaryList, sennafile, save2file=filename + ".keys")
             
-            keys = sorted(dict, key=dict.get, reverse = True)
+            #sort the clusters according to the number of phrases
+            dict = defaultdict(float)
+            for row in body: 
+                dict[int(row[1])] = dict[int(row[1])] + 1
             
-            added_cluster = []
+            keys = sorted(dict, key=dict.get, reverse =True)
             
             total_word = 0
             word_count = 0
             for key in keys:
-                assert(key in cluster)
-                id = cluster[key]
-                if id in added_cluster:continue
+                phrase = NPs[key]
+                if phrase in Summary: continue
                 
-                phrase = NPs[id]
                 word_count = len(phrase.split())
                 total_word = total_word + word_count
                 if total_word <= K:
-                    
-                    #Summary.append(key)
                     Summary.append(phrase)
-                    
-                    added_cluster.append(id)
             
             fio.savelist(Summary, filename)
                         
@@ -119,11 +118,12 @@ if __name__ == '__main__':
     sennadatadir = "../data/senna/"
     clusterdir = "../data/np/"
     
-    for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
-    #for ratio in ["sqrt"]:
-        for method in ['greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']: #'bleuComparer', 'cmComparer', 'lsaComparer',
-        #for method in ['lexicalOverlapComparer']:
-            datadir = "../../mead/data/ShallowSummary_ClusteringNPhraseSoftKMedoid_"+str(ratio)+"_"+method+"/"   
+    #for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+    for ratio in ["sqrt", 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+        for method in ['npsoft', 'lexicalOverlapComparer','greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim']: #'bleuComparer', 'cmComparer', 'lsaComparer',
+        #for method in ['dependencyComparerWnLeskTanim']:
+        #for method in ['npsoft']:
+            datadir = "../../mead/data/ShallowSummary_ClusteringNP_KMedoid_"+str(ratio)+"_"+method+"/"   
             fio.deleteFolder(datadir)
             ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=method, ratio=ratio)
             

@@ -330,13 +330,13 @@ def ExtractedSyntaxNP(datadir, outdir):
             output = outdir + str(week)+ '/' + type + '.key'
             fio.savelist(keys, output)
 
-def CombineKMethod(datadir, output):
+def CombineKMethod(datadir, output, methods, ratios, model_prefix):
     Header = ['method', 'lambda', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
     newbody = []
     
-    for method in ['greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']: 
-        for ratio in ["sqrt", 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
-            filename = datadir + "rouge.ShallowSummary_ClusteringNPhraseSoftKMedoid_" + str(ratio) + "_"+ method + ".txt"
+    for method in methods: 
+        for ratio in ratios:
+            filename = datadir + "rouge." + model_prefix + "_" + str(ratio) + "_"+ method + ".txt"
             head, body = fio.readMatrix(filename, hasHead=True)
             
             row = []
@@ -394,8 +394,10 @@ if __name__ == '__main__':
     #'ShallowSummary_AdjNounPhrase_Hard_NoSingleNoun', 'ShallowSummary_AdjNounPhrase_Hard_WithSingleNoun', 'ShallowSummary_AdjNounPhrase_Soft_NoSingleNoun', 'ShallowSummary_AdjNounPhrase_Soft_WithSingleNoun'
     #'ShallowSummary_SyntaxNPhraseHard', 'ShallowSummary_SyntaxNPhraseSoft'
     #'ShallowSummary_ClusteringNPhraseSoft', ShallowSummary_ClusteringSyntaxNPhraseSoft
+    #ShallowSummary_ClusteringNP_KMedoid_sqrt_lexicalOverlapComparer
+    #ShallowSummary_ClusteringNP_KMedoid_sqrt_npsoft
     
-    #GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_ClusteringNPhraseSoftKMedoid'], outputdir = "../data/" )
+    GetRougeScore(datadir = "../../mead/data/", models = ['keyphraseExtractionbasedShallowSummary'], outputdir = "../data/" )
     
     #GetRougeScoreMMR(datadir = "../../mead/data/", models = ['2011SpringReranker'], outputdir = "../data/")
     #GetRougeScore(datadir = "../../mead/data/", model = "2011Spring", outputdir = "../data/" )
@@ -406,10 +408,16 @@ if __name__ == '__main__':
     #datadir = "../../mead/data/ShallowSummary_NPhraseSoft/"
     #outdir = "../data/np/"
     #ExtractedSyntaxNP(datadir, outdir)
-    for ratio in ["sqrt", 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
-        for method in ['greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']: #'bleuComparer', 'cmComparer', 'lsaComparer',
-            GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_ClusteringNPhraseSoftKMedoid_' + str(ratio)+"_"+method], outputdir = "../data/" )
     
-    CombineKMethod("../data/", "../data/KmetroidKMethod.txt")
+    #methods = ['npsoft', 'greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']
+#     methods = ['npsoft', 'optimumComparerLSATasa']
+#     ratios = ["sqrt", 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+#     
+#     #ShallowSummary_ClusteringNP_KMedoid, ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase
+#     for ratio in ratios:
+#         for method in methods: #'bleuComparer', 'cmComparer', 'lsaComparer',
+#             GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase' + "_"+ str(ratio)+"_"+method], outputdir = "../data/" )
+#      
+#     CombineKMethod("../data/", "../data/Kmetroid-K-Method-KMedoidMalformedKeyphrase.txt", methods, ratios, 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase')
     
     print "done"

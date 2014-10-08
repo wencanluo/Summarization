@@ -3,11 +3,12 @@ import sys
 import re
 import fio
 import NLTKWrapper
+import json
 
-header = ['Timestamp', 'Course', 'Lecture', 'Your Token', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2', 'q3']
 
-WeekLecture = {"CS2610":["Lecture 4", "Lecture 5", "Lecture 6", "Lecture 7", "Lecture 8", "Lecture 9", "Lecture 10",],
-               "CS2001": ["Lecture 5"]}
+WeekLecture = {"CS2610":range(4, 40),
+               "CS2001":range(5, 40)}
                     
 def HasSummary(orig, header, summarykey):
     key = header[0]
@@ -54,13 +55,13 @@ def getTASummary(orig, header, summarykey, type='POI'):
         return []
     
     if type=='POI':
-        keyword = header[2]
+        key = 'q1'
     elif type=='MP':
-        keyword = header[3]
+        key = 'q2'
     elif type=='LP':
-        keyword = header[4]
+        key = 'q3'
     else:
-        return []
+        return None
     
     key = header[0]
     
@@ -103,31 +104,34 @@ def getStudentResponse(excelfile, course, week, type='POI'):
     return a dictionary of the students' summary, with the student id as a key
     The value is a list with each sentence an entry
     '''
-    orig = prData(excelfile, 0)
-    tokenIndex = 'Your Token'
-    couseIndex = 'Course'
-    lectureIndex = 'Lecture'
+    f = open(excelfile)
+    reflections = json.load(f)['results']
+    f.close()
+    
+    tokenIndex = 'user'
+    couseIndex = 'cid'
+    lectureIndex = 'lecture_number'
     
     summaries = {}
     
     if type=='POI':
-        key = 'Point of Interest'
+        key = 'q1'
     elif type=='MP':
-        key = 'Muddiest Point'
+        key = 'q2'
     elif type=='LP':
-        key = 'Learning Point'
+        key = 'q3'
     else:
         return None
     
-    filters = ["?", "[blank]", 'n/a', 'blank', 'none', "None"] #a classifier to predict whether the student has problem
+    filters = ["?", "[blank]", 'n/a', 'blank', 'none', "no", "nothing"] #a classifier to predict whether the student has problem
     #filters = []
     week = week-1
     
-    for k, inst in enumerate(orig._data):
+    for k, inst in enumerate(reflections):
         try:
             token = inst[tokenIndex].lower().strip()
             courseNow = inst[couseIndex].strip()
-            lecture = inst[lectureIndex].strip()
+            lecture = inst[lectureIndex]
             
             if courseNow != course: continue
             if WeekLecture[course][week] != lecture: continue
