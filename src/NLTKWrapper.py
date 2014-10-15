@@ -8,8 +8,16 @@ import porter
 punctuations = ".?!:;-()[]'\"/,"
 
 def splitSentence(paragraph):
+    sentences = []
+    paragraph = paragraph.strip()
+    paragraph = paragraph.replace("\r\n", "\n")
+    firstSplitsentences = paragraph.split("\n")
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-    return tokenizer.tokenize(paragraph)
+    
+    for s in firstSplitsentences:
+        secondspits = tokenizer.tokenize(s)
+        sentences = sentences + secondspits
+    return sentences
   
 def wordtokenizer(s, punct = True):
     if punct:

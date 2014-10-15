@@ -119,7 +119,7 @@ def getNPHard(np1, np2):
     else:
         return 0
     
-def getNPWeight(weigthdir, method='npsort'):
+def getNPWeight(weigthdir, metric='npsort', method='syntax'):
     #K is the number of words per points
     sheets = range(0,12)
     
@@ -128,7 +128,7 @@ def getNPWeight(weigthdir, method='npsort'):
         for type in ['POI', 'MP', 'LP']:
             path = weigthdir + str(week)+ '/'
             fio.newPath(path)
-            filename = path + type + '.key'
+            filename = path + type + '.'+method+'.key'
             NPs = fio.loadlist(filename)
             
             header = NPs
@@ -137,15 +137,15 @@ def getNPWeight(weigthdir, method='npsort'):
                 row = []
                 for np2 in NPs:
                     weight = 0
-                    if method == 'npsoft':
+                    if metric == 'npsoft':
                         weight = getNPSort(np1, np2)
-                    if method == 'nphard':
+                    if metric == 'nphard':
                         weight = getNPHard(np1, np2)
                     row.append(weight)
                 body.append(row)
             
             
-            fio.writeMatrix(path + type + '.' + method, body, header)
+            fio.writeMatrix(path + type + '.' + method + '.' + metric, body, header)
                         
 def ShallowSummary(excelfile, datadir, sennadatadir, K=30):
     getShallowSummary(excelfile, datadir, sennadatadir, K)
@@ -158,11 +158,14 @@ if __name__ == '__main__':
     weigthdir = "../data/np/"
     
     #datadir = "../../mead/data/ShallowSummary_NPhraseSoft/" 
-    datadir = "../../mead/data/ShallowSummary_NPhraseHard/"   
+    #datadir = "../../mead/data/ShallowSummary_NPhraseHard/"   
     #fio.deleteFolder(datadir)
     #getNPList(excelfile, sennadatadir, weigthdir)
-    getNPWeight(weigthdir, method = 'npsoft')
-    getNPWeight(weigthdir, method = 'nphard')
+    getNPWeight(weigthdir, metric = 'npsoft', method='syntax')
+    getNPWeight(weigthdir, metric = 'nphard', method='syntax')
+    
+    getNPWeight(weigthdir, metric = 'npsoft', method='chunk')
+    getNPWeight(weigthdir, metric = 'nphard', method='chunk')
     
     #print getNPSort("help", 'help')
     print 'done'

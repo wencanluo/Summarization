@@ -27,15 +27,22 @@ def isMalformed(phrase):
     
     return False
 
-def getNPs(sennafile, MalformedFlilter=False):
+def getNPs(sennafile, MalformedFlilter=False, source = None, np=None):
     np_phrase = []
+    sources = []
     
     #read senna file
     sentences = SennaParser.SennaParse(sennafile)
     
+    if len(source) != len(sentences):
+        print len(source), len(sentences), sennafile
+        
     #get NP phrases
-    for s in sentences:
-        NPs = s.getNPrases()
+    for i, s in enumerate(sentences):
+        if np=='syntax':
+            NPs = s.getSyntaxNP()
+        else:
+            NPs = s.getNPrases()
         
         for NP in NPs:
             NP = NP.lower()
@@ -44,12 +51,17 @@ def getNPs(sennafile, MalformedFlilter=False):
                 if isMalformed(NP): continue
             
             np_phrase.append(NP)
-        
+            
+            if source != None:
+                sources.append(source[i])
+    
+    if source != None:
+        return np_phrase, sources
+    
     return np_phrase
 
-def getPhraseClusterAll(sennafile, weightfile, output, ratio=None, MalformedFlilter=False):
-    
-    NPCandidates = getNPs(sennafile, MalformedFlilter)
+def getPhraseClusterAll(sennafile, weightfile, output, ratio=None, MalformedFlilter=False, source=None, np=None):
+    NPCandidates, sources = getNPs(sennafile, MalformedFlilter, source=source, np=np)
     
     NPs, matrix = fio.readMatrix(weightfile, hasHead = True)
     
@@ -83,6 +95,8 @@ def getPhraseClusterAll(sennafile, weightfile, output, ratio=None, MalformedFlil
         
         row = []
         for NP2 in NPCandidates:
+            if NP2 not in index:
+                print NP2, weightfile, np
             j = index[NP2]
             row.append(matrix[i][j])
             

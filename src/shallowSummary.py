@@ -14,7 +14,7 @@ print "stopwords:", len(stopwords)
 
 stopwords = stopwords + ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']
 
-def getKeyNgram(student_summaryList, K, remove_stop = False, N = 5, weighted = False, M=1, save2file=None):
+def getKeyNgram(student_summaryList, K=None, remove_stop = False, N = 5, weighted = False, M=1, save2file=None, ids=None):
     #K is the number of words to be extracted
     #N is the max number of Ngram
     key_ngrams = []

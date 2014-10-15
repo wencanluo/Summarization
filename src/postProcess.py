@@ -6,8 +6,13 @@ import xml.etree.ElementTree as ET
 import numpy as np
 from collections import defaultdict
 import NLTKWrapper
+import phraseClusteringKmedoid
+import json
+import shallowSummary
 
 from Survey import *
+                    
+            
                     
 def formatSummaryOutput(excelfile, datadir, output):
     reload(sys)
@@ -315,21 +320,84 @@ def TASummaryCoverage(excelfile, datadir, output):
     
     fio.PrintDict(uncoveried, True)
 
-def ExtractedSyntaxNP(datadir, outdir):
+def ExtractNP(datadir, outdir, method="syntax"):
     sheets = range(0,12)
     
     for i, sheet in enumerate(sheets):
         week = i + 1
         
         for type in ['POI', 'MP', 'LP']:
+            
             file = datadir + str(week)+ '/' + type + '.summary.keys'
             
             dict = fio.LoadDict(file, 'float')
             keys = sorted(dict, key=dict.get, reverse = True)
             
-            output = outdir + str(week)+ '/' + type + '.key'
+            fio.newPath(outdir + str(week)+ '/')
+            output = outdir + str(week)+ '/' + type + '.'+method+'.key'
             fio.savelist(keys, output)
 
+def ExtractNPSource(excelfile, sennadatadir, outdir, method="syntax"):
+    sheets = range(0,12)
+    
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        
+        orig = prData(excelfile, sheet)
+        
+        for type in ['POI', 'MP', 'LP']:
+            
+            sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
+            
+            student_summaryList = getStudentResponseList(orig, header, summarykey, type, withSource=True)
+            ids = [summary[1] for summary in student_summaryList]
+            NPs, sources = phraseClusteringKmedoid.getNPs(sennafile, MalformedFlilter=False, source=ids, np=method)
+            
+            dict = {}
+            for np, id in zip(NPs, sources):
+                if np not in dict:
+                    dict[np] = []
+                dict[np].append(id)
+            
+            fileout = outdir + str(week)+ '/' + type + '.'+method+'.keys.source'
+            
+            with open(fileout, 'w') as outfile:
+                json.dump(dict, outfile)
+
+def ExtractUnigramSource(excelfile, outdir, method="unigram"):
+    sheets = range(0,12)
+    
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        
+        orig = prData(excelfile, sheet)
+        
+        for type in ['POI', 'MP', 'LP']:
+            
+            sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
+            
+            student_summaryList = getStudentResponseList(orig, header, summarykey, type, withSource=True)
+            
+            dict = {}
+            for summary, id in student_summaryList:
+                ngrams = NLTKWrapper.getNgram(summary, 1)
+                for ngram in ngrams:
+                    ngram = ngram.lower()
+                    if ngram not in dict:
+                        dict[ngram] = []
+                    dict[ngram].append(id)
+            
+            fileout = outdir + str(week)+ '/' + type + '.'+method+'.keys.source'
+            
+            with open(fileout, 'w') as outfile:
+                json.dump(dict, outfile)
+               
 def CombineKMethod(datadir, output, methods, ratios, model_prefix):
     Header = ['method', 'lambda', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
     newbody = []
@@ -356,7 +424,224 @@ def CombineKMethod(datadir, output, methods, ratios, model_prefix):
     newbody.append(row)
     
     fio.writeMatrix(output, newbody, Header)
-                    
+
+def getSingleCoverage(entries, sources, N):
+    covered = []
+    
+    for entry in entries:
+        if entry not in sources:
+            print entry
+            continue
+        covered = covered + sources[entry]
+
+    return len(set(covered))*1.0/N
+
+
+def getSingleQuality(entries, sources, qualitydict, N):
+    scores = []
+    for entry in entries:
+        if entry not in sources:
+            print entry
+            continue
+        
+        score = 0.0
+        for id in sources[entry]:
+            if id not in qualitydict: continue
+            if qualitydict[id] == 'a': continue
+            
+            score = score + float(qualitydict[id])
+        score = score / len(sources[entry])
+        
+        scores.append(score)
+
+    return np.mean(scores)
+
+def getSingleDiversity(entries, sources):
+    covered = []
+    
+    for entry in entries:
+        if entry not in sources:
+            print entry
+            continue
+        covered = covered + sources[entry]
+        
+    covered = set(covered) #get all covered students
+    
+    #for each of the student, get the probability
+    dict = defaultdict(float)
+    for entry in entries:
+        if entry not in sources:continue
+        ids = sources[entry]
+        
+        for id in ids:
+            dict[id] = dict[id] + 1.0
+    
+    N = len(covered)
+    
+    for k, v in dict.items():#normailize to probablity
+        dict[k] = v/N
+        assert(dict[k] <= 1.0)
+    
+    #get the entropy
+    entropy = 0
+    for k, v in dict.items(): #normailize to probablity
+        entropy = entropy - v * np.log(v)
+        
+    return entropy
+
+def getCoverage(modelname, excelfile, npdir, method="unigram"):
+    sheets = range(0,12)
+    
+    newhead = ['week', 'POI', 'MP', 'LP']
+    newbody = []
+    
+    datadir = "../../mead/data/" + modelname + '/'
+    
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        
+        orig = prData(excelfile, sheet)
+        
+        row = []
+        row.append(week)
+        
+        for type in ['POI', 'MP', 'LP']:
+            path = datadir + str(week)+ '/'
+            summaryfile = path + type + '.summary'
+            summaries = [line.strip() for line in fio.readfile(summaryfile)]
+            
+            sourcefile = npdir + str(week)+ '/' + type + '.'+method+'.keys.source'
+            student_summaryList = getStudentResponseList(orig, header, summarykey, type, withSource=True)
+            N = getValidStudentNum(student_summaryList)
+            
+            print sourcefile, summaryfile
+            
+            with open(sourcefile, 'r') as infile:
+                dict = json.load(infile)
+            
+            coverage = getSingleCoverage(summaries, dict, N)
+            assert(coverage <= 1.0)
+            row.append(coverage)
+        
+        newbody.append(row)
+    
+    row = []
+    row.append("average")
+    for i in range(1, len(newhead)):
+        scores = [float(xx[i]) for xx in newbody]
+        row.append(np.mean(scores))
+    newbody.append(row)
+        
+    file = "../data/coverage." + modelname + '.txt'
+    fio.writeMatrix(file, newbody, newhead)
+
+def getDiversity(modelname, excelfile, npdir, method="unigram"):
+    sheets = range(0,12)
+    
+    newhead = ['week', 'POI', 'MP', 'LP']
+    newbody = []
+    
+    datadir = "../../mead/data/" + modelname + '/'
+    
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        
+        orig = prData(excelfile, sheet)
+        
+        row = []
+        row.append(week)
+        
+        for type in ['POI', 'MP', 'LP']:
+            path = datadir + str(week)+ '/'
+            summaryfile = path + type + '.summary'
+            summaries = [line.strip() for line in fio.readfile(summaryfile)]
+            
+            sourcefile = npdir + str(week)+ '/' + type + '.'+method+'.keys.source'
+            student_summaryList = getStudentResponseList(orig, header, summarykey, type, withSource=True)
+            N = getValidStudentNum(student_summaryList)
+            
+            print sourcefile, summaryfile
+            
+            with open(sourcefile, 'r') as infile:
+                dict = json.load(infile)
+            
+            diversity = getSingleDiversity(summaries, dict)
+            row.append(diversity)
+        
+        newbody.append(row)
+    
+    row = []
+    row.append("average")
+    for i in range(1, len(newhead)):
+        scores = [float(xx[i]) for xx in newbody]
+        row.append(np.mean(scores))
+    newbody.append(row)
+        
+    file = "../data/diversity." + modelname + '.txt'
+    fio.writeMatrix(file, newbody, newhead)
+
+
+def getHighQualityRatio(modelname, excelfile, npdir, method="unigram"):
+    sheets = range(0,12)
+    
+    newhead = ['week', 'MP']
+    newbody = []
+    
+    datadir = "../../mead/data/" + modelname + '/'
+    
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        
+        orig = prData(excelfile, sheet)
+        
+        row = []
+        row.append(week)
+        
+        for type in ['MP']:
+            path = datadir + str(week)+ '/'
+            summaryfile = path + type + '.summary'
+            summaries = [line.strip() for line in fio.readfile(summaryfile)]
+            
+            qualitydict = getStudentQuality(orig, header)
+            
+            sourcefile = npdir + str(week)+ '/' + type + '.'+method+'.keys.source'
+            student_summaryList = getStudentResponseList(orig, header, summarykey, type, withSource=True)
+            N = getValidStudentNum(student_summaryList)
+            
+            print sourcefile, summaryfile
+            
+            with open(sourcefile, 'r') as infile:
+                dict = json.load(infile)
+            
+            coverage = getSingleQuality(summaries, dict, qualitydict, N)
+            row.append(coverage)
+        
+        newbody.append(row)
+    
+    row = []
+    row.append("average")
+    for i in range(1, len(newhead)):
+        scores = [float(xx[i]) for xx in newbody]
+        row.append(np.mean(scores))
+    newbody.append(row)
+        
+    file = "../data/quality." + modelname + '.txt'
+    fio.writeMatrix(file, newbody, newhead)
+            
+def getCoverageDiversity(modelname, excelfile, npdir, method="unigram"):
+    getCoverage(modelname, excelfile, npdir, method)
+    getDiversity(modelname, excelfile, npdir, method)
+    getHighQualityRatio(modelname, excelfile, npdir, method)
+                              
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     output = "../data/2011Spring_overivew.txt"
@@ -372,6 +657,30 @@ if __name__ == '__main__':
     rougescore = "../data/2011Spring_rouge_single.txt"
     rougescore_multiple = "../data/2011Spring_rouge_multiple.txt"
     
+    sennadatadir = "../data/senna/"
+    
+    npdir = "../data/np/"
+    #ExtractUnigramQuality(excelfile, sennadatadir, npdir, 'syntax')
+    
+    modelname = 'ShallowSummary_unigram_remove_stop'
+    #getCoverageDiversity(modelname, excelfile, npdir, method = 'unigram')
+    getHighQualityRatio(modelname, excelfile, npdir, method = 'unigram')
+     
+    modelname = 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_0.6_npsoft_chunk'
+    #getCoverageDiversity(modelname, excelfile, npdir, method = 'chunk')
+    getHighQualityRatio(modelname, excelfile, npdir, method = 'chunk')
+      
+    modelname = 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_0.2_optimumComparerLSATasa_chunk'
+    #getCoverageDiversity(modelname, excelfile, npdir, method = 'chunk')
+    getHighQualityRatio(modelname, excelfile, npdir, method = 'chunk')
+    
+    #datadir = '../data/ShallowSummary_unigram_remove_stop.txt'
+    #getCoverage(excelfile, npdir, output, method = 'unigram')
+    
+    
+    #ExtractNPSource(excelfile, sennadatadir, outdir, 'syntax')
+    #ExtractNPSource(excelfile, sennadatadir, outdir, 'chunk')
+    #ExtractUnigramSource(excelfile, outdir)
     #load(excelfile, output)
     #getSummaryOverview(excelfile, summaryoutput)
     
@@ -397,17 +706,18 @@ if __name__ == '__main__':
     #ShallowSummary_ClusteringNP_KMedoid_sqrt_lexicalOverlapComparer
     #ShallowSummary_ClusteringNP_KMedoid_sqrt_npsoft
     
-    GetRougeScore(datadir = "../../mead/data/", models = ['keyphraseExtractionbasedShallowSummary'], outputdir = "../data/" )
+    #GetRougeScore(datadir = "../../mead/data/", models = ['keyphraseExtractionbasedShallowSummary'], outputdir = "../data/" )
     
     #GetRougeScoreMMR(datadir = "../../mead/data/", models = ['2011SpringReranker'], outputdir = "../data/")
     #GetRougeScore(datadir = "../../mead/data/", model = "2011Spring", outputdir = "../data/" )
     #GetRougeScore(datadir, rougescore)
     #TASummaryCoverage(excelfile, datadir, output="../data/coverage.txt")
     #print getNgram("1 2 3 4 5 6", 6)
+
     
-    #datadir = "../../mead/data/ShallowSummary_NPhraseSoft/"
+    #datadir = "../../mead/data/ShallowSummary_NPhraseHard/"
     #outdir = "../data/np/"
-    #ExtractedSyntaxNP(datadir, outdir)
+    #ExtractNP(datadir, outdir, 'chunk')
     
     #methods = ['npsoft', 'greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']
 #     methods = ['npsoft', 'optimumComparerLSATasa']

@@ -3,7 +3,9 @@ import sys
 import re
 import fio
 import NLTKWrapper
-                    
+
+filters = ["?", "[blank]", 'n/a', 'blank', 'nothing'] #a classifier to predict whether the student has problem
+                        
 def HasSummary(orig, header, summarykey):
     key = header[0]
     for k, inst in enumerate(orig._data):
@@ -92,7 +94,30 @@ def WriteTASummary(excelfile, datadir):
             
             #only save the first 3 points
             fio.savelist(summary, filename)
+
+def getStudentQuality(orig, header):
+    '''
+    return a dictionary of the students' summary, with the student id as a key
+    The value is a list with each sentence an entry
+    '''
+    dict = {}
+    
+    key = "Muddiest Point Coding (0-3; a = \"I understood everything\")"
+        
+    for k, inst in enumerate(orig._data):
+        try:
+            value = inst['ID'].lower().strip()
+            if value == 'top answers': continue
             
+            if len(value) > 0:
+                content = inst[key]
+                dict[value] = content
+            else:
+                break
+        except Exception:
+            return dict
+    return dict
+           
 def getStudentResponse(orig, header, summarykey=None, type='POI'):
     '''
     return a dictionary of the students' summary, with the student id as a key
@@ -108,10 +133,7 @@ def getStudentResponse(orig, header, summarykey=None, type='POI'):
         key = header[4]
     else:
         return None
-    
-    filters = ["?", "[blank]", 'n/a', 'blank'] #a classifier to predict whether the student has problem
-    #filters = []
-    
+        
     for k, inst in enumerate(orig._data):
         try:
             value = inst['ID'].lower().strip()
@@ -120,7 +142,7 @@ def getStudentResponse(orig, header, summarykey=None, type='POI'):
             if len(value) > 0:
                 content = inst[key].strip()
                 if content.lower() in filters: continue
-                if len(content) > 0:                    
+                if len(content) > 0:   
                     summary = NLTKWrapper.splitSentence(content)
                     summaries[value] = summary
             else:
@@ -129,14 +151,18 @@ def getStudentResponse(orig, header, summarykey=None, type='POI'):
             return summaries
     return summaries
 
-def getStudentResponseList(orig, header, summarykey, type='POI'):
+def getStudentResponseList(orig, header, summarykey, type='POI', withSource=False):
     student_summaries = getStudentResponse(orig, header, summarykey, type)
     student_summaryList = []
     
-    for summaryList in student_summaries.values():
+    for id, summaryList in student_summaries.items():
         for s in summaryList:
-            student_summaryList.append(s)
-    return student_summaryList
+            student_summaryList.append((s,id))
+            
+    if withSource:
+        return student_summaryList
+    else:
+        return [summary[0] for summary in student_summaryList]
                     
 def getStudentSummaryNum(orig, header, summarykey, type='POI'):
     if type=='POI':
@@ -186,6 +212,12 @@ def getStudentNum(orig, header, summarykey):
         except Exception:
             return 0
     return count-1
+
+def getValidStudentNum(student_summaryList):
+    ids = []
+    for _, id in student_summaryList:
+        ids.append(id)
+    return len(set(ids))
 
 def getMeadSummary(datadir, type):
     #return a list of summaries, week by week. The summary for each week is also a list
@@ -253,6 +285,9 @@ def getStudentResponses4Senna(excelfile, datadir):
         for type in ['POI', 'MP', 'LP']:
             student_summaryList = getStudentResponseList(orig, header, summarykey, type)
             filename = datadir + "senna." + str(week) + "." + type + ".input"
+            
+            fio.savelist(student_summaryList, filename + ".2")
+            student_summaryList = [summary[0] for summary in student_summaryList]
             fio.savelist(student_summaryList, filename)
 
 def getStudentResponses4Maui(excelfile, datadir):
@@ -269,13 +304,16 @@ def getStudentResponses4Maui(excelfile, datadir):
         for type in ['POI', 'MP', 'LP']:
             student_summaryList = getStudentResponseList(orig, header, summarykey, type)
             filename = datadir + "" + str(week) + "." + type + ".txt"
-            fio.savelist(student_summaryList, filename)
+            fio.savelist(student_summaryList, filename, ".\n")
                                     
 if __name__ == '__main__':
     
     excelfile = "../data/2011Spring.xls"
     datadir = "../../Maui1.2/data/2011Spring/"
+    sennadir = "../data/senna/"
     
-    fio.newPath(datadir)
-    getStudentResponses4Maui(excelfile, datadir)
+    #fio.newPath(datadir)
+    #getStudentResponses4Maui(excelfile, datadir)
+    
+    getStudentResponses4Senna(excelfile, sennadir)
     

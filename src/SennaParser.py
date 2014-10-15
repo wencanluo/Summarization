@@ -85,7 +85,7 @@ if __name__ == "__main__":
 	if len(sys.argv) != 2:
 		#print "Incorrect Input. Usage: python SennaParser.py filename"
 		#sys.exit()
-		filename = '../20_Data/TextData/outputFromSenna.txt'
+		filename = '../data/senna/senna.2.MP.output'
 	else:
 		filename = sys.argv[1]
 		

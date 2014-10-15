@@ -135,8 +135,8 @@ if __name__ == '__main__':
     
     datadir = "../../mead/data/ShallowSummary_SyntaxNPhraseSoft/" 
     #datadir = "../../mead/data/ShallowSummary_SyntaxNPhraseHard/"   
-    #fio.deleteFolder(datadir)
-    #ShallowSummary(excelfile, datadir, sennadatadir, K=30)
+    fio.deleteFolder(datadir)
+    ShallowSummary(excelfile, datadir, sennadatadir, K=30)
         
     print "done"
     

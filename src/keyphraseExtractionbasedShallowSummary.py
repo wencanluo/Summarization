@@ -48,4 +48,5 @@ if __name__ == '__main__':
     keyhphrasedir = "../../Maui1.2/data/2011Spring/"
     datadir = "../../mead/data/keyphraseExtractionbasedShallowSummary/"  
     
+    fio.deleteFolder(datadir)
     ShallowSummary(excelfile, datadir, keyhphrasedir, K=30)    

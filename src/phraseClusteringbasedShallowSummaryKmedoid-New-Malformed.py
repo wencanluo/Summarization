@@ -11,11 +11,11 @@ import porter
 import phraseClusteringKmedoid
 
 stopwords = [line.lower().strip() for line in fio.readfile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
-print "stopwords:", len(stopwords)
+#print "stopwords:", len(stopwords)
 
 stopwords = stopwords + ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']
                             
-def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=None, ratio=None):
+def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=None, ratio=None, np=None):
     #K is the number of words per points
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
     summarykey = "Top Answers"
@@ -29,8 +29,12 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
         
         for type in ['POI', 'MP', 'LP']:
             print excelfile, sheet, type
-            student_summaryList = getStudentResponseList(orig, header, summarykey, type)
-
+            
+            student_summaryList = getStudentResponseList(orig, header, summarykey, type, withSource=True)
+            
+            ids = [summary[1] for summary in student_summaryList]
+            summaries = [summary[0] for summary in student_summaryList] 
+                            
             path = folder + str(week)+ '/'
             fio.newPath(path)
             filename = path + type + '.summary'
@@ -38,8 +42,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             #produce the cluster file on the fly
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
             output = clusterdir + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method
-            weightfile = clusterdir + str(week)+ '/' + type + '.' + method
-            phraseClusteringKmedoid.getPhraseClusterAll(sennafile, weightfile, output, ratio, MalformedFlilter=True)
+            weightfile = clusterdir + str(week)+ '/' + type + '.' + np + '.' + method
+            phraseClusteringKmedoid.getPhraseClusterAll(sennafile, weightfile, output, ratio, MalformedFlilter=True, source=ids, np=np)
             body = fio.readMatrix(output, False)
             
             NPs = [row[0] for row in body]
@@ -70,8 +74,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             
             fio.savelist(Summary, filename)
                         
-def ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=None, ratio=None):
-    getShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K, method, ratio)
+def ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=None, ratio=None, np=None):
+    getShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K, method, ratio, np)
     WriteTASummary(excelfile, datadir)
         
 if __name__ == '__main__':
@@ -82,12 +86,14 @@ if __name__ == '__main__':
     
     #for ratio in ["sqrt"]:
     for ratio in ["sqrt", 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
-        for method in ['optimumComparerLSATasa']: #'bleuComparer', 'cmComparer', 'lsaComparer',
+        #for method in ['optimumComparerLSATasa']: #'bleuComparer', 'cmComparer', 'lsaComparer',
         #for method in ['dependencyComparerWnLeskTanim']:
-        #for method in ['npsoft']:
-            datadir = "../../mead/data/ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_"+str(ratio)+"_"+method+"/"   
-            fio.deleteFolder(datadir)
-            ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=method, ratio=ratio)
+        for method in ['npsoft', 'optimumComparerLSATasa']:
+            #for np in ['chunk', 'syntax']:
+            for np in ['chunk']:
+                datadir = "../../mead/data/ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_"+str(ratio)+"_"+method+"_"+np+"/"   
+                fio.deleteFolder(datadir)
+                ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=method, ratio=ratio, np=np)
             
     print "done"
 
