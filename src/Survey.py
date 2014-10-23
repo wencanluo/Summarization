@@ -305,7 +305,30 @@ def getStudentResponses4Maui(excelfile, datadir):
             student_summaryList = getStudentResponseList(orig, header, summarykey, type)
             filename = datadir + "" + str(week) + "." + type + ".txt"
             fio.savelist(student_summaryList, filename, ".\n")
-                                    
+
+def getCandidatePhrases(dir):
+    sheets = range(0,12)
+    
+    numbers = []
+    
+    length = []
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        filename = dir + str(week) + ".txt"
+        
+        phrases = fio.readfile(filename)
+        #print len(phrases)
+        numbers.append(len(phrases))
+        for phrase in phrases:
+            n = len(phrase.split())
+            if n>10:
+                print phrase
+            length.append(len(phrase.split()))
+    
+    #fio.PrintList(numbers, "\n")
+    fio.PrintList(length, ",")
+                                           
 if __name__ == '__main__':
     
     excelfile = "../data/2011Spring.xls"
@@ -315,5 +338,7 @@ if __name__ == '__main__':
     #fio.newPath(datadir)
     #getStudentResponses4Maui(excelfile, datadir)
     
-    getStudentResponses4Senna(excelfile, sennadir)
+    #getStudentResponses4Senna(excelfile, sennadir)
+    
+    getCandidatePhrases("../data/phrases/")
     
