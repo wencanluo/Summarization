@@ -3,7 +3,7 @@ import sys
 import re
 import fio
 import xml.etree.ElementTree as ET
-import numpy as np
+import numpy
 from collections import defaultdict
 import NLTKWrapper
 import phraseClusteringKmedoid
@@ -53,6 +53,7 @@ def formatSummaryOutput(excelfile, datadir, output):
 
 def GetRougeScore(datadir, models, outputdir):
     for model in models:
+        print model
         sheets = range(0,12)
         types = ['POI', 'MP', 'LP']
         scores = ['ROUGE-1','ROUGE-2', 'ROUGE-SUX']
@@ -85,7 +86,7 @@ def GetRougeScore(datadir, models, outputdir):
         row.append("average")
         for i in range(1, len(header)):
             scores = [float(xx[i]) for xx in body]
-            row.append(np.mean(scores))
+            row.append(numpy.mean(scores))
         body.append(row)
         
         fio.writeMatrix(outputdir + "rouge." + model + ".txt", body, header)
@@ -128,8 +129,8 @@ def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
             arow.append('mmr_lambda_'+r)
             for i in range(1, len(header)):
                 ave = [float(xx[i]) for xx in body]
-                row.append(np.mean(ave))
-                arow.append(np.mean(ave))
+                row.append(numpy.mean(ave))
+                arow.append(numpy.mean(ave))
             body.append(row)
             averagebody.append(arow)
   
@@ -180,7 +181,7 @@ def getTAWordCountDistribution(excelfile, output):
                 counts[type][summary]  = len(summary.split())
     
     for type in ['POI', 'MP', 'LP']:
-        print np.max(counts[type].values()),'\t',np.min(counts[type].values()),'\t',np.mean(counts[type].values()),'\t',np.median(counts[type].values()),'\t',np.std(counts[type].values())
+        print numpy.max(counts[type].values()),'\t',numpy.min(counts[type].values()),'\t',numpy.mean(counts[type].values()),'\t',numpy.median(counts[type].values()),'\t',numpy.std(counts[type].values())
         #fio.PrintList(counts[type].values(), sep='\t')
         #fio.PrintDict(counts[type], True)
         #print
@@ -197,7 +198,7 @@ def getMeadAverageWordCount(summary, output):
     fio.PrintList(["Type", "Max", "Min", "Mean", "Median", "Std"], "\t")
     for type in ['POI', 'MP', 'LP']:
         #fio.PrintList(counts[type].values(), sep=',')
-        print type,'\t',np.max(counts[type].values()),'\t',np.min(counts[type].values()),'\t',np.mean(counts[type].values()),'\t',np.median(counts[type].values()),'\t',np.std(counts[type].values())
+        print type,'\t',numpy.max(counts[type].values()),'\t',numpy.min(counts[type].values()),'\t',numpy.mean(counts[type].values()),'\t',numpy.median(counts[type].values()),'\t',numpy.std(counts[type].values())
 
 def getStudentResponseAverageWords(excelfile, output):
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
@@ -222,8 +223,8 @@ def getStudentResponseAverageWords(excelfile, output):
                 for s in summaryList:
                     counts[type][s] = len(s.split())
         
-            row.append(np.mean(counts[type].values()))
-            row.append(np.std(counts[type].values()))
+            row.append(numpy.mean(counts[type].values()))
+            row.append(numpy.std(counts[type].values()))
         body.append(row)
             
     fio.writeMatrix(output, body, ['Week', 'POI', '', 'MP', '', 'LP', '']) 
@@ -251,7 +252,7 @@ def getStudentResponseWordCountDistribution(excelfile, output):
             
     for type in ['POI', 'MP', 'LP']:
     #for type in ['LP']:
-        print np.max(counts[type].values()),'\t',np.min(counts[type].values()),'\t',np.mean(counts[type].values()),'\t',np.median(counts[type].values()),'\t',np.std(counts[type].values())
+        print numpy.max(counts[type].values()),'\t',numpy.min(counts[type].values()),'\t',numpy.mean(counts[type].values()),'\t',numpy.median(counts[type].values()),'\t',numpy.std(counts[type].values())
         #fio.PrintList(counts[type].values(), sep=',')
         #fio.PrintDict(counts[type], True)
         #print
@@ -398,32 +399,62 @@ def ExtractUnigramSource(excelfile, outdir, method="unigram"):
             with open(fileout, 'w') as outfile:
                 json.dump(dict, outfile)
                
-def CombineKMethod(datadir, output, methods, ratios, model_prefix):
-    Header = ['method', 'lambda', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
+def CombineKMethod(datadir, output, methods, ratios, nps, model_prefix):
+    Header = ['np', 'method', 'lambda', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
     newbody = []
     
-    for method in methods: 
-        for ratio in ratios:
-            filename = datadir + "rouge." + model_prefix + "_" + str(ratio) + "_"+ method + ".txt"
-            head, body = fio.readMatrix(filename, hasHead=True)
-            
-            row = []
-            row.append(method)
-            row.append(ratio)
-            row = row + body[-1][1:]
-            
-            newbody.append(row)
+    for np in nps:
+        for method in methods: 
+            for ratio in ratios:
+                filename = datadir + "rouge." + model_prefix + "_" + str(ratio) + "_"+ method + '_' + np + ".txt"
+                head, body = fio.readMatrix(filename, hasHead=True)
+                
+                row = []
+                row.append(np)
+                row.append(method)
+                row.append(ratio)
+                row = row + body[-1][1:]
+                
+                newbody.append(row)
             
     #get the max
     row = []
     row.append("max")
     row.append("")
-    for i in range(2, len(Header)):
+    row.append("")
+    for i in range(3, len(Header)):
         scores = [float(xx[i]) for xx in newbody]
-        row.append(np.max(scores))
+        row.append(numpy.max(scores))
     newbody.append(row)
     
     fio.writeMatrix(output, newbody, Header)
+    
+def CombineRouges(models, outputdir):
+    Header = ['method', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
+    newbody = []
+    
+    for model in models: 
+        filename = outputdir + "rouge." + model + ".txt"
+        head, body = fio.readMatrix(filename, hasHead=True)
+        
+        row = []
+        row.append(model)
+        row = row + body[-1][1:]
+        
+        newbody.append(row)
+            
+    #get the max
+    row = []
+    row.append("max")
+    for i in range(1, len(Header)):
+        scores = [float(xx[i]) for xx in newbody]
+        row.append(numpy.max(scores))
+    newbody.append(row)
+    
+    newname = outputdir + "_".join(models) + ".txt"
+    if len(newname) > 50:
+        newname = newname[:50] + "_50.txt"
+    fio.writeMatrix(newname, newbody, Header)    
 
 def getSingleCoverage(entries, sources, N):
     covered = []
@@ -454,7 +485,7 @@ def getSingleQuality(entries, sources, qualitydict, N):
         
         scores.append(score)
 
-    return np.mean(scores)
+    return numpy.mean(scores)
 
 def getSingleDiversity(entries, sources):
     covered = []
@@ -485,7 +516,7 @@ def getSingleDiversity(entries, sources):
     #get the entropy
     entropy = 0
     for k, v in dict.items(): #normailize to probablity
-        entropy = entropy - v * np.log(v)
+        entropy = entropy - v * numpy.log(v)
         
     return entropy
 
@@ -532,7 +563,7 @@ def getCoverage(modelname, excelfile, npdir, method="unigram"):
     row.append("average")
     for i in range(1, len(newhead)):
         scores = [float(xx[i]) for xx in newbody]
-        row.append(np.mean(scores))
+        row.append(numpy.mean(scores))
     newbody.append(row)
         
     file = "../data/coverage." + modelname + '.txt'
@@ -580,7 +611,7 @@ def getDiversity(modelname, excelfile, npdir, method="unigram"):
     row.append("average")
     for i in range(1, len(newhead)):
         scores = [float(xx[i]) for xx in newbody]
-        row.append(np.mean(scores))
+        row.append(numpy.mean(scores))
     newbody.append(row)
         
     file = "../data/diversity." + modelname + '.txt'
@@ -631,7 +662,7 @@ def getHighQualityRatio(modelname, excelfile, npdir, method="unigram"):
     row.append("average")
     for i in range(1, len(newhead)):
         scores = [float(xx[i]) for xx in newbody]
-        row.append(np.mean(scores))
+        row.append(numpy.mean(scores))
     newbody.append(row)
         
     file = "../data/quality." + modelname + '.txt'
@@ -662,17 +693,17 @@ if __name__ == '__main__':
     npdir = "../data/np/"
     #ExtractUnigramQuality(excelfile, sennadatadir, npdir, 'syntax')
     
-    modelname = 'ShallowSummary_unigram_remove_stop'
-    #getCoverageDiversity(modelname, excelfile, npdir, method = 'unigram')
-    getHighQualityRatio(modelname, excelfile, npdir, method = 'unigram')
-     
-    modelname = 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_0.6_npsoft_chunk'
-    #getCoverageDiversity(modelname, excelfile, npdir, method = 'chunk')
-    getHighQualityRatio(modelname, excelfile, npdir, method = 'chunk')
-      
-    modelname = 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_0.2_optimumComparerLSATasa_chunk'
-    #getCoverageDiversity(modelname, excelfile, npdir, method = 'chunk')
-    getHighQualityRatio(modelname, excelfile, npdir, method = 'chunk')
+#     modelname = 'ShallowSummary_unigram_remove_stop'
+#     #getCoverageDiversity(modelname, excelfile, npdir, method = 'unigram')
+#     getHighQualityRatio(modelname, excelfile, npdir, method = 'unigram')
+#      
+#     modelname = 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_0.6_npsoft_chunk'
+#     #getCoverageDiversity(modelname, excelfile, npdir, method = 'chunk')
+#     getHighQualityRatio(modelname, excelfile, npdir, method = 'chunk')
+#       
+#     modelname = 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_0.2_optimumComparerLSATasa_chunk'
+#     #getCoverageDiversity(modelname, excelfile, npdir, method = 'chunk')
+#     getHighQualityRatio(modelname, excelfile, npdir, method = 'chunk')
     
     #datadir = '../data/ShallowSummary_unigram_remove_stop.txt'
     #getCoverage(excelfile, npdir, output, method = 'unigram')
@@ -706,7 +737,8 @@ if __name__ == '__main__':
     #ShallowSummary_ClusteringNP_KMedoid_sqrt_lexicalOverlapComparer
     #ShallowSummary_ClusteringNP_KMedoid_sqrt_npsoft
     
-    #GetRougeScore(datadir = "../../mead/data/", models = ['keyphraseExtractionbasedShallowSummary'], outputdir = "../data/" )
+    #GetRougeScore(datadir = "../../mead/data/", models = ['PhraseMead_chunk', 'PhraseMead_syntax', 'PhraseMead_candidate', 'PhraseMead_candidatestemming'], outputdir = "../data/" )
+    CombineRouges(models = ['ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_0.4_optimumComparerLSATasa_chunk', 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_0.1_optimumComparerLSATasa_syntax', 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_0.8_npsoft_candidatestemming'], outputdir = "../data/")
     
     #GetRougeScoreMMR(datadir = "../../mead/data/", models = ['2011SpringReranker'], outputdir = "../data/")
     #GetRougeScore(datadir = "../../mead/data/", model = "2011Spring", outputdir = "../data/" )
@@ -715,19 +747,24 @@ if __name__ == '__main__':
     #print getNgram("1 2 3 4 5 6", 6)
 
     
-    #datadir = "../../mead/data/ShallowSummary_NPhraseHard/"
-    #outdir = "../data/np/"
-    #ExtractNP(datadir, outdir, 'chunk')
+#     datadir = "../../mead/data/ShallowSummary_PhraseCandidateSoft_default/"
+#     outdir = "../data/np/"
+#     ExtractNP(datadir, outdir, 'candidate')
+#     
+#     datadir = "../../mead/data/ShallowSummary_PhraseCandidateSoft_stemming/"
+#     outdir = "../data/np/"
+#     ExtractNP(datadir, outdir, 'candidatestemming')
     
     #methods = ['npsoft', 'greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']
 #     methods = ['npsoft', 'optimumComparerLSATasa']
 #     ratios = ["sqrt", 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-#     
+#     nps = ['chunk', 'syntax','candidate', 'candidatestemming']
 #     #ShallowSummary_ClusteringNP_KMedoid, ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase
 #     for ratio in ratios:
 #         for method in methods: #'bleuComparer', 'cmComparer', 'lsaComparer',
-#             GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase' + "_"+ str(ratio)+"_"+method], outputdir = "../data/" )
-#      
-#     CombineKMethod("../data/", "../data/Kmetroid-K-Method-KMedoidMalformedKeyphrase.txt", methods, ratios, 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase')
-    
+#             for np in nps:
+#                 GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase' + "_"+ str(ratio)+"_"+method+"_"+np], outputdir = "../data/" )
+#       
+#     CombineKMethod("../data/", "../data/Kmetroid-K-Method-NP-KMedoidMalformedKeyphrase.txt", methods, ratios, nps, 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase')
+#     
     print "done"

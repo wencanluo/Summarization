@@ -10,9 +10,27 @@ def KCluster(data, K=2):
 
 
 def KMedoidCluster(distance, K=2):
-    clusterid, error, nfound = kmedoids(distance, nclusters=K, npass=1, initialid=None)
+    if K==1:
+        return [0]*len(distance)
     
-    return clusterid
+    if len(distance) == 1:
+        clusterid = [0]
+        return clusterid
+    
+    try:
+        clusterid, error, nfound = kmedoids(distance, nclusters=K, npass=3, initialid=None)
+        return clusterid
+    except RuntimeError as e:
+        print K
+        print distance
+        print e
+        exit()
+    except ValueError as e:
+        print K
+        print distance
+        print e
+        exit()
+
 
 if __name__ == '__main__':
     
@@ -26,9 +44,11 @@ if __name__ == '__main__':
         [3.5,4.5],
     ]
     
-    distance = distancematrix(data, mask=None, weight=None, transpose=0, dist='e')
-    
-    clusterid = KMedoidCluster(distance, 3) 
+    #distance = numpy.array([[0.3, 1, 1, 0.3],[1, 0.3, 1, 1.0],[1, 1, 0.3, 1],[0.3, 1, 1, 0.3]])
+    distance = numpy.array([[0.3, 1, 1],[1, 0.3, 1],[1, 1, 0.3]])
+    #distance = numpy.array([[0, 1, 1],[1, 0, 1],[1, 1, 0]])
+    #distance = distancematrix(data, mask=None, weight=None, transpose=0, dist='e')
+    clusterid = KMedoidCluster(distance, 2) 
     #clusterid, cdata = KCluster(data, 2)
     
     print clusterid

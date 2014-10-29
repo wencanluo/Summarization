@@ -161,11 +161,11 @@ if __name__ == '__main__':
     #datadir = "../../mead/data/ShallowSummary_NPhraseHard/"   
     #fio.deleteFolder(datadir)
     #getNPList(excelfile, sennadatadir, weigthdir)
-    getNPWeight(weigthdir, metric = 'npsoft', method='syntax')
-    getNPWeight(weigthdir, metric = 'nphard', method='syntax')
     
-    getNPWeight(weigthdir, metric = 'npsoft', method='chunk')
-    getNPWeight(weigthdir, metric = 'nphard', method='chunk')
+    for metric in ['npsoft', 'nphard']:
+        for method in ['candidate', 'candidatestemming']:
+        #for method in ['syntax', 'chunk']:
+            getNPWeight(weigthdir, metric, method)
     
     #print getNPSort("help", 'help')
     print 'done'

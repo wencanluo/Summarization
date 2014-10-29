@@ -3,6 +3,10 @@ import sys
 import re
 import fio
 import NLTKWrapper
+import MaximalMatchTokenizer
+import numpy as np
+import math
+import SennaParser
 
 filters = ["?", "[blank]", 'n/a', 'blank', 'nothing'] #a classifier to predict whether the student has problem
                         
@@ -328,6 +332,84 @@ def getCandidatePhrases(dir):
     
     #fio.PrintList(numbers, "\n")
     fio.PrintList(length, ",")
+
+def getLength(NPs):
+    N = 0.0
+    for NP in NPs:
+        N = N + len(NP.split())
+    return N / len(NPs)
+    
+def getNumberofCandiatePhrase(excel, phrasedir):
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    #sheets = range(0,25)
+    sheets = range(0,12)
+    
+    localheader = ['ratio  phrase/sen', 'total phrase', '# word/phrase']
+    nhead = ['type',  'Week', 'total sen']
+    
+    nbody = []
+    methodNames = ['Hard Constraint', "Stemming Constraint", "Chunk", "Syntax"]
+    methods = [1, 2, 3, 4]
+    for type in ['POI', 'MP', 'LP']:
+        for method in methods:
+            localbody = []
+            for i, sheet in enumerate(sheets):
+                row = []                
+                week = i + 1
+                
+                orig = prData(excelfile, sheet)
+            
+                print excelfile, sheet, type
+                student_summaryList = getStudentResponseList(orig, header, summarykey, type)
+                
+                phrasefile = phrasedir + str(week) + ".txt"
+                sennadatadir = "../data/senna/"
+                sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
+                sentences = SennaParser.SennaParse(sennafile)
+                
+                #row.append(len(student_summaryList))
+                
+                if method == 1 or method == 2:
+                    sentenceList = student_summaryList
+                else:
+                    sentenceList = sentences
+                    
+                #candiate no stemming
+                counts = []
+                lengths = []
+                for s in sentenceList:
+                    if method == 1:
+                        NPs = MaximalMatchTokenizer.MaximalMatchTokenizer(s, phrasefile, stemming=False)
+                    elif method == 2:
+                        NPs = MaximalMatchTokenizer.MaximalMatchTokenizer(s, phrasefile)
+                    elif method == 3:
+                        NPs = s.getNPrases()
+                    elif method == 4:
+                        NPs = s.getSyntaxNP()
+                    
+                    counts.append(len(NPs))
+                    if len(NPs) > 0:
+                        l = getLength(NPs)
+                        lengths.append(l)
+                    
+                row.append("%.3f" % np.mean(counts))
+                row.append(np.sum(counts))
+                row.append("%.3f" % np.mean(lengths))
+                       
+                localbody.append(row)
+            
+            #get the average
+            newrow = []
+            newrow.append(methodNames[method-1])
+            newrow.append(type)
+            for i in range(len(localheader)):
+                values = [ float(row[i]) for row in localbody]
+                newrow.append("%.3f" % np.mean(values))
+            nbody.append(newrow)
+            
+    fio.writeMatrix("../data/numberofcandiatephrase.txt", nbody, ["method", "type"] + localheader)
                                            
 if __name__ == '__main__':
     
@@ -340,5 +422,6 @@ if __name__ == '__main__':
     
     #getStudentResponses4Senna(excelfile, sennadir)
     
-    getCandidatePhrases("../data/phrases/")
+    #getCandidatePhrases("../data/phrases/")
     
+    getNumberofCandiatePhrase(excelfile, "../data/phrases/")

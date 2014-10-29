@@ -10,6 +10,9 @@ import SennaParser
 import porter
 import math
 import phrasebasedShallowSummary
+import copy
+import MaximalMatchTokenizer
+import numpy
 
 import ClusterWrapper
 import SennaParser
@@ -27,6 +30,13 @@ def isMalformed(phrase):
     
     return False
 
+def MalformedNPFlilter(NPs):
+    newNPs = []
+    for NP in NPs:
+        if isMalformed(NP): continue
+        newNPs.append(NP)
+    return newNPs
+                        
 def getNPs(sennafile, MalformedFlilter=False, source = None, np=None):
     np_phrase = []
     sources = []
@@ -60,28 +70,116 @@ def getNPs(sennafile, MalformedFlilter=False, source = None, np=None):
     
     return np_phrase
 
+def getNPCandiate(student_summaryList, phrasefile, MalformedFlilter=False, source = None, np=None):
+    np_phrase = []
+    sources = []
+    
+    #read senna file
+    sentences = student_summaryList
+    
+    if len(source) != len(sentences):
+        print len(source), len(sentences), phrasefile
+        
+    #get NP phrases
+    for i, s in enumerate(sentences):
+        if np== "candidate":
+            NPs = MaximalMatchTokenizer.MaximalMatchTokenizer(s, phrasefile, stemming=False)
+        elif np == 'candidatestemming':
+            NPs = MaximalMatchTokenizer.MaximalMatchTokenizer(s, phrasefile)
+        else:
+            NPs = []
+            
+        for NP in NPs:
+            NP = NP.lower()
+            
+            if MalformedFlilter:
+                if isMalformed(NP): continue
+            
+            np_phrase.append(NP)
+            
+            if source != None:
+                sources.append(source[i])
+    
+    if source != None:
+        return np_phrase, sources
+    
+    return np_phrase
+
+def Similarity2Distance(similarity):
+    distance = copy.deepcopy(similarity)
+    
+    #change the similarity to distance
+    for i, row in enumerate(distance):
+        for j, col in enumerate(row):
+            if distance[i][j] == "NaN":
+                distance[i][j] = 1.0
+            else:
+                try:
+                    if float(distance[i][j]) < 0:
+                        print "<0", i, j, distance[i][j]
+                        distance[i][j] = 0
+                    if float(distance[i][j]) > 100:
+                        print ">100", i, j, distance[i][j]
+                        distance[i][j] = 100
+                    distance[i][j] = 1.0 / math.pow(math.e, float(distance[i][j]))
+                except OverflowError as e:
+                    print e
+                    exit()
+    return distance
+
+def getPhraseClusterCandidateNP(student_summaryList, weightfile, candiatefile, output, ratio=None, MalformedFlilter=False, source=None, np=None):
+    NPCandidates, sources = getNPCandiate(student_summaryList, candiatefile, MalformedFlilter, source=source, np=np)
+    
+    NPs, matrix = fio.readMatrix(weightfile, hasHead = True)
+    
+    matrix = Similarity2Distance(matrix)
+
+    index = {}
+    for i, NP in enumerate(NPs):
+        index[NP] = i
+    
+    newMatrix = []
+    
+    for NP1 in NPCandidates:
+        assert(NP1 in index)
+        i = index[NP1]
+        
+        row = []
+        for NP2 in NPCandidates:
+            if NP2 not in index:
+                print NP2, weightfile, np
+            j = index[NP2]
+            row.append(matrix[i][j])
+            
+        newMatrix.append(row)
+    
+    V = len(NPCandidates)
+    if ratio == "sqrt":
+        K = int(math.sqrt(V))
+    else:
+        K = int(ratio*V)
+    
+    if K <= 1:
+        K = 1
+    
+    clusterid = ClusterWrapper.KMedoidCluster(newMatrix, K)
+ 
+    body = []   
+    for NP, id in zip(NPCandidates, clusterid):
+        row = []
+        row.append(NP)
+        row.append(id)
+        body.append(row)    
+    
+    fio.writeMatrix(output, body, header = None)
+    
 def getPhraseClusterAll(sennafile, weightfile, output, ratio=None, MalformedFlilter=False, source=None, np=None):
     NPCandidates, sources = getNPs(sennafile, MalformedFlilter, source=source, np=np)
     
     NPs, matrix = fio.readMatrix(weightfile, hasHead = True)
     
     #change the similarity to distance
-    for i, row in enumerate(matrix):
-        for j, col in enumerate(row):
-            if matrix[i][j] == "NaN":
-                matrix[i][j] = 1.0
-            else:
-                try:
-                    if float(matrix[i][j]) < 0:
-                        print "<0", weightfile, i, j, matrix[i][j]
-                        matrix[i][j] = 0
-                    if float(matrix[i][j]) > 100:
-                        print ">100", weightfile, i, j, matrix[i][j]
-                        matrix[i][j] = 100
-                    matrix[i][j] = 1.0 / math.pow(math.e, float(matrix[i][j]))
-                except OverflowError as e:
-                    print e
-                    exit()
+    matrix = Similarity2Distance(matrix)
 
     index = {}
     for i, NP in enumerate(NPs):

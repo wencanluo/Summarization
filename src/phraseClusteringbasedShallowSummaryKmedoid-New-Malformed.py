@@ -89,12 +89,12 @@ if __name__ == '__main__':
         #for method in ['optimumComparerLSATasa']: #'bleuComparer', 'cmComparer', 'lsaComparer',
         #for method in ['dependencyComparerWnLeskTanim']:
         for method in ['npsoft', 'optimumComparerLSATasa']:
-            #for np in ['chunk', 'syntax']:
-            for np in ['chunk']:
+            for np in ['chunk', 'syntax']:
+            #for np in ['candidate', 'candidatestemming']:
+            #for np in ['chunk']:
                 datadir = "../../mead/data/ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_"+str(ratio)+"_"+method+"_"+np+"/"   
                 fio.deleteFolder(datadir)
                 ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=method, ratio=ratio, np=np)
             
     print "done"
-
     
