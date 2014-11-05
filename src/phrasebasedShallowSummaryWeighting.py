@@ -163,7 +163,8 @@ if __name__ == '__main__':
     #getNPList(excelfile, sennadatadir, weigthdir)
     
     for metric in ['npsoft', 'nphard']:
-        for method in ['candidate', 'candidatestemming']:
+        #for method in ['candidate', 'candidatestemming', 'candidatengram']:
+        for method in ['candidatengram', 'candidatengramstemming']:
         #for method in ['syntax', 'chunk']:
             getNPWeight(weigthdir, metric, method)
     

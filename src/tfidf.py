@@ -96,6 +96,17 @@ class TfIdf:
         self.term_num_docs[word] += 1
       else:
         self.term_num_docs[word] = 1
+ 
+  def add_input_document_withterms(self, terms):
+    """Add terms in the specified document to the idf dictionary."""
+    self.num_docs += 1
+    words = set(terms)
+    
+    for word in words:
+      if word in self.term_num_docs:
+        self.term_num_docs[word] += 1
+      else:
+        self.term_num_docs[word] = 1
 
   def save_corpus_to_file(self, idf_filename, stopword_filename,
                           STOPWORD_PERCENTAGE_THRESHOLD = 0.01):
@@ -148,6 +159,24 @@ class TfIdf:
       # within the document, but for short documents, I've found heuristically
       # that sometimes len(tokens_set) yields more intuitive results.
       mytf = float(tokens.count(word)) / len(tokens)
+      myidf = self.get_idf(word)
+      tfidf[word] = mytf * myidf
+
+    #return sorted(tfidf.items(), key=itemgetter(1), reverse=True)
+    return tfidf
+
+  def get_doc_keywords_withterms(self, terms):
+    """Retrieve terms and corresponding tf-idf for the specified document.
+
+       The returned terms are ordered by decreasing tf-idf.
+    """
+    tfidf = {}
+    tokens_set = set(terms)
+    for word in tokens_set:
+      # The definition of TF specifies the denominator as the count of terms
+      # within the document, but for short documents, I've found heuristically
+      # that sometimes len(tokens_set) yields more intuitive results.
+      mytf = float(terms.count(word)) / len(terms)
       myidf = self.get_idf(word)
       tfidf[word] = mytf * myidf
 

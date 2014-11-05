@@ -86,6 +86,10 @@ def getNPCandiate(student_summaryList, phrasefile, MalformedFlilter=False, sourc
             NPs = MaximalMatchTokenizer.MaximalMatchTokenizer(s, phrasefile, stemming=False)
         elif np == 'candidatestemming':
             NPs = MaximalMatchTokenizer.MaximalMatchTokenizer(s, phrasefile)
+        elif np == "candidatengram":
+            NPs = MaximalMatchTokenizer.NgramMatchTokenizer(s, phrasefile, stemming=False)
+        elif np == "candidatengramstemming":
+            NPs = MaximalMatchTokenizer.NgramMatchTokenizer(s, phrasefile)
         else:
             NPs = []
             

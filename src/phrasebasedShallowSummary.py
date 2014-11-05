@@ -9,6 +9,11 @@ import NLTKWrapper
 import SennaParser
 import porter
 
+import tfidf
+import shallowSummary
+import phraseClusteringKmedoid
+
+stopwordfilename = "../../ROUGE-1.5.5/data/smart_common_words.txt"
 stopwords = [line.lower().strip() for line in fio.readfile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
 print "stopwords:", len(stopwords)
 
@@ -82,7 +87,7 @@ def getKeyNgram(student_summaryList, sennafile, save2file=None, soft = False):
 def getKeyPhrases(student_summaryList, sennafile, save2file=None):
     return getKeyNgram(student_summaryList, sennafile, save2file=save2file)
                             
-def getShallowSummary(excelfile, folder, sennadatadir, K=30):
+def getShallowSummary(excelfile, folder, sennadatadir, tfidfdir, np, method, K=30):
     #K is the number of words per points
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
     summarykey = "Top Answers"
@@ -105,7 +110,13 @@ def getShallowSummary(excelfile, folder, sennadatadir, K=30):
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
             
             Summary = []
-            dict = getKeyPhrases(student_summaryList, sennafile, save2file=filename + ".keys")
+            
+            if method == 'tfidf':
+                dict = fio.LoadDict(tfidfdir + str(week)+ '/' + type + '.' + np + '.tfidf.dict')
+            if method == 'lexrank':
+                dict = fio.LoadDict(tfidfdir + str(week)+ '/' + type + '.' + np + '.lexrank.dict')
+            else:
+                dict = getKeyPhrases(student_summaryList, sennafile, save2file=filename + ".keys")
             
             keys = sorted(dict, key=dict.get, reverse = True)
             total_word = 0
@@ -124,18 +135,71 @@ def getShallowSummary(excelfile, folder, sennadatadir, K=30):
             
             fio.savelist(Summary, filename)
                         
-def ShallowSummary(excelfile, datadir, sennadatadir, K=30):
-    getShallowSummary(excelfile, datadir, sennadatadir, K)
+def ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method, K=30):
+    getShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method,  K)
     WriteTASummary(excelfile, datadir)
+
+def computeTFIDF(excelfile, datadir, sennadatadir, np):
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    for type in ['POI', 'MP', 'LP']:
+        my_tfidf = tfidf.TfIdf(stopword_filename=stopwordfilename)
         
+        sheets = range(0,12)
+        for i, sheet in enumerate(sheets):
+            week = i + 1
+            orig = prData(excelfile, sheet)
+            student_summaryList = getStudentResponseList(orig, header, summarykey, type, withSource=True)
+            ids = [summary[1] for summary in student_summaryList]
+            summaries = [summary[0] for summary in student_summaryList] 
+            
+            sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
+            NPs, sources = phraseClusteringKmedoid.getNPs(sennafile, MalformedFlilter = True, source=ids, np=np)
+            
+            my_tfidf.add_input_document_withterms(NPs)
+        
+        for i, sheet in enumerate(sheets):
+            week = i + 1        
+            
+            orig = prData(excelfile, sheet)
+            student_summaryList = getStudentResponseList(orig, header, summarykey, type, withSource=True)
+            ids = [summary[1] for summary in student_summaryList]
+            summaries = [summary[0] for summary in student_summaryList] 
+            
+            sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
+            NPs, sources = phraseClusteringKmedoid.getNPs(sennafile, MalformedFlilter = True, source=ids, np=np)
+            
+            dict = my_tfidf.get_doc_keywords_withterms(NPs)
+            
+            path = datadir + str(week)+ '/'
+            fio.newPath(path)
+            fio.SaveDict(dict, path + type + '.' + np + '.tfidf.dict', SortbyValueflag = True)
+
+def getTFIDF(excelfile, datadir, sennadatadir, np):
+    computeTFIDF(excelfile, datadir, sennadatadir, np)
+            
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     
     sennadatadir = "../data/senna/"
-    
-    #datadir = "../../mead/data/ShallowSummary_NPhraseSoft/" 
-    datadir = "../../mead/data/ShallowSummary_NPhraseHard/"   
-    fio.deleteFolder(datadir)
-    ShallowSummary(excelfile, datadir, sennadatadir, K=30)
 
+    tfidfdir = "../data/np/"
+#     fio.newPath(tfidfdir)
+#     
+#     for np in ['chunk', 'syntax']:
+#         getTFIDF(excelfile, tfidfdir, sennadatadir, np)
+    
+        #datadir = "../../mead/data/ShallowSummary_NPhraseSoft/" 
+#     for np in ['chunk', 'syntax']:
+#         datadir = "../../mead/data/ShallowSummary_NPhrase_"+np+"_TFIDF/"   
+#         fio.deleteFolder(datadir)
+#         ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method="tfidf", K=30)
+    
+    for np in ['chunk', 'syntax']:
+        datadir = "../../mead/data/Phrase_"+np+"_lexrank/"   
+        fio.deleteFolder(datadir)
+        ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method="lexrank", K=30)
+        
+    print "done"
     

@@ -10,7 +10,6 @@ import NLTKWrapper
 import CourseMirrorSurvey
 import Survey
 
-#course = "CS2001"
 course = "CS2610"
 maxWeekDict = {"CS2610": 5, 
                "CS2001": 1}
