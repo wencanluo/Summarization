@@ -102,10 +102,11 @@ def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
         types = ['POI', 'MP', 'LP']
         scores = ['ROUGE-1','ROUGE-2', 'ROUGE-SUX']
         
-        header = ['lamda', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
+        header = ['week', 'R1-P', 'R1-R', 'R1-F', 'R2-P', 'R2-R', 'R2-F', 'RSU4-P', 'RSU4-R', 'RSU4-F', 'R1-P', 'R1-R', 'R1-F', 'R2-P', 'R2-R', 'R2-F', 'RSU4-P', 'RSU4-R', 'RSU4-F', 'R1-P', 'R1-R', 'R1-F', 'R2-P', 'R2-R', 'R2-F', 'RSU4-P', 'RSU4-R', 'RSU4-F', ]
+        #header = ['lamda', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
         averagebody = []
         
-        for r in ['0', '0.2', '0.4', '0.6', '0.8', '1.0']:
+        for r in ['0', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0']:
             body = []
             for sheet in sheets:
                 week = sheet + 1
@@ -120,6 +121,10 @@ def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
                         lines = fio.readfile(filename)
                         try:
                             scorevalues = lines[1].split(',')
+                            score = scorevalues[1].strip()
+                            row.append(score)
+                            score = scorevalues[2].strip()
+                            row.append(score)
                             score = scorevalues[3].strip()
                             row.append(score)
                         except Exception:
@@ -140,6 +145,16 @@ def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
             averagebody.append(arow)
   
             fio.writeMatrix(outputdir + "rouge." + model + '.' + r + ".txt", body, header)
+        
+        #get max
+        #get the max
+        row = []
+        row.append("max")
+        for i in range(1, len(header)):
+            scores = [float(xx[i]) for xx in averagebody]
+            row.append(numpy.max(scores))
+        averagebody.append(row)
+        
         fio.writeMatrix(outputdir + "rouge." + model + ".txt", averagebody, header)
            
 def getWordCount(summary, output):
@@ -472,7 +487,6 @@ def getSingleCoverage(entries, sources, N):
 
     return len(set(covered))*1.0/N
 
-
 def getSingleQuality(entries, sources, qualitydict, N):
     scores = []
     for entry in entries:
@@ -622,7 +636,6 @@ def getDiversity(modelname, excelfile, npdir, method="unigram"):
     file = "../data/diversity." + modelname + '.txt'
     fio.writeMatrix(file, newbody, newhead)
 
-
 def getHighQualityRatio(modelname, excelfile, npdir, method="unigram"):
     sheets = range(0,12)
     
@@ -677,7 +690,43 @@ def getCoverageDiversity(modelname, excelfile, npdir, method="unigram"):
     getCoverage(modelname, excelfile, npdir, method)
     getDiversity(modelname, excelfile, npdir, method)
     getHighQualityRatio(modelname, excelfile, npdir, method)
-                              
+
+def PrintCluster(output):
+    body = fio.readMatrix(output, False)
+            
+    NPs = [row[0] for row in body]
+    clusterids = [row[1] for row in body]
+    
+    cluster = {}
+    for row in body:
+        cluster[row[0]] = int(row[1])
+    
+    Summary = []
+    
+    #sort the clusters according to the number of phrases
+    dict = defaultdict(float)
+    for row in body: 
+        dict[int(row[1])] = dict[int(row[1])] + 1
+    
+    keys = sorted(dict, key=dict.get, reverse =True)
+    
+    clusters = []
+    dict = {}
+    for key in keys:
+        
+        #get the phrases
+        P = []
+        P.append(NPs[key])
+        
+        for i, (NP, id) in enumerate(zip(NPs, clusterids)):
+            if i == key: continue
+            if int(id) == key:
+                P.append(NP)
+        clusters.append(P)
+    
+    for i, cluster in enumerate(clusters):
+        print i+1, '\t', len(cluster), '\t', ', '.join(cluster)
+                                      
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     output = "../data/2011Spring_overivew.txt"
@@ -743,20 +792,33 @@ if __name__ == '__main__':
     #ShallowSummary_ClusteringNP_KMedoid_sqrt_npsoft
     #'PhraseMead_chunk', 'PhraseMead_syntax', 'PhraseMead_candidate', 'PhraseMead_candidatestemming'
     
-    models = [#'ShallowSummary_unigram', 'ShallowSummary_unigram_remove_stop', 'ShallowSummary_unigram_tfidf',
+    #PrintCluster("../data/np/3/MP.cluster.kmedoids.sqrt.optimumComparerLSATasa.syntax")
+    
+    models = ['ShallowSummary_unigram', #'ShallowSummary_unigram_remove_stop', 'ShallowSummary_unigram_tfidf',
+              #'ShallowSummary_bigram',
               #'keyphraseExtractionbasedShallowSummary',
               #'ShallowSummary_NPhrase_chunk_TFIDF', 'ShallowSummary_NPhrase_syntax_TFIDF',
-              #'PhraseMead_chunk', 'PhraseMead_syntax', 'PhraseMeadLexRank_chunk', 'PhraseMeadLexRank_syntax', 
-              #'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_sqrt_optimumComparerLSATasa_chunk', 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_sqrt_optimumComparerLSATasa_syntax',
-              #'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_sqrt_npsoft_syntax', 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_sqrt_npsoft_chunk',
+              #'PhraseMead_chunk', 'PhraseMead_syntax', 
+              #'PhraseMeadLexRank_chunk', 'PhraseMeadLexRank_syntax', 
+              #'Clustering_lexrank_sqrt_npsoft_chunk', 'Clustering_lexrank_sqrt_npsoft_syntax', 'Clustering_lexrank_sqrt_optimumComparerLSATasa_chunk', 'Clustering_lexrank_sqrt_optimumComparerLSATasa_syntax',
+              #'Clustering_lexrankmax_sqrt_npsoft_chunk', 'Clustering_lexrankmax_sqrt_npsoft_syntax', 'Clustering_lexrankmax_sqrt_optimumComparerLSATasa_chunk', 'Clustering_lexrankmax_sqrt_optimumComparerLSATasa_syntax',
               #'ShallowSummary_ClusteringNP_KMedoid_sqrt_lexicalOverlapComparer'
               #'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_LexRank_sqrt_optimumComparerLSATasa_syntax', 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_LexRank_sqrt_optimumComparerLSATasa_chunk', 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_LexRank_sqrt_npsoft_syntax', 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_LexRank_sqrt_npsoft_chunk',
-              'Phrase_syntax_lexrank', 'Phrase_chunk_lexrank',
+              #'Phrase_syntax_lexrank', 'Phrase_chunk_lexrank',
+              #'PhraseLexRankMMR_chunk', 'PhraseLexRankMMR_syntax',
+              #'PhraseMead_syntax', 'PhraseMead_chunk', 'PhraseMeadLexRank_syntax', 'PhraseMeadLexRank_chunk',
+              
+              #'C4_ShallowSummary_unigram',
+              #'C4_ShallowSummary_bigram',
+              #'C4_Phrase_syntax_lexrank', 'C4_Phrase_chunk_lexrank',
+              #'C4_Clustering_lexrankmax_sqrt_npsoft_chunk', 'C4_Clustering_lexrankmax_sqrt_npsoft_syntax', 'C4_Clustering_lexrankmax_sqrt_optimumComparerLSATasa_chunk', 'C4_Clustering_lexrankmax_sqrt_optimumComparerLSATasa_syntax',
+              #'C4_Clustering_lexrankmax_sqrt_optimumComparerLSATasa_syntax',
               ]
     GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
     CombineRouges(models = models, outputdir = "../data/")
     
-    #GetRougeScoreMMR(datadir = "../../mead/data/", models = ['2011SpringReranker'], outputdir = "../data/")
+    #GetRougeScoreMMR(datadir = "../../mead/data/", models = ['PhraseMeadLexRankMMR_syntax', 'PhraseMeadLexRankMMR_chunk', 'PhraseMeadMMR_syntax', 'PhraseMeadMMR_chunk'], outputdir = "../data/")
+       
     #GetRougeScore(datadir = "../../mead/data/", model = "2011Spring", outputdir = "../data/" )
     #GetRougeScore(datadir, rougescore)
     #TASummaryCoverage(excelfile, datadir, output="../data/coverage.txt")
@@ -779,5 +841,6 @@ if __name__ == '__main__':
 #                 GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase' + "_"+ str(ratio)+"_"+method+"_"+np], outputdir = "../data/" )
 #        
 #     CombineKMethod("../data/", "../data/Kmetroid-K-Method-NP-KMedoidMalformedKeyphrase.txt", methods, ratios, nps, 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase')
-#      
+#   
+ 
     print "done"

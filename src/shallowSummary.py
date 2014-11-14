@@ -7,6 +7,7 @@ from Survey import *
 import random
 import NLTKWrapper
 import tfidf
+import phraseClusteringKmedoid
 
 stopwordfilename = "../../ROUGE-1.5.5/data/smart_common_words.txt"
 stopwords = [line.lower().strip() for line in fio.readfile(stopwordfilename)]
@@ -95,12 +96,15 @@ def getShallowSummary(excelfile, folder, K=30, method='ngram', tfidfdir=None):
                 dict = getKeyPhrases(student_summaryList, K, method, save2file=filename + ".keys", tfidfdir=tfidfdir)
             
             keys = sorted(dict, key=dict.get, reverse = True)
+            keys = phraseClusteringKmedoid.MalformedNPFlilter(keys)
+            
             total_word = 0
             word_count = 0
             for key in keys:
                 word_count = len(key.split())
                 total_word = total_word + word_count
-                if total_word <= K:
+                #if total_word <= K:
+                if len(Summary) + 1 <= K:
                     Summary.append(key)
             
             fio.savelist(Summary, filename)
@@ -193,9 +197,11 @@ if __name__ == '__main__':
 #     fio.deleteFolder(datadir)
 #     ShallowSummary(excelfile, datadir, K=30, method='unigram_remove_stop')
     
-    datadir = "../../mead/data/ShallowSummary_unigram_tfidf/"  
-    fio.deleteFolder(datadir)
-    ShallowSummary(excelfile, datadir, K=30, method='unigram_tfidf', tfidfdir = tfidfdir)
+    #for model in ['unigram', 'bigram']:
+    for model in ['unigram']:
+        datadir = "../../mead/data/ShallowSummary_"+model+"/"  
+        fio.deleteFolder(datadir)
+        ShallowSummary(excelfile, datadir, K=4, method=model, tfidfdir = tfidfdir)
 #  
 #     datadir = "../../mead/data/ShallowSummary_weightedngram_remove_stop/"  
 #     fio.deleteFolder(datadir)

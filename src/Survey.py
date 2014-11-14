@@ -22,6 +22,20 @@ def HasSummary(orig, header, summarykey):
             return False
     return False
 
+def getWeight(summary):
+    summary = summary.strip()
+    g = re.search('^\d+\).*\[(\d+)\]$', summary)
+    if g != None:
+        weight = g.group(1).strip()
+        return int(weight)
+    
+    g = re.search('^.*\[(\d+)\]$', summary)
+    if g != None:
+        weight = g.group(1).strip()
+        return int(weight)
+    
+    return 1
+
 def NormalizedTASummary(summary):
     summary = summary.strip()
     g = re.search('^\d+\)(.*)\[\d+\]$', summary)
@@ -46,7 +60,7 @@ def NormalizeMeadSummary(summary):
     
     return summary.strip()
 
-def getTASummary(orig, header, summarykey, type='POI'):
+def getTASummary(orig, header, summarykey, type='POI', weight = False):
     '''
     Get TA's summary from the excel
     return a list of sentences
@@ -65,6 +79,7 @@ def getTASummary(orig, header, summarykey, type='POI'):
     
     key = header[0]
     
+    weights = []
     summary = []
     for k, inst in enumerate(orig._data):
         value = inst[key].lower().strip()
@@ -72,7 +87,11 @@ def getTASummary(orig, header, summarykey, type='POI'):
             value = inst[keyword].strip()
             summaries = value.split("\n")
             for sum in summaries:
+                w = getWeight(sum)
                 summary.append(NormalizedTASummary(sum))
+                weights.append(w)
+    if weight:
+        return summary, weights
     return summary
 
 def WriteTASummary(excelfile, datadir):
@@ -91,8 +110,10 @@ def WriteTASummary(excelfile, datadir):
 
         orig = prData(excelfile, sheet)
         for type in types:
-            summary = getTASummary(orig, header, summarykey, type)
-            
+            summary, weight = getTASummary(orig, header, summarykey, type, weight=True)
+    
+            #summary = ["ssssss " + str(w) + " " + s for s, w in zip(summary, weight)]
+                             
             filename = path + type + '.ref.summary'
             print filename
             
@@ -149,6 +170,35 @@ def getStudentResponse(orig, header, summarykey=None, type='POI'):
                 if len(content) > 0:   
                     summary = NLTKWrapper.splitSentence(content)
                     summaries[value] = summary
+            else:
+                break
+        except Exception:
+            return summaries
+    return summaries
+
+def getMPQualityPoint(orig):
+    '''
+    return a list of the students' muddiest point with scores
+    '''
+    summaries = []
+    
+    key = "Muddiest Point"
+    pointkey = "Muddiest Point Coding (0-3; a = \"I understood everything\")"
+    
+    for k, inst in enumerate(orig._data):
+        
+        if pointkey not in inst:
+            continue
+            
+        try:
+            value = inst['ID'].lower().strip()
+            if value == 'top answers': continue
+            
+            if len(value) > 0:
+                content = inst[key].strip()
+                score = inst[pointkey]
+                
+                summaries.append((content, score))
             else:
                 break
         except Exception:

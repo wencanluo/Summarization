@@ -23,7 +23,7 @@ punctuations = ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!'
 def isMalformed(phrase):
     N = len(phrase.split())
     if N == 1: #single stop words
-        if phrase in stopwords: return True
+        if phrase.lower() in stopwords: return True
     
     if len(phrase) > 0:
         if phrase[0] in punctuations: return True
@@ -211,7 +211,7 @@ def getPhraseClusterAll(sennafile, weightfile, output, ratio=None, MalformedFlil
         K = int(ratio*V)
     
     clusterid = ClusterWrapper.KMedoidCluster(newMatrix, K)
-     
+    
     body = []   
     for NP, id in zip(NPCandidates, clusterid):
         row = []

@@ -113,12 +113,13 @@ def getShallowSummary(excelfile, folder, sennadatadir, tfidfdir, np, method, K=3
             
             if method == 'tfidf':
                 dict = fio.LoadDict(tfidfdir + str(week)+ '/' + type + '.' + np + '.tfidf.dict')
-            if method == 'lexrank':
-                dict = fio.LoadDict(tfidfdir + str(week)+ '/' + type + '.' + np + '.lexrank.dict')
+            if method.startswith('lexrank'):
+                dict = fio.LoadDict(tfidfdir + str(week)+ '/' + type + '.' + np + '.'+method+'.dict')
             else:
                 dict = getKeyPhrases(student_summaryList, sennafile, save2file=filename + ".keys")
             
             keys = sorted(dict, key=dict.get, reverse = True)
+            
             total_word = 0
             word_count = 0
             for key in keys:
@@ -130,7 +131,9 @@ def getShallowSummary(excelfile, folder, sennadatadir, tfidfdir, np, method, K=3
                 if skip: continue
                 word_count = len(key.split())
                 total_word = total_word + word_count
-                if total_word <= K:
+                
+                if len(Summary) + 1 <= K:
+                #if total_word <= K:
                     Summary.append(key)
             
             fio.savelist(Summary, filename)
@@ -185,6 +188,9 @@ if __name__ == '__main__':
     sennadatadir = "../data/senna/"
 
     tfidfdir = "../data/np/"
+    
+    datadir = "../../mead/data/C4_ShallowSummary_bigram/" 
+    ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np=None, method="bigram", K=4)
 #     fio.newPath(tfidfdir)
 #     
 #     for np in ['chunk', 'syntax']:
@@ -196,10 +202,15 @@ if __name__ == '__main__':
 #         fio.deleteFolder(datadir)
 #         ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method="tfidf", K=30)
     
-    for np in ['chunk', 'syntax']:
-        datadir = "../../mead/data/Phrase_"+np+"_lexrank/"   
-        fio.deleteFolder(datadir)
-        ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method="lexrank", K=30)
+#     for np in ['chunk', 'syntax']:
+#         datadir = "../../mead/data/Phrase_"+np+"_lexrank/"
+#         fio.deleteFolder(datadir)
+#         ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method="lexrankmax", K=30)
+    
+#     for np in ['chunk', 'syntax']:
+#         datadir = "../../mead/data/C4_Phrase_"+np+"_lexrank/"
+#         fio.deleteFolder(datadir)
+#         ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method="lexrankmax", K=4)
         
     print "done"
     

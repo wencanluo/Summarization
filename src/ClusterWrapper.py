@@ -18,8 +18,22 @@ def KMedoidCluster(distance, K=2):
         return clusterid
     
     try:
-        clusterid, error, nfound = kmedoids(distance, nclusters=K, npass=3, initialid=None)
-        return clusterid
+        tmp = []
+        for xx in range(100):
+            clusterid, error, nfound = kmedoids(distance, nclusters=K, npass=10, initialid=None)
+            tmp.append((clusterid, error))
+        
+        min = 100000
+        minc = None
+        for c, e in tmp:
+            if e <= min:
+                min = e
+                minc = c
+        
+        #print minc, min
+        
+        return minc
+    
     except RuntimeError as e:
         print K
         print distance

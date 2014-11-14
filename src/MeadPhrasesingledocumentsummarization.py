@@ -105,69 +105,26 @@ def Write2Mead(excelfile, datadir, sennadatadir, phrasedir, np=None):
     #assume one week is a one document
     WriteDocsent(excelfile, datadir, sennadatadir, phrasedir, np)
     WriteCluster(excelfile, datadir)
-    WriteTASummary(excelfile, datadir)
-
-def GetLexRankScore(datadir, np, outputdir):
-    sheets = range(0,12)
-    
-    for type in ['POI', 'MP', 'LP']:
-        for sheet in sheets:
-            week = sheet + 1
-            
-            DID = str(week) + '_' + type
-            
-            phrases = []
-            scores = []
-    
-            #read Docsent
-            path = datadir + str(week)+ '/'
-            path = path + type + '/'
-            path = path + 'docsent/'
-            filename = path + DID + '.docsent'
-            
-            tree = ET.parse(filename)
-            root = tree.getroot()
-            
-            for child in root:
-                phrases.append(child.text)
-            
-            #read feature
-            path = datadir + str(week)+ '/'
-            path = path + type + '/'
-            path = path + 'feature/'
-            filename = path + type + '.LexRank.sentfeature'
-            
-            tree = ET.parse(filename)
-            root = tree.getroot()
-            
-            for child in root:
-                feature = child[0]
-                #print feature.tag, feature.attrib, feature.attrib['V']
-                #print child.tag, child.attrib
-                scores.append(feature.attrib['V'])
-                
-            #write
-            assert(len(phrases) == len(scores))
-            
-            dict = {}
-            for phrase, score in zip(phrases, scores):
-                dict[phrase.lower()] = score
-            
-            output = outputdir + str(week)+ '/' + str(type) + "." + np + ".lexrank.dict"
-            fio.SaveDict(dict, output, SortbyValueflag=True)
                 
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     sennadir = "../data/senna/"
     phrasedir = "../data/phrases/"
     outputdir = "../data/np/"
-#     for np in ['chunk', 'syntax', 'candidate', 'candidatestemming']:
-#         datadir = "../../mead/data/PhraseMeadLexRank_"+np+"/"
-#         fio.deleteFolder(datadir)
+    for np in ['chunk', 'syntax', ]:#'candidate', 'candidatestemming']:
+        datadir = "../../mead/data/PhraseMead_"+np+"/"
+        fio.deleteFolder(datadir)
+        Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+         
+#         datadir = "../../mead/data/PhraseMeadMMR_"+np+"/"
+#         #fio.deleteFolder(datadir)
 #         Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
-    
-    #for np in ['chunk', 'syntax', 'candidate', 'candidatestemming']:
-    for np in ['chunk', 'syntax']:
-        datadir = "../../mead/data/PhraseMeadLexRank_"+np+"/"
-        GetLexRankScore(datadir, np, outputdir)
+#          
+#         datadir = "../../mead/data/PhraseMeadLexRank_"+np+"/"
+#         #fio.deleteFolder(datadir)
+#         Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+#          
+#         datadir = "../../mead/data/PhraseMeadLexRankMMR_"+np+"/"
+#         #fio.deleteFolder(datadir)
+#         Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
     
