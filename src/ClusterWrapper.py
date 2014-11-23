@@ -5,9 +5,7 @@ from Bio.Cluster import *
 def KCluster(data, K=2):
     clusterid, error, nfound = kcluster (data, nclusters=K, mask=None, weight=None, transpose=0, npass=1, method='a', dist='e', initialid=None)
     cdata, cmask = clustercentroids(data, mask=None, transpose=0, clusterid=clusterid, method='a')
-
     return clusterid, cdata
-
 
 def KMedoidCluster(distance, K=2):
     if K==1:

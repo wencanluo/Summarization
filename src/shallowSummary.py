@@ -103,8 +103,8 @@ def getShallowSummary(excelfile, folder, K=30, method='ngram', tfidfdir=None):
             for key in keys:
                 word_count = len(key.split())
                 total_word = total_word + word_count
-                #if total_word <= K:
-                if len(Summary) + 1 <= K:
+                if total_word <= K:
+                #if len(Summary) + 1 <= K:
                     Summary.append(key)
             
             fio.savelist(Summary, filename)
@@ -197,11 +197,11 @@ if __name__ == '__main__':
 #     fio.deleteFolder(datadir)
 #     ShallowSummary(excelfile, datadir, K=30, method='unigram_remove_stop')
     
-    #for model in ['unigram', 'bigram']:
-    for model in ['unigram']:
-        datadir = "../../mead/data/ShallowSummary_"+model+"/"  
+    for model in ['unigram_remove_stop', 'bigram']:
+    #for model in ['unigram']:
+        datadir = "../../mead/data/ShallowSummary_"+model+"_C30/"  
         fio.deleteFolder(datadir)
-        ShallowSummary(excelfile, datadir, K=4, method=model, tfidfdir = tfidfdir)
+        ShallowSummary(excelfile, datadir, K=30, method=model, tfidfdir = tfidfdir)
 #  
 #     datadir = "../../mead/data/ShallowSummary_weightedngram_remove_stop/"  
 #     fio.deleteFolder(datadir)

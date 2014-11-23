@@ -35,6 +35,7 @@ def getShallowSummary(excelfile, folder, keyhphrasedir, K=30):
                 word_count = len(phrase.split())
                 total_word = total_word + word_count
                 if total_word <= K:
+                #if len(Summary) +1 <= K:
                     Summary.append(phrase)
             
             fio.savelist(Summary, filename)
@@ -46,7 +47,7 @@ def ShallowSummary(excelfile, datadir, keyhphrasedir, K=30):
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     keyhphrasedir = "../../Maui1.2/data/2011Spring/"
-    datadir = "../../mead/data/keyphraseExtractionbasedShallowSummary/"  
+    datadir = "../../mead/data/C30_keyphraseExtractionbasedShallowSummary/"  
     
     fio.deleteFolder(datadir)
     ShallowSummary(excelfile, datadir, keyhphrasedir, K=30)    

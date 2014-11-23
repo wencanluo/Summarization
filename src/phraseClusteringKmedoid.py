@@ -24,7 +24,8 @@ def isMalformed(phrase):
     N = len(phrase.split())
     if N == 1: #single stop words
         if phrase.lower() in stopwords: return True
-    
+        if phrase.isdigit(): return True
+            
     if len(phrase) > 0:
         if phrase[0] in punctuations: return True
     
@@ -58,7 +59,9 @@ def getNPs(sennafile, MalformedFlilter=False, source = None, np=None):
             NP = NP.lower()
             
             if MalformedFlilter:
-                if isMalformed(NP): continue
+                if isMalformed(NP): 
+                    #print NP
+                    continue
             
             np_phrase.append(NP)
             
@@ -207,8 +210,12 @@ def getPhraseClusterAll(sennafile, weightfile, output, ratio=None, MalformedFlil
     V = len(NPCandidates)
     if ratio == "sqrt":
         K = int(math.sqrt(V))
+    elif float(ratio) > 1:
+        K = int(ratio)
     else:
         K = int(ratio*V)
+    
+    if K < 1: K=1
     
     clusterid = ClusterWrapper.KMedoidCluster(newMatrix, K)
     

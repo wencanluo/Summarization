@@ -50,7 +50,7 @@ def formatSummaryOutput(excelfile, datadir, output):
         body.append(row)
             
     fio.writeMatrix(output, body, head)
-
+    
 def GetRougeScore(datadir, models, outputdir):
     for model in models:
         print model
@@ -59,7 +59,53 @@ def GetRougeScore(datadir, models, outputdir):
         scores = ['ROUGE-1','ROUGE-2', 'ROUGE-SUX']
         
         #header = ['week', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
-        header = ['week', 'R1-P', 'R1-R', 'R1-F', 'R2-P', 'R2-R', 'R2-F', 'RSU4-P', 'RSU4-R', 'RSU4-F', 'R1-P', 'R1-R', 'R1-F', 'R2-P', 'R2-R', 'R2-F', 'RSU4-P', 'RSU4-R', 'RSU4-F', 'R1-P', 'R1-R', 'R1-F', 'R2-P', 'R2-R', 'R2-F', 'RSU4-P', 'RSU4-R', 'RSU4-F', ]
+        #header = ['week', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F','R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F',]
+        header = ['week', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F',]
+        
+        body = []
+        for type in types:
+            for sheet in sheets:
+                week = sheet + 1
+                path = datadir + model + '/' + str(week)+ '/'
+                fio.newPath(path)
+        
+                row = []
+                row.append(week)
+                for scorename in scores:
+                    filename = path + type + "_OUT_"+scorename+".csv"
+                    lines = fio.readfile(filename)
+                    try:
+                        scorevalues = lines[1].split(',')
+                        score = scorevalues[1].strip()
+                        row.append(score)
+                        score = scorevalues[2].strip()
+                        row.append(score)
+                        score = scorevalues[3].strip()
+                        row.append(score)
+                    except Exception:
+                        print filename, scorename, lines
+                body.append(row)
+        
+        #get average
+        
+        row = []
+        row.append("average")
+        for i in range(1, len(header)):
+            scores = [float(xx[i]) for xx in body]
+            row.append(numpy.mean(scores))
+        body.append(row)
+        
+        fio.writeMatrix(outputdir + "rouge." + model + ".txt", body, header)
+        
+def GetRougeScoreSingle(datadir, models, outputdir):
+    for model in models:
+        print model
+        sheets = range(0,12)
+        types = ['POI', 'MP', 'LP']
+        scores = ['ROUGE-1','ROUGE-2', 'ROUGE-SUX']
+        
+        #header = ['week', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
+        header = ['week', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F','R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F',]
         
         body = []
         for sheet in sheets:
@@ -95,8 +141,8 @@ def GetRougeScore(datadir, models, outputdir):
         body.append(row)
         
         fio.writeMatrix(outputdir + "rouge." + model + ".txt", body, header)
-        
-def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
+
+def GetRougeScoreMMRSingle(datadir, models, outputdir): #only keep the average
     for model in models:
         sheets = range(0,12)
         types = ['POI', 'MP', 'LP']
@@ -137,6 +183,68 @@ def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
             row.append("average")
             arow = []
             arow.append('mmr_lambda_'+r)
+            for i in range(1, len(header)):
+                ave = [float(xx[i]) for xx in body]
+                row.append(numpy.mean(ave))
+                arow.append(numpy.mean(ave))
+            body.append(row)
+            averagebody.append(arow)
+  
+            fio.writeMatrix(outputdir + "rouge." + model + '.' + r + ".txt", body, header)
+        
+        #get max
+        #get the max
+        row = []
+        row.append("max")
+        for i in range(1, len(header)):
+            scores = [float(xx[i]) for xx in averagebody]
+            row.append(numpy.max(scores))
+        averagebody.append(row)
+        
+        fio.writeMatrix(outputdir + "rouge." + model + ".txt", averagebody, header)
+                
+def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
+    for model in models:
+        sheets = range(0,12)
+        types = ['POI', 'MP', 'LP']
+        scores = ['ROUGE-1','ROUGE-2', 'ROUGE-SUX']
+        
+        header = ['week', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F']
+        #header = ['week', 'R1-P', 'R1-R', 'R1-F', 'R2-P', 'R2-R', 'R2-F', 'RSU4-P', 'RSU4-R', 'RSU4-F', 'R1-P', 'R1-R', 'R1-F', 'R2-P', 'R2-R', 'R2-F', 'RSU4-P', 'RSU4-R', 'RSU4-F', 'R1-P', 'R1-R', 'R1-F', 'R2-P', 'R2-R', 'R2-F', 'RSU4-P', 'RSU4-R', 'RSU4-F', ]
+        #header = ['lamda', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
+        averagebody = []
+        
+        for r in ['0', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0']:
+            body = []
+            for type in types:
+                for sheet in sheets:
+                    week = sheet + 1
+                    path = datadir + model + '/' + str(week)+ '/'
+                    fio.newPath(path)
+                
+                    row = []
+                    row.append(week)
+                    for scorename in scores:
+                        filename = path + type + "." + str(r) + "_OUT_"+scorename+".csv"
+                        lines = fio.readfile(filename)
+                        try:
+                            scorevalues = lines[1].split(',')
+                            score = scorevalues[1].strip()
+                            row.append(score)
+                            score = scorevalues[2].strip()
+                            row.append(score)
+                            score = scorevalues[3].strip()
+                            row.append(score)
+                        except Exception:
+                            print filename, scorename, lines
+                    body.append(row)
+            
+            #get average
+            
+            row = []
+            row.append("average")
+            arow = []
+            arow.append(model + '_'+r)
             for i in range(1, len(header)):
                 ave = [float(xx[i]) for xx in body]
                 row.append(numpy.mean(ave))
@@ -254,9 +362,11 @@ def getStudentResponseWordCountDistribution(excelfile, output):
     summarykey = "Top Answers"
     
     #sheets = range(0,25)
-    sheets = range(0,25)
+    sheets = range(0,12)
     
     counts = {'POI':{}, 'MP':{}, 'LP':{}}
+    
+    dict = {'POI':{}, 'MP':{}, 'LP':{}}
     
     body = []
     for i, sheet in enumerate(sheets):
@@ -266,14 +376,31 @@ def getStudentResponseWordCountDistribution(excelfile, output):
         row = []
         for type in ['POI', 'MP', 'LP']:
             summaries = getStudentResponse(orig, header, summarykey, type=type)
+            
             for summaryList in summaries.values():
+                N = 0
                 for s in summaryList:
                     counts[type][s] = len(s.split())
+                    N = N + len(s.split())
             
-    for type in ['POI', 'MP', 'LP']:
-    #for type in ['LP']:
+                if N not in dict[type]:
+                    dict[type][N] = 0
+                dict[type][N] = dict[type][N] + 1
+    
+    #fio.PrintDict(dict['MP'], SortbyValueflag=False)
+    
+    values = []
+    for key in range(0, 46):
+        if key in dict['MP']:
+            values.append(dict['MP'][key])
+        else:
+            values.append(0)
+    fio.PrintList(values, ',')
+        
+    #for type in ['POI', 'MP', 'LP']:
+    for type in ['MP']:
         print numpy.max(counts[type].values()),'\t',numpy.min(counts[type].values()),'\t',numpy.mean(counts[type].values()),'\t',numpy.median(counts[type].values()),'\t',numpy.std(counts[type].values())
-        #fio.PrintList(counts[type].values(), sep=',')
+        fio.PrintList(counts[type].values(), sep=',')
         #fio.PrintDict(counts[type], True)
         #print
 
@@ -283,7 +410,7 @@ def CheckKeyword(keyword, sentences):
             return True
     return False
     
-def TASummaryCoverage(excelfile, datadir, output):
+def TASummaryCoverage(excelfile, output):
     reload(sys)
     sys.setdefaultencoding('utf8')
     
@@ -334,15 +461,20 @@ def TASummaryCoverage(excelfile, datadir, output):
                         else:
                             uncoveried[token.lower()] = uncoveried[token.lower()] + 1
         
-    fio.PrintList(["Type", "N", "# of points", "# of response points", "coverage ratio"])
+    #fio.PrintList(["Question", "Ngram Length", "# of points", "# of response points", "coverage ratio"])
+    fio.PrintList(["Question", "Ngram Length", "coverage ratio"])
     for type in ['POI', 'MP', 'LP']:
         for n in range(MaxNgram):
-            print type, "\t", n+1, "\t", dict[type][n+1][0], "\t", dict[type][n+1][1], "\t", float(dict[type][n+1][1])/dict[type][n+1][0]
+            #print type, "\t", n+1, "\t", dict[type][n+1][0], "\t", dict[type][n+1][1], "\t", float(dict[type][n+1][1])/dict[type][n+1][0]
+            r = float(dict[type][n+1][1])/float(dict[type][n+1][0])
+            #print type, "\t", n+1, "\t", "%.2f" % r
+            print "%.2f," % r, 
+        print
     
     fio.PrintDict(uncoveried, True)
 
 def ExtractNP(datadir, outdir, method="syntax"):
-    sheets = range(0,12)
+    sheets = range(0,25)
     
     for i, sheet in enumerate(sheets):
         week = i + 1
@@ -350,6 +482,7 @@ def ExtractNP(datadir, outdir, method="syntax"):
         for type in ['POI', 'MP', 'LP']:
             
             file = datadir + str(week)+ '/' + type + '.summary.keys'
+            if not fio.isExist(file): continue
             
             dict = fio.LoadDict(file, 'float')
             keys = sorted(dict, key=dict.get, reverse = True)
@@ -420,7 +553,7 @@ def ExtractUnigramSource(excelfile, outdir, method="unigram"):
                 json.dump(dict, outfile)
                
 def CombineKMethod(datadir, output, methods, ratios, nps, model_prefix):
-    Header = ['np', 'method', 'lambda', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
+    Header = ['np', 'method', 'lambda', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F' ]
     newbody = []
     
     for np in nps:
@@ -448,9 +581,36 @@ def CombineKMethod(datadir, output, methods, ratios, nps, model_prefix):
     newbody.append(row)
     
     fio.writeMatrix(output, newbody, Header)
-    
+
 def CombineRouges(models, outputdir):
-    Header = ['method', 'R1-P', 'R1-R', 'R1-F', 'R2-P', 'R2-R', 'R2-F', 'RSU4-P', 'RSU4-R', 'RSU4-F', 'R1-P', 'R1-R', 'R1-F', 'R2-P', 'R2-R', 'R2-F', 'RSU4-P', 'RSU4-R', 'RSU4-F', 'R1-P', 'R1-R', 'R1-F', 'R2-P', 'R2-R', 'R2-F', 'RSU4-P', 'RSU4-R', 'RSU4-F', ]
+    Header = ['method', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F',]
+    newbody = []
+    
+    for model in models: 
+        filename = outputdir + "rouge." + model + ".txt"
+        head, body = fio.readMatrix(filename, hasHead=True)
+        
+        row = []
+        row.append(model)
+        row = row + body[-1][1:]
+        
+        newbody.append(row)
+            
+    #get the max
+    row = []
+    row.append("max")
+    for i in range(1, len(Header)):
+        scores = [float(xx[i]) for xx in newbody]
+        row.append(numpy.max(scores))
+    newbody.append(row)
+    
+    newname = outputdir + "_".join(models) + ".txt"
+    if len(newname) > 50:
+        newname = newname[:50] + "_50.txt"
+    fio.writeMatrix(newname, newbody, Header) 
+        
+def CombineRouges2(models, outputdir):
+    Header = ['method', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F']
     newbody = []
     
     for model in models: 
@@ -691,11 +851,117 @@ def getCoverageDiversity(modelname, excelfile, npdir, method="unigram"):
     getDiversity(modelname, excelfile, npdir, method)
     getHighQualityRatio(modelname, excelfile, npdir, method)
 
-def PrintCluster(output):
+def getTopRankPhrase(NPs, clusterids, cid, lexdict, sources):
+    #get cluster NP, and scores
+    dict = {}
+    
+    s = []
+    
+    for NP, id, source in zip(NPs, clusterids, sources):
+        if int(id) == cid:
+            dict[NP] = lexdict[NP.lower()]
+            s.append(source)
+    
+    keys = sorted(dict, key=dict.get, reverse =True)
+    
+    source = set(s)
+    return keys[0], source
+
+def RankCluster(NPs, lexdict, clusterids, sources):
+    sdict = {}
+    for id, source in zip(clusterids, sources):
+        if id not in sdict:
+            sdict[id] = set([])
+        sdict[id].add(source)
+    
+    sizedict = {}
+    for key in sdict:
+        sizedict[key] = len(sdict[key])
+
+    #get lex scores for clusters
+    highestlexdict = {}
+    for key in sdict:
+        phrase, source = getTopRankPhrase(NPs, clusterids, int(key), lexdict, sources)
+        highestlexdict[key] = lexdict[phrase]
+    
+    print "highestlexdict" 
+    fio.PrintDict(highestlexdict)
+        
+    
+    print "sizedict"        
+    fio.PrintDict(sizedict)
+    
+    tkeys = sorted(sizedict, key=sizedict.get, reverse =True)
+    
+    #break the tires
+    keys = []
+    N = len(tkeys)
+    i = 0
+    while i < len(tkeys):
+        tkey = []
+        j = i
+        while (j < N):
+            if sizedict[tkeys[j]] == sizedict[tkeys[i]]:
+                tkey.append(tkeys[j])
+                j = j + 1
+            else:
+                break
+        if j==i:
+            i = i + 1
+        else:
+            i = j
+        
+        print i
+        
+        if len(tkey) == 1:
+            keys = keys + tkey
+        else:
+            #sort them
+            tdict = {}
+            for key in tkey:
+                tdict[key] = highestlexdict[key]
+            tkey = sorted(tdict, key=tdict.get, reverse =True)
+            keys = keys + tkey
+        
+    assert(len(keys) == len(tkeys))
+    
+    print keys
+    return keys
+
+def PrintExample():
+    pass
+    
+def PrintCluster():
+    output = "../data/np511/3/MP.cluster.kmedoids.sqrt.optimumComparerLSATasa.syntax"
+    lexfile = "../data/np511/3/MP.syntax.lexrankmax.dict"
+    sourcesfile = "../data/np511/3/MP.syntax.source.txt"
+    
+    import json
+    
+    body = fio.readMatrix(sourcesfile, False)
+    NPCandidates = [row[0] for row in body]
+    sources = [row[1] for row in body]
+    
+    
+    lexdict = fio.LoadDict(lexfile, 'float')
+    
     body = fio.readMatrix(output, False)
             
     NPs = [row[0] for row in body]
     clusterids = [row[1] for row in body]
+    
+    assert(NPCandidates == NPs)
+    
+    sdict = {}
+    for id, source in zip(clusterids, sources):
+        if id not in sdict:
+            sdict[id] = set([])
+        
+        sdict[id].add(source)
+    
+    sizedict = {}
+    for key in sdict:
+        sizedict[key] = len(sdict[key])
     
     cluster = {}
     for row in body:
@@ -703,12 +969,7 @@ def PrintCluster(output):
     
     Summary = []
     
-    #sort the clusters according to the number of phrases
-    dict = defaultdict(float)
-    for row in body: 
-        dict[int(row[1])] = dict[int(row[1])] + 1
-    
-    keys = sorted(dict, key=dict.get, reverse =True)
+    keys = RankCluster(NPs, lexdict, clusterids, sources)
     
     clusters = []
     dict = {}
@@ -716,17 +977,40 @@ def PrintCluster(output):
         
         #get the phrases
         P = []
-        P.append(NPs[key])
+        
+        centroid = NPs[int(key)]
+        
+        tdict = {}
         
         for i, (NP, id) in enumerate(zip(NPs, clusterids)):
-            if i == key: continue
-            if int(id) == key:
-                P.append(NP)
-        clusters.append(P)
+            #if i == int(key): continue
+            if int(id) == int(key):
+                tdict[str(i)+"_"+NP] = lexdict[NP]
+        
+        NPss = sorted(tdict, key=tdict.get, reverse=True)
+        
+        newNPss = []
+        for NP in NPss:
+            k = NP.find("_")
+            NP = NP[k+1:]
+            if NP == centroid:
+                NP = "@"+NP
+            newNPss.append(NP)
+        
+        clusters.append(newNPss)
     
+    print "cluster", "\t", "student #","\t", "size", "\t","phrases"
     for i, cluster in enumerate(clusters):
-        print i+1, '\t', len(cluster), '\t', ', '.join(cluster)
-                                      
+        print i+1, '\t', sizedict[keys[i]], '\t', len(cluster), '\t', ', '.join(cluster)
+
+def AllModels():
+    basic = "ClusterARank"
+    
+    models = []
+    for i in range(1, 1000):
+        models.append(basic + str(i))    
+    return models
+                                          
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     output = "../data/2011Spring_overivew.txt"
@@ -792,55 +1076,78 @@ if __name__ == '__main__':
     #ShallowSummary_ClusteringNP_KMedoid_sqrt_npsoft
     #'PhraseMead_chunk', 'PhraseMead_syntax', 'PhraseMead_candidate', 'PhraseMead_candidatestemming'
     
-    #PrintCluster("../data/np/3/MP.cluster.kmedoids.sqrt.optimumComparerLSATasa.syntax")
+    PrintCluster()
     
-    models = ['ShallowSummary_unigram', #'ShallowSummary_unigram_remove_stop', 'ShallowSummary_unigram_tfidf',
+    models = [#'ShallowSummary_unigram', #
+              #'ShallowSummary_unigram_remove_stop', #'ShallowSummary_unigram_tfidf',
               #'ShallowSummary_bigram',
               #'keyphraseExtractionbasedShallowSummary',
               #'ShallowSummary_NPhrase_chunk_TFIDF', 'ShallowSummary_NPhrase_syntax_TFIDF',
-              #'PhraseMead_chunk', 'PhraseMead_syntax', 
-              #'PhraseMeadLexRank_chunk', 'PhraseMeadLexRank_syntax', 
+              #'PhraseMead_chunk', 
+              #'PhraseMead_syntax', 
+              #'PhraseMeadLexRank_chunk', 
+              
+              #'PhraseMeadLexRank_syntax', 
               #'Clustering_lexrank_sqrt_npsoft_chunk', 'Clustering_lexrank_sqrt_npsoft_syntax', 'Clustering_lexrank_sqrt_optimumComparerLSATasa_chunk', 'Clustering_lexrank_sqrt_optimumComparerLSATasa_syntax',
               #'Clustering_lexrankmax_sqrt_npsoft_chunk', 'Clustering_lexrankmax_sqrt_npsoft_syntax', 'Clustering_lexrankmax_sqrt_optimumComparerLSATasa_chunk', 'Clustering_lexrankmax_sqrt_optimumComparerLSATasa_syntax',
               #'ShallowSummary_ClusteringNP_KMedoid_sqrt_lexicalOverlapComparer'
               #'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_LexRank_sqrt_optimumComparerLSATasa_syntax', 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_LexRank_sqrt_optimumComparerLSATasa_chunk', 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_LexRank_sqrt_npsoft_syntax', 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase_LexRank_sqrt_npsoft_chunk',
+              
               #'Phrase_syntax_lexrank', 'Phrase_chunk_lexrank',
               #'PhraseLexRankMMR_chunk', 'PhraseLexRankMMR_syntax',
               #'PhraseMead_syntax', 'PhraseMead_chunk', 'PhraseMeadLexRank_syntax', 'PhraseMeadLexRank_chunk',
-              
               #'C4_ShallowSummary_unigram',
               #'C4_ShallowSummary_bigram',
               #'C4_Phrase_syntax_lexrank', 'C4_Phrase_chunk_lexrank',
               #'C4_Clustering_lexrankmax_sqrt_npsoft_chunk', 'C4_Clustering_lexrankmax_sqrt_npsoft_syntax', 'C4_Clustering_lexrankmax_sqrt_optimumComparerLSATasa_chunk', 'C4_Clustering_lexrankmax_sqrt_optimumComparerLSATasa_syntax',
+              
+              #"C4_keyphraseExtractionbasedShallowSummary",
+              #"ClusteringAlone",
+              #"ClusterARank",
               #'C4_Clustering_lexrankmax_sqrt_optimumComparerLSATasa_syntax',
+              #'C4_Clustering_lexrankmax_4_npsoft_chunk', 'C4_Clustering_lexrankmax_4_npsoft_syntax', 'C4_Clustering_lexrankmax_4_optimumComparerLSATasa_chunk', 'C4_Clustering_lexrankmax_4_optimumComparerLSATasa_syntax',         
+              
+              #'ShallowSummary_unigram_remove_stop_K6', 'ShallowSummary_bigram_K6', 'C6_keyphraseExtractionbasedShallowSummary', 'C6_PhraseMead_syntax', 'C6_PhraseMeadMMR_syntax', 'C6_PhraseMeadLexRank_syntax', 'C6_PhraseMeadLexRankMMR_syntax', 'C6_LexRank_syntax', 'C6_LexRankMMR_syntax','C6_ClusterARank511',
+              #'ShallowSummary_unigram_remove_stop_C30', 'ShallowSummary_bigram_C30', 'C30_keyphraseExtractionbasedShallowSummary', 'C30_PhraseMead_syntax', 'C30_PhraseMeadMMR_syntax', 'C30_PhraseMeadLexRank_syntax', 'C30_PhraseMeadLexRankMMR_syntax', 'C30_LexRank_syntax', 'C30_LexRankMMR_syntax',
+              "C30_ClusteringAlone",
+              'C30_ClusterARank511', 
+              
               ]
+    
+    #models = AllModels()
+    
     GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
     CombineRouges(models = models, outputdir = "../data/")
     
-    #GetRougeScoreMMR(datadir = "../../mead/data/", models = ['PhraseMeadLexRankMMR_syntax', 'PhraseMeadLexRankMMR_chunk', 'PhraseMeadMMR_syntax', 'PhraseMeadMMR_chunk'], outputdir = "../data/")
+    models = ['PhraseMeadLexRankMMR_syntax', 
+              #'PhraseMeadLexRankMMR_chunk', 
+              #'PhraseMeadMMR_syntax', 
+              #'PhraseMeadMMR_chunk'
+              ]
+    #GetRougeScoreMMR(datadir = "../../mead/data/", models = models, outputdir = "../data/")
        
     #GetRougeScore(datadir = "../../mead/data/", model = "2011Spring", outputdir = "../data/" )
     #GetRougeScore(datadir, rougescore)
-    #TASummaryCoverage(excelfile, datadir, output="../data/coverage.txt")
+    #TASummaryCoverage(excelfile, output="../data/coverage.txt")
     #print getNgram("1 2 3 4 5 6", 6)
 
     
-#     datadir = "../../mead/data/ShallowSummary_PhraseCandidateSoft_default/"
+#     datadir = "../../mead/data/ShallowSummary_SyntaxNPhraseSoft/"
 #     outdir = "../data/np/"
-#     ExtractNP(datadir, outdir, 'candidate')
+#     ExtractNP(datadir, outdir, 'syntax')
 #    
     
     #methods = ['npsoft', 'greedyComparerWNLin', 'optimumComparerLSATasa','optimumComparerWNLin',  'dependencyComparerWnLeskTanim', 'lexicalOverlapComparer']
-#     methods = ['npsoft', 'optimumComparerLSATasa']
-#     ratios = ["sqrt", 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-#     nps = ['chunk', 'syntax','candidate', 'candidatestemming', 'candidatengram', 'candidatengramstemming']
+#     methods = ['optimumComparerLSATasa']
+#     ratios = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+#     nps = ['syntax']
 #     #ShallowSummary_ClusteringNP_KMedoid, ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase
 #     for ratio in ratios:
 #         for method in methods: #'bleuComparer', 'cmComparer', 'lsaComparer',
 #             for np in nps:
-#                 GetRougeScore(datadir = "../../mead/data/", models = ['ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase' + "_"+ str(ratio)+"_"+method+"_"+np], outputdir = "../data/" )
-#        
-#     CombineKMethod("../data/", "../data/Kmetroid-K-Method-NP-KMedoidMalformedKeyphrase.txt", methods, ratios, nps, 'ShallowSummary_ClusteringNP_KMedoidMalformedKeyphrase')
-#   
- 
+#                 GetRougeScore(datadir = "../../mead/data/", models = ['C4_Clustering_lexrankmax' + "_"+ str(ratio)+"_"+method+"_"+np], outputdir = "../data/" )
+#         
+#     CombineKMethod("../data/", "../data/C4_Clustering_lexrankmax.txt", methods, ratios, nps, 'C4_Clustering_lexrankmax')
+#    
+  
     print "done"

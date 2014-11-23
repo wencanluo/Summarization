@@ -84,11 +84,11 @@ if __name__ == '__main__':
     sennadatadir = "../data/senna/"
     clusterdir = "../data/np/"
     
-    #for ratio in ["sqrt"]:
-    for ratio in ["sqrt", 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+    for ratio in ["sqrt"]:
+    #for ratio in ["sqrt", 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
         #for method in ['optimumComparerLSATasa']: #'bleuComparer', 'cmComparer', 'lsaComparer',
         #for method in ['dependencyComparerWnLeskTanim']:
-        for method in ['npsoft', 'optimumComparerLSATasa']:
+        for method in ['optimumComparerLSATasa']:
             for np in ['chunk', 'syntax']:
             #for np in ['candidate', 'candidatestemming']:
             #for np in ['chunk']:

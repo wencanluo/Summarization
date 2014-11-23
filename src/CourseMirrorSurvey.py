@@ -5,7 +5,13 @@ import fio
 import NLTKWrapper
 import json
 
+#filters = ["?", "[blank]", 'n/a', 'blank', 'none', "no", "nothing"]
+filters = []
+
 header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2', 'q3']
+
+maxWeekDict = {"CS2610": 21-4+1, 
+               "CS2001": 18-5+1}
 
 WeekLecture = {"CS2610":range(4, 40),
                "CS2001":range(5, 40)}
@@ -45,59 +51,6 @@ def NormalizeMeadSummary(summary):
         summary = g.group(1).strip()
     
     return summary.strip()
-
-def getTASummary(orig, header, summarykey, type='POI'):
-    '''
-    Get TA's summary from the excel
-    return a list of sentences
-    '''
-    if not HasSummary(orig, header, summarykey):
-        return []
-    
-    if type=='POI':
-        key = 'q1'
-    elif type=='MP':
-        key = 'q2'
-    elif type=='LP':
-        key = 'q3'
-    else:
-        return None
-    
-    key = header[0]
-    
-    summary = []
-    for k, inst in enumerate(orig._data):
-        value = inst[key].lower().strip()
-        if value == summarykey.lower():
-            value = inst[keyword].strip()
-            summaries = value.split("\n")
-            for sum in summaries:
-                summary.append(NormalizedTASummary(sum))
-    return summary
-
-def WriteTASummary(excelfile, datadir):
-    reload(sys)
-    sys.setdefaultencoding('utf8')
-    
-    summarykey = "Top Answers"
-    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
-    sheets = range(0,12)
-    types = ['POI', 'MP', 'LP']
-    
-    for sheet in sheets:
-        week = sheet + 1
-        path = datadir + str(week)+ '/'
-        fio.newPath(path)
-
-        orig = prData(excelfile, sheet)
-        for type in types:
-            summary = getTASummary(orig, header, summarykey, type)
-            
-            filename = path + type + '.ref.summary'
-            print filename
-            
-            #only save the first 3 points
-            fio.savelist(summary, filename)
             
 def getStudentResponse(excelfile, course, week, type='POI'):
     '''
@@ -123,7 +76,7 @@ def getStudentResponse(excelfile, course, week, type='POI'):
     else:
         return None
     
-    filters = ["?", "[blank]", 'n/a', 'blank', 'none', "no", "nothing"] #a classifier to predict whether the student has problem
+     #a classifier to predict whether the student has problem
     #filters = []
     week = week-1
     
@@ -148,15 +101,19 @@ def getStudentResponse(excelfile, course, week, type='POI'):
             return summaries
     return summaries
 
-def getStudentResponseList(excelfile, course, week, type='POI'):
+def getStudentResponseList(excelfile, course, week, type='POI', withSource=False):
     student_summaries = getStudentResponse(excelfile, course, week, type)
     student_summaryList = []
     
-    for summaryList in student_summaries.values():
+    for id, summaryList in student_summaries.items():
         for s in summaryList:
-            student_summaryList.append(s)
-    return student_summaryList
-                    
+            student_summaryList.append((s,id))
+            
+    if withSource:
+        return student_summaryList
+    else:
+        return [summary[0] for summary in student_summaryList]
+                        
 def getStudentSummaryNum(orig, header, summarykey, type='POI'):
     if type=='POI':
         key = header[2]
@@ -255,7 +212,31 @@ def getMeadSummaryList(datadir, type):
             summaryList.append(summary)
         
     return summaryList
+
+def getStudentResponses4Senna(excelfile, datadir):
+    sheets = range(0, maxWeek)
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+
+        for type in ['POI', 'MP', 'LP']:
+            student_summaryList = getStudentResponseList(excelfile, course, week, type)
+            if len(student_summaryList) == 0: continue
+            
+            filename = datadir + "senna." + str(week) + "." + type + ".input"
+            
+            fio.savelist(student_summaryList, filename)
             
 if __name__ == '__main__':
-    pass
+
+    for c in ["CS2001", "CS2610"]:
+        course = c
+        maxWeek = maxWeekDict[course]
+        
+        sennadir = "../data/"+course+"/senna/"
+        excelfile = "../data/reflections.json"
+        phrasedir = "../data/"+course+"/phrases/"
+        
+        fio.newPath(sennadir)
+        getStudentResponses4Senna(excelfile, sennadir)
     

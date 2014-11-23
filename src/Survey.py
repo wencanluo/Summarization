@@ -8,7 +8,8 @@ import numpy as np
 import math
 import SennaParser
 
-filters = ["?", "[blank]", 'n/a', 'blank', 'nothing'] #a classifier to predict whether the student has problem
+filters = ["?", "[blank]", 'n/a', 'blank'] #a classifier to predict whether the student has problem
+#filters = []
                         
 def HasSummary(orig, header, summarykey):
     key = header[0]
@@ -166,8 +167,13 @@ def getStudentResponse(orig, header, summarykey=None, type='POI'):
             
             if len(value) > 0:
                 content = inst[key].strip()
-                if content.lower() in filters: continue
-                if len(content) > 0:   
+                #if content.lower() in filters: continue
+                #if len(content) > 0:
+                
+                if content.lower() in filters: 
+                    content = ""
+                
+                if True:
                     summary = NLTKWrapper.splitSentence(content)
                     summaries[value] = summary
             else:

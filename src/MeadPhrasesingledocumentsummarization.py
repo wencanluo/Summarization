@@ -105,26 +105,35 @@ def Write2Mead(excelfile, datadir, sennadatadir, phrasedir, np=None):
     #assume one week is a one document
     WriteDocsent(excelfile, datadir, sennadatadir, phrasedir, np)
     WriteCluster(excelfile, datadir)
+    WriteTASummary(excelfile, datadir)
                 
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     sennadir = "../data/senna/"
     phrasedir = "../data/phrases/"
     outputdir = "../data/np/"
-    for np in ['chunk', 'syntax', ]:#'candidate', 'candidatestemming']:
-        datadir = "../../mead/data/PhraseMead_"+np+"/"
+    for np in ['syntax']:#'candidate', 'candidatestemming']:
+        datadir = "../../mead/data/C30_PhraseMead_"+np+"/"
         fio.deleteFolder(datadir)
         Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
-         
-#         datadir = "../../mead/data/PhraseMeadMMR_"+np+"/"
-#         #fio.deleteFolder(datadir)
-#         Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
-#          
-#         datadir = "../../mead/data/PhraseMeadLexRank_"+np+"/"
-#         #fio.deleteFolder(datadir)
-#         Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
-#          
-#         datadir = "../../mead/data/PhraseMeadLexRankMMR_"+np+"/"
-#         #fio.deleteFolder(datadir)
-#         Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+        
+        datadir = "../../mead/data/C30_LexRank_"+np+"/"
+        fio.deleteFolder(datadir)
+        Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+                    
+        datadir = "../../mead/data/C30_PhraseMeadMMR_"+np+"/"
+        fio.deleteFolder(datadir)
+        Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+          
+        datadir = "../../mead/data/C30_PhraseMeadLexRank_"+np+"/"
+        fio.deleteFolder(datadir)
+        Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+          
+        datadir = "../../mead/data/C30_PhraseMeadLexRankMMR_"+np+"/"
+        fio.deleteFolder(datadir)
+        Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+        
+        datadir = "../../mead/data/C30_LexRankMMR_"+np+"/"
+        fio.deleteFolder(datadir)
+        Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
     
