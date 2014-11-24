@@ -36,6 +36,8 @@ def FormatOutputMead(datadir, rate = "word", R = 30):
                     if total_word <= R:
                         newSummary.append('[' + str(index) + ']  ' + summary)
                         index = index + 1
+                    else:
+                        total_word = total_word - word_count
                 else:
                     if len(newSummary) + 1 <= R:
                         newSummary.append('[' + str(index) + ']  ' + summary)

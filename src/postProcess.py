@@ -1108,10 +1108,10 @@ if __name__ == '__main__':
               #'C4_Clustering_lexrankmax_4_npsoft_chunk', 'C4_Clustering_lexrankmax_4_npsoft_syntax', 'C4_Clustering_lexrankmax_4_optimumComparerLSATasa_chunk', 'C4_Clustering_lexrankmax_4_optimumComparerLSATasa_syntax',         
               
               #'ShallowSummary_unigram_remove_stop_K6', 'ShallowSummary_bigram_K6', 'C6_keyphraseExtractionbasedShallowSummary', 'C6_PhraseMead_syntax', 'C6_PhraseMeadMMR_syntax', 'C6_PhraseMeadLexRank_syntax', 'C6_PhraseMeadLexRankMMR_syntax', 'C6_LexRank_syntax', 'C6_LexRankMMR_syntax','C6_ClusterARank511',
-              #'ShallowSummary_unigram_remove_stop_C30', 'ShallowSummary_bigram_C30', 'C30_keyphraseExtractionbasedShallowSummary', 'C30_PhraseMead_syntax', 'C30_PhraseMeadMMR_syntax', 'C30_PhraseMeadLexRank_syntax', 'C30_PhraseMeadLexRankMMR_syntax', 'C30_LexRank_syntax', 'C30_LexRankMMR_syntax',
+              'ShallowSummary_unigram_remove_stop_C30', 'ShallowSummary_bigram_C30', 'C30_keyphraseExtractionbasedShallowSummary', "Mead", 'C30_PhraseMead_syntax', 'C30_PhraseMeadMMR_syntax', 'C30_PhraseMeadLexRank_syntax', 'C30_PhraseMeadLexRankMMR_syntax', 'C30_LexRank_syntax', 'C30_LexRankMMR_syntax',
               "C30_ClusteringAlone",
-              'C30_ClusterARank511', 
               
+              #'C30_ClusterARank511', 
               ]
     
     #models = AllModels()
