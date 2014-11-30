@@ -92,7 +92,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             Summary = []
             
             #sort the clusters according to the number of students
-            keys = postProcess.RankCluster(NPs, lexdict, clusterids, sources)
+            keys = postProcess.RankCluster2(NPs, lexdict, clusterids, sources)
             
             sumarysource = []
             
@@ -104,8 +104,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
                 
                 word_count = len(phrase.split())
                 total_word = total_word + word_count
-                if total_word <= K:
-                #if len(Summary)+1 <= K:
+                #if total_word <= K:
+                if len(Summary)+1 <= K:
                     Summary.append(phrase)
             
             fio.savelist(Summary, filename)
@@ -230,9 +230,9 @@ if __name__ == '__main__':
             for np in ['syntax']:
                 for lex in ['lexrankmax']:
                     #datadir = "../../mead/data/C4_ClusteringAlone_"+str(ratio)+"_"+method+"_"+np+"/"   
-                    datadir = "../../mead/data/C30_ClusteringAlone/"  
+                    datadir = "../../mead/data/C4_ClusteringAlone/"  
                     fio.deleteFolder(datadir)
-                    ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=method, ratio=ratio, np=np, lex=lex)
+                    ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=4, method=method, ratio=ratio, np=np, lex=lex)
             
     print "done"
     

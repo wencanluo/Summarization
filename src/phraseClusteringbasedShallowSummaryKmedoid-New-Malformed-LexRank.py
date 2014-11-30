@@ -110,8 +110,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
                   
                 word_count = len(phrase.split())
                 total_word = total_word + word_count
-                if total_word <= K:
-                #if len(Summary) + 1 <= K:
+                #if total_word <= K:
+                if len(Summary) + 1 <= K:
                     Summary.append(phrase)
                     sumarysource.append(",".join(source))
             
@@ -243,9 +243,9 @@ if __name__ == '__main__':
                     #for lex in ['lexrank', 'lexrankmax']:
                     for lex in ['lexrankmax']:
                         #datadir = "../../mead/data/C4_Clustering_"+lex+"_"+str(ratio)+"_"+method+"_"+np+"/"   
-                        datadir = "../../mead/data/C30_ClusterARank"+str(i)+"/"
+                        datadir = "../../mead/data/C4_ClusterARank"+str(i)+"/"
                         fio.deleteFolder(datadir)
-                        ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=method, ratio=ratio, np=np, lex=lex)
+                        ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=4, method=method, ratio=ratio, np=np, lex=lex)
                 
     print "done"
     

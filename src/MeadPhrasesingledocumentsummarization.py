@@ -112,28 +112,10 @@ if __name__ == '__main__':
     sennadir = "../data/senna/"
     phrasedir = "../data/phrases/"
     outputdir = "../data/np/"
-    for np in ['syntax']:#'candidate', 'candidatestemming']:
-        datadir = "../../mead/data/C30_PhraseMead_"+np+"/"
-        fio.deleteFolder(datadir)
-        Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+    for np in ['syntax']:
+        for model in ['PhraseMead', 'LexRank','PhraseMeadMMR','PhraseMeadLexRank','PhraseMeadLexRankMMR', 'LexRankMMR']:
+            datadir = "../../mead/data/C4_"+model+"_"+np+"/"
+            fio.deleteFolder(datadir)
+            Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
         
-        datadir = "../../mead/data/C30_LexRank_"+np+"/"
-        fio.deleteFolder(datadir)
-        Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
-                    
-        datadir = "../../mead/data/C30_PhraseMeadMMR_"+np+"/"
-        fio.deleteFolder(datadir)
-        Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
-          
-        datadir = "../../mead/data/C30_PhraseMeadLexRank_"+np+"/"
-        fio.deleteFolder(datadir)
-        Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
-          
-        datadir = "../../mead/data/C30_PhraseMeadLexRankMMR_"+np+"/"
-        fio.deleteFolder(datadir)
-        Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
-        
-        datadir = "../../mead/data/C30_LexRankMMR_"+np+"/"
-        fio.deleteFolder(datadir)
-        Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
     

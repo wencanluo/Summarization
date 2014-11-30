@@ -296,6 +296,40 @@ def getTAWordCountDistribution(excelfile, output):
     
     datahead = ['Week', '# of sentence POI', '# of sentence POI', '# of sentence POI']
     
+    counts = []
+    
+    for sheet in sheets:
+        row = []
+        week = sheet + 1
+        
+        orig = prData(excelfile, sheet)
+        
+        for type in ['POI', 'MP', 'LP']:
+            summaryList = getTASummary(orig, header, summarykey, type)
+            
+            N = 0
+            for summary in summaryList:
+                N = N + len(summary.split())
+                
+            if N>100:
+                print type, week, summaryList
+                
+            counts.append(N)
+    
+    
+    print numpy.max(counts),'\t',numpy.min(counts),'\t',numpy.mean(counts),'\t',numpy.median(counts),'\t',numpy.std(counts)
+    
+def getTAWordCountDistribution2(excelfile, output):
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    sheets = range(0,12)
+    
+    datahead = ['Week', '# of sentence POI', '# of sentence POI', '# of sentence POI']
+    
     counts = {'POI':{}, 'MP':{}, 'LP':{}}
     for sheet in sheets:
         row = []
@@ -313,7 +347,7 @@ def getTAWordCountDistribution(excelfile, output):
         #fio.PrintList(counts[type].values(), sep='\t')
         #fio.PrintDict(counts[type], True)
         #print
-
+        
 def getMeadAverageWordCount(summary, output):
     counts = {'POI':{}, 'MP':{}, 'LP':{}}
     
@@ -357,7 +391,7 @@ def getStudentResponseAverageWords(excelfile, output):
             
     fio.writeMatrix(output, body, ['Week', 'POI', '', 'MP', '', 'LP', '']) 
 
-def getStudentResponseWordCountDistribution(excelfile, output):
+def getStudentResponseWordCountDistribution2(excelfile, output):
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
     summarykey = "Top Answers"
     
@@ -403,14 +437,62 @@ def getStudentResponseWordCountDistribution(excelfile, output):
         fio.PrintList(counts[type].values(), sep=',')
         #fio.PrintDict(counts[type], True)
         #print
+        
+def getStudentResponseWordCountDistribution(excelfile, output):
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    #sheets = range(0,25)
+    sheets = range(0,12)
+    
+    counts = []
+    
+    dict = {}
+    
+    body = []
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        orig = prData(excelfile, sheet)
+        
+        row = []
+        for type in ['POI', 'MP', 'LP']:
+            summaries = getStudentResponse(orig, header, summarykey, type=type)
+            
+            for summaryList in summaries.values():
+                N = 0
+                for s in summaryList:   
+                    N = N + len(s.split())
+                
+                if N==0: continue
+                counts.append(N)
+  
+                if N not in dict:
+                    dict[N] = 0
+                dict[N] = dict[N] + 1
+    
+    #fio.PrintDict(dict['MP'], SortbyValueflag=False)
+    
+    values = []
+    for key in range(0, 45):
+        if key in dict:
+            values.append(dict[key])
+        else:
+            values.append(0)
+    fio.PrintList(values, ',')
+        
+    #for type in ['POI', 'MP', 'LP']:
+    print numpy.max(counts),'\t',numpy.min(counts),'\t',numpy.mean(counts),'\t',numpy.median(counts),'\t',numpy.std(counts)
+    #fio.PrintList(counts.values(), sep=',')
+        #fio.PrintDict(counts[type], True)
+        #print
 
 def CheckKeyword(keyword, sentences):
     for s in sentences:
         if s.lower().find(keyword.lower()) != -1:
             return True
     return False
-    
-def TASummaryCoverage(excelfile, output):
+
+def TASummaryCoverage2(excelfile, output):
     reload(sys)
     sys.setdefaultencoding('utf8')
     
@@ -470,6 +552,68 @@ def TASummaryCoverage(excelfile, output):
             #print type, "\t", n+1, "\t", "%.2f" % r
             print "%.2f," % r, 
         print
+    
+    fio.PrintDict(uncoveried, True)
+        
+def TASummaryCoverage(excelfile, output):
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    sheets = range(0,12)
+    
+    datahead = ['Week', '# of sentence POI', '# of sentence POI', '# of sentence POI']
+    
+    head = ['Week', 'TA:POI', 'S:POI','TA:MP','S:MP','TA:LP', 'S:LP',]
+    body = []
+    
+    MaxNgram = 5
+    dict = {}
+    
+    uncoveried = defaultdict(float)
+    
+    for type in ['POI', 'MP', 'LP']:
+        for n in range(MaxNgram):
+            dict[n+1] = [0,0]
+    
+    for sheet in sheets:
+        row = []
+        week = sheet + 1
+        row.append(week)
+        
+        for type in ['POI', 'MP', 'LP']:
+            orig = prData(excelfile, sheet)
+        
+            student_summaries = getStudentResponse(orig, header, summarykey, type)
+            student_summaryList = []
+            
+            for summaryList in student_summaries.values():
+                for s in summaryList:
+                    student_summaryList.append(s)
+            
+            ta_summaries = getTASummary(orig, header, summarykey, type)
+            
+            for summary in ta_summaries:
+                for n in range(MaxNgram):
+                    ngrams = NLTKWrapper.getNgram(summary, n+1)
+                    dict[n+1][0] = dict[n+1][0] + len(ngrams)
+                    
+                    for token in ngrams:
+                        if CheckKeyword(token, student_summaryList):
+                            dict[n+1][1] = dict[n+1][1] + 1
+                        else:
+                            uncoveried[token.lower()] = uncoveried[token.lower()] + 1
+        
+    #fio.PrintList(["Question", "Ngram Length", "# of points", "# of response points", "coverage ratio"])
+    fio.PrintList(["Question", "Ngram Length", "coverage ratio"])
+    #for type in ['POI', 'MP', 'LP']:
+    for n in range(MaxNgram):
+        #print type, "\t", n+1, "\t", dict[n+1][0], "\t", dict[n+1][1], "\t", float(dict[n+1][1])/dict[n+1][0]
+        r = float(dict[n+1][1])/float(dict[n+1][0])
+        #print type, "\t", n+1, "\t", "%.2f" % r
+        print "%.2f," % r, 
     
     fio.PrintDict(uncoveried, True)
 
@@ -867,6 +1011,24 @@ def getTopRankPhrase(NPs, clusterids, cid, lexdict, sources):
     source = set(s)
     return keys[0], source
 
+def RankCluster2(NPs, lexdict, clusterids, sources):
+    sdict = {}
+    for id, source in zip(clusterids, sources):
+        if id not in sdict:
+            sdict[id] = set([])
+        sdict[id].add(source)
+    
+    sizedict = {}
+    for key in sdict:
+        sizedict[key] = len(sdict[key])
+    
+    print "sizedict"        
+    fio.PrintDict(sizedict)
+    
+    keys = sorted(sizedict, key=sizedict.get, reverse =True)
+    
+    return keys
+
 def RankCluster(NPs, lexdict, clusterids, sources):
     sdict = {}
     for id, source in zip(clusterids, sources):
@@ -990,9 +1152,13 @@ def PrintCluster():
         NPss = sorted(tdict, key=tdict.get, reverse=True)
         
         newNPss = []
-        for NP in NPss:
+        for i, NP in enumerate(NPss):
             k = NP.find("_")
             NP = NP[k+1:]
+            
+            if i==0:
+                NP = NP + '(' + str(lexdict[NP]) + ')'
+                
             if NP == centroid:
                 NP = "@"+NP
             newNPss.append(NP)
@@ -1007,7 +1173,7 @@ def AllModels():
     basic = "ClusterARank"
     
     models = []
-    for i in range(1, 1000):
+    for i in range(1, 685):
         models.append(basic + str(i))    
     return models
                                           
@@ -1108,10 +1274,13 @@ if __name__ == '__main__':
               #'C4_Clustering_lexrankmax_4_npsoft_chunk', 'C4_Clustering_lexrankmax_4_npsoft_syntax', 'C4_Clustering_lexrankmax_4_optimumComparerLSATasa_chunk', 'C4_Clustering_lexrankmax_4_optimumComparerLSATasa_syntax',         
               
               #'ShallowSummary_unigram_remove_stop_K6', 'ShallowSummary_bigram_K6', 'C6_keyphraseExtractionbasedShallowSummary', 'C6_PhraseMead_syntax', 'C6_PhraseMeadMMR_syntax', 'C6_PhraseMeadLexRank_syntax', 'C6_PhraseMeadLexRankMMR_syntax', 'C6_LexRank_syntax', 'C6_LexRankMMR_syntax','C6_ClusterARank511',
-              'ShallowSummary_unigram_remove_stop_C30', 'ShallowSummary_bigram_C30', 'C30_keyphraseExtractionbasedShallowSummary', "Mead", 'C30_PhraseMead_syntax', 'C30_PhraseMeadMMR_syntax', 'C30_PhraseMeadLexRank_syntax', 'C30_PhraseMeadLexRankMMR_syntax', 'C30_LexRank_syntax', 'C30_LexRankMMR_syntax',
-              "C30_ClusteringAlone",
-              
-              #'C30_ClusterARank511', 
+            'C4_unigram_remove_stop', 'C4_bigram', 'C4_keyphrase', "C4_Mead", 
+            'C4_PhraseMead_syntax', 'C4_PhraseMeadMMR_syntax',
+            'C4_LexRank_syntax', 'C4_LexRankMMR_syntax',
+            'C4_PhraseMeadLexRank_syntax',
+            'C4_PhraseMeadLexRankMMR_syntax', 
+            "C4_ClusteringAlone", 
+            'C4_ClusterARank511', 
               ]
     
     #models = AllModels()
@@ -1119,8 +1288,7 @@ if __name__ == '__main__':
     GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
     CombineRouges(models = models, outputdir = "../data/")
     
-    models = ['PhraseMeadLexRankMMR_syntax', 
-              #'PhraseMeadLexRankMMR_chunk', 
+    models = ['C4_PhraseMeadLexRankMMR_syntax', 
               #'PhraseMeadMMR_syntax', 
               #'PhraseMeadMMR_chunk'
               ]

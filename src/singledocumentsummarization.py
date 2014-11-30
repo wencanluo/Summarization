@@ -79,7 +79,7 @@ def Write2Mead(excelfile, datadir, K=3):
    
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
-    datadir = "../../mead/data/Mead/"
+    datadir = "../../mead/data/C4_Mead/"
     
     fio.deleteFolder(datadir)
     Write2Mead(excelfile, datadir)

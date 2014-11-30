@@ -47,7 +47,77 @@ def FormatOutputMead(datadir, rate = "word", R = 30):
             filename = path + type + '.summary'
             fio.savelist(newSummary, filename)
 
-def FormatOutputMeadMMR(datadir, rate = "word", R = 30):
+def getTotalWords(file):
+    lines = fio.readfile(file)
+    summaries = []
+    for line in lines:
+        summaries.append(Survey.NormalizeMeadSummary(line))
+    
+    #Format it
+    import phraseClusteringKmedoid
+    summaries = phraseClusteringKmedoid.MalformedNPFlilter(summaries)
+    
+    total_word = 0
+    for summary in summaries:
+        word_count = len(summary.split())
+        total_word = total_word + word_count
+    
+    return total_word
+                    
+def FormatOutputMeadMMR(datadir, rate = "word", R = 30, w=[1,2,3,4,5,6,7,8]):
+    sheets = range(0,12)
+    w.reverse()
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        
+        for type in ['POI', 'MP', 'LP']:
+            
+            wordcount = []
+            
+            for r in w:
+                #read the output
+                path = datadir + str(week)+ '/'
+                filename = path + type + '.summary.'+str(r)+'.org'
+                
+                N = getTotalWords(filename)
+                
+                if N <= R:
+                    lines = fio.readfile(filename)
+                    summaries = []
+                    for line in lines:
+                        summaries.append(Survey.NormalizeMeadSummary(line))
+                    
+                    #Format it
+                    import phraseClusteringKmedoid
+                    summaries = phraseClusteringKmedoid.MalformedNPFlilter(summaries)
+    
+                    #Write it
+                    newSummary = []
+                    index = 1
+                    added = []
+                    total_word = 0
+                    for summary in summaries:
+                        if summary in added: continue
+                        
+                        word_count = len(summary.split())
+                        total_word = total_word + word_count
+                        
+                        if rate == "word":
+                            if total_word <= R:
+                                newSummary.append('[' + str(index) + ']  ' + summary)
+                                index = index + 1
+                        else:
+                            if len(newSummary) + 1 <= R:
+                                newSummary.append('[' + str(index) + ']  ' + summary)
+                                index = index + 1
+                    
+                    #print newSummary
+                    filename = path + type + '.summary'
+                    fio.savelist(newSummary, filename)
+                    break
+
+def FormatOutputMeadMMR2(datadir, rate = "word", R = 30):
     sheets = range(0,12)
     for i, sheet in enumerate(sheets):
         week = i + 1
@@ -91,7 +161,7 @@ def FormatOutputMeadMMR(datadir, rate = "word", R = 30):
                 #print newSummary
                 filename = path + type + '.' + str(r) + '.summary'
                 fio.savelist(newSummary, filename)
-            
+                            
 if __name__ == '__main__':
     
     rate = "word"
@@ -103,8 +173,11 @@ if __name__ == '__main__':
     outputdir = "../data/np/"
     #for np in ['chunk', 'syntax', ]:#'candidate', 'candidatestemming']:
     for np in ['syntax', ]:#'candidate', 'candidatestemming']:
-        for model in ['C30_PhraseMead_syntax', 'C30_PhraseMeadMMR_syntax', 'C30_PhraseMeadLexRank_syntax', 'C30_PhraseMeadLexRankMMR_syntax', 'C30_LexRank_syntax', 'C30_LexRankMMR_syntax']:
+        for model in ['C30_PhraseMead_syntax', 'C30_PhraseMeadLexRank_syntax', 'C30_LexRank_syntax']:
+        #for model in ['C30_PhraseMeadMMR_syntax', 'C30_PhraseMeadLexRankMMR_syntax', 'C30_LexRankMMR_syntax']:
             datadir = "../../mead/data/"+model+"/"
+            #FormatOutputMeadMMR(datadir, rate, R, w=[1,2,3,4,5,6,7,8])
+            #FormatOutputMeadMMR2(datadir, rate, R)
             FormatOutputMead(datadir, rate, R)
             #Survey.WriteTASummary(excelfile, datadir)
             
