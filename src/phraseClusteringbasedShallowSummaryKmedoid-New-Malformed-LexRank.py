@@ -97,6 +97,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             #sort the clusters according to the number of students
             
             keys = postProcess.RankCluster(NPs, lexdict, clusterids, sources)
+            #keys = keys[1:] #remove the first one
             
             sumarysource = []
             

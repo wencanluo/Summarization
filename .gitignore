@@ -22,3 +22,4 @@
 /doc/Summary for the instructor of CS2610 - Lecture 4.docx
 /doc/*.pdf
 /doc/Zhang, Li - 2009 - Automatic text summarization based on sentences clustering and extraction-annotated.pdf
+/SummaryUpdate/src/*.pyc

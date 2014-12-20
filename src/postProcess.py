@@ -54,7 +54,9 @@ def formatSummaryOutput(excelfile, datadir, output):
 def GetRougeScore(datadir, models, outputdir):
     for model in models:
         print model
-        sheets = range(0,12)
+        
+        #sheets = range(0,12)
+        sheets = [1,2,3,4,5,6,7,10]
         types = ['POI', 'MP', 'LP']
         scores = ['ROUGE-1','ROUGE-2', 'ROUGE-SUX']
         
@@ -63,8 +65,8 @@ def GetRougeScore(datadir, models, outputdir):
         header = ['week', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F',]
         
         body = []
-        for type in types:
-            for sheet in sheets:
+        for sheet in sheets:
+            for type in types:
                 week = sheet + 1
                 path = datadir + model + '/' + str(week)+ '/'
                 fio.newPath(path)
@@ -318,6 +320,34 @@ def getTAWordCountDistribution(excelfile, output):
     
     
     print numpy.max(counts),'\t',numpy.min(counts),'\t',numpy.mean(counts),'\t',numpy.median(counts),'\t',numpy.std(counts)
+ 
+def getTALengthDistribution(excelfile, output):
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    sheets = range(0,12)
+    
+    datahead = ['Week', '# of sentence POI', '# of sentence POI', '# of sentence POI']
+    
+    counts = []
+    
+    for sheet in sheets:
+        row = []
+        week = sheet + 1
+        
+        orig = prData(excelfile, sheet)
+        
+        for type in ['POI', 'MP', 'LP']:
+            summaryList = getTASummary(orig, header, summarykey, type)
+            
+            counts.append(len(summaryList))
+    
+    fio.PrintList(counts, ", ")
+    print numpy.max(counts),'\t',numpy.min(counts),'\t',numpy.mean(counts),'\t',numpy.median(counts),'\t',numpy.std(counts)
+ 
     
 def getTAWordCountDistribution2(excelfile, output):
     reload(sys)
@@ -473,7 +503,7 @@ def getStudentResponseWordCountDistribution(excelfile, output):
     #fio.PrintDict(dict['MP'], SortbyValueflag=False)
     
     values = []
-    for key in range(0, 45):
+    for key in range(0, 55):
         if key in dict:
             values.append(dict[key])
         else:
@@ -1226,6 +1256,7 @@ if __name__ == '__main__':
     #getWordCount(formatedsummary, TAwordcount)
     #getMeadAverageWordCount(formatedsummary, '../data/2011Spring_mead_avaregewordcount.txt')
     #getStudentResponseAverageWords(excelfile, '../data/averageword.txt')
+    #getTALengthDistribution(excelfile, '../data/studentword_distribution.txt')
     #getStudentResponseWordCountDistribution(excelfile, '../data/studentword_distribution.txt')
     #GetRougeScore(datadir_multiple, rougescore_multiple)
     #GetRougeScore(datadir = "../../mead/data/", models = ['2011Spring', 'RandombaselineK3', 'RandombaselineK2', 'RandombaselineK1', 'LongestbaselineK3', 'LongestbaselineK2', 'LongestbaselineK1', 'ShortestbaselineK3', 'ShortestbaselineK2', 'ShortestbaselineK1'], outputdir = "../data/" )
@@ -1276,12 +1307,14 @@ if __name__ == '__main__':
               #'ShallowSummary_unigram_remove_stop_K6', 'ShallowSummary_bigram_K6', 'C6_keyphraseExtractionbasedShallowSummary', 'C6_PhraseMead_syntax', 'C6_PhraseMeadMMR_syntax', 'C6_PhraseMeadLexRank_syntax', 'C6_PhraseMeadLexRankMMR_syntax', 'C6_LexRank_syntax', 'C6_LexRankMMR_syntax','C6_ClusterARank511',
             'C4_unigram_remove_stop', 'C4_bigram', 'C4_keyphrase', "C4_Mead", 
             'C4_PhraseMead_syntax', 'C4_PhraseMeadMMR_syntax',
-            'C4_LexRank_syntax', 'C4_LexRankMMR_syntax',
             'C4_PhraseMeadLexRank_syntax',
             'C4_PhraseMeadLexRankMMR_syntax', 
+            'C4_LexRank_syntax', 'C4_LexRankMMR_syntax',
             "C4_ClusteringAlone", 
-            'C4_ClusterARank511', 
-              ]
+            'C4_ClusterARank511',
+            'Opinosis',
+            'OpinosisPhrase',
+            ]
     
     #models = AllModels()
     

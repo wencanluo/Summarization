@@ -15,7 +15,31 @@ maxWeekDict = {"CS2610": 21-4+1,
 
 WeekLecture = {"CS2610":range(4, 40),
                "CS2001":range(5, 40)}
-                    
+
+import datetime
+
+def ExtractTimeStamp(excelfile, output):
+    header = ['Timestamp', 'user', 'q1', 'q2', 'q3']    
+    orig = prData(excelfile, 0)
+    
+    data = []
+    for inst in orig._data:
+        dict = {}
+        for h in header:
+            if h == "Timestamp":
+                seconds = (inst[h] - 25569) * 86400.0
+                t = datetime.datetime.utcfromtimestamp(seconds)
+                #dict[h] = str(t)
+                dict[h] = seconds
+            else:
+                dict[h] = inst[h]
+        
+        data.append(dict)
+        
+    f = open(output,'w')
+    json.dump(data,f,indent=2)
+    f.close()
+                        
 def HasSummary(orig, header, summarykey):
     key = header[0]
     for k, inst in enumerate(orig._data):
@@ -228,15 +252,23 @@ def getStudentResponses4Senna(excelfile, datadir):
             fio.savelist(student_summaryList, filename)
             
 if __name__ == '__main__':
-
+    
+    excelfile = "../data/CourseMIRROR Reflections (Responses).xls"
+    output = "../data/CourseMIRROR_reflections.json"
+    
+    ExtractTimeStamp(excelfile, output)
+     
     for c in ["CS2001", "CS2610"]:
-        course = c
-        maxWeek = maxWeekDict[course]
-        
-        sennadir = "../data/"+course+"/senna/"
-        excelfile = "../data/reflections.json"
-        phrasedir = "../data/"+course+"/phrases/"
-        
-        fio.newPath(sennadir)
-        getStudentResponses4Senna(excelfile, sennadir)
+         course = c
+         maxWeek = maxWeekDict[course]
+#         
+#         sennadir = "../data/"+course+"/senna/"
+#         excelfile = "../data/reflections.json"
+#         phrasedir = "../data/"+course+"/phrases/"
+#         
+#         fio.newPath(sennadir)
+#         getStudentResponses4Senna(excelfile, sennadir)
+
+
+
     

@@ -232,6 +232,46 @@ class SennaSentence:
 		
 		return NP
 	
+	def getPhrasewithPos(self):
+		NP = []
+		
+		stack = []
+		tmp = []
+		
+		hasNP = False
+		for word in self.words:
+			Added = False
+			
+			for i, ch in enumerate(word.psg):
+				if ch == '(':
+					if not hasNP: continue
+					stack.append(ch)
+				elif ch == ')':
+					if not hasNP: continue
+					
+					stack.pop()
+					if len(stack) == 0: #empty, the NP is done
+						if not Added: 
+							tmp.append(word.token.lower() + "/" + word.pos)
+							Added = True
+						NP.append(" ".join(tmp))
+						tmp = []
+						hasNP = False
+				else:
+					if hasNP: 
+						if not Added: #add the word only once
+							tmp.append(word.token.lower() + "/" + word.pos)
+							Added = True
+						continue
+					
+					if word.psg[i-1:].startswith('(NP'):
+						hasNP = True
+						stack.append('(')
+						tmp.append(word.token.lower() + "/" + word.pos)
+						Added = True
+		
+		return NP
+	
 	def getAdjNounPrases(self):
 		AdjNoun = []
 		
@@ -283,6 +323,18 @@ class SennaSentence:
 		for word in self.words:
 			pos = pos + word.pos + " "
 		return pos.strip()
+	
+	def getWordPos(self, tolower=False):
+		"""
+		@function: get the pos string in SennaWord form
+		"""
+		res = ""
+		for word in self.words:
+			if tolower:
+				res = res + word.token.lower() + "/" +  word.pos + " "
+			else:
+				res = res + word.token + "/" +  word.pos + " "
+		return res.strip()
 	
 	def getNer(self):
 		"""
