@@ -425,33 +425,54 @@ def getStudentResponseWordCountDistribution2(excelfile, output):
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
     summarykey = "Top Answers"
     
-    #sheets = range(0,25)
-    sheets = range(0,12)
+    sheets = range(0,25)
+    #sheets = range(0,12)
     
     counts = {'POI':{}, 'MP':{}, 'LP':{}}
     
     dict = {'POI':{}, 'MP':{}, 'LP':{}}
+    
+    AveBody = []
+    AveHead = ['week', 'POI', 'MP', 'LP']
     
     body = []
     for i, sheet in enumerate(sheets):
         week = i + 1
         orig = prData(excelfile, sheet)
         
+        AveRow = [week]
+        
         row = []
         for type in ['POI', 'MP', 'LP']:
             summaries = getStudentResponse(orig, header, summarykey, type=type)
             
+            totalN = 0
+            totalWordCount = 0
+        
             for summaryList in summaries.values():
                 N = 0
                 for s in summaryList:
-                    counts[type][s] = len(s.split())
-                    N = N + len(s.split())
-            
+                    nlen = len(NLTKWrapper.wordtokenizer(s, punct=True))
+                    counts[type][s] = nlen
+                    N = N + nlen
+                
+                if N == 0: continue
+                
                 if N not in dict[type]:
                     dict[type][N] = 0
                 dict[type][N] = dict[type][N] + 1
+                
+                totalWordCount = totalWordCount + N
+                totalN = totalN + 1
+                
+            print totalWordCount, totalN
+            AveRow.append(float(totalWordCount)/totalN)
+        
+        AveBody.append(AveRow)
     
     #fio.PrintDict(dict['MP'], SortbyValueflag=False)
+    
+    fio.writeMatrix("../data/wordcount.txt", AveBody, AveHead)
     
     values = []
     for key in range(0, 46):
@@ -1242,6 +1263,7 @@ if __name__ == '__main__':
     #datadir = '../data/ShallowSummary_unigram_remove_stop.txt'
     #getCoverage(excelfile, npdir, output, method = 'unigram')
     
+    getStudentResponseWordCountDistribution2(excelfile, '../data/studentword_distribution.txt')
     
     #ExtractNPSource(excelfile, sennadatadir, outdir, 'syntax')
     #ExtractNPSource(excelfile, sennadatadir, outdir, 'chunk')
@@ -1318,8 +1340,8 @@ if __name__ == '__main__':
     
     #models = AllModels()
     
-    GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
-    CombineRouges(models = models, outputdir = "../data/")
+    #GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
+    #CombineRouges(models = models, outputdir = "../data/")
     
     models = ['C4_PhraseMeadLexRankMMR_syntax', 
               #'PhraseMeadMMR_syntax', 
