@@ -232,7 +232,7 @@ class SennaSentence:
 		
 		return NP
 	
-	def getPhrasewithPos(self):
+	def getPhrasewithPos(self):#SyntaxNP
 		NP = []
 		
 		stack = []
@@ -267,6 +267,52 @@ class SennaSentence:
 					if word.psg[i-1:].startswith('(NP'):
 						hasNP = True
 						stack.append('(')
+						tmp.append(word.token.lower() + "/" + word.pos)
+						Added = True
+		
+		return NP
+	
+	def getPhrasPairwithPos(self):#SyntaxNP
+		# return [NP: NP+Pos]
+		NP = []
+		
+		stack = []
+		tmp = []
+		tmpNP = []
+		
+		hasNP = False
+		for word in self.words:
+			Added = False
+			
+			for i, ch in enumerate(word.psg):
+				if ch == '(':
+					if not hasNP: continue
+					stack.append(ch)
+				elif ch == ')':
+					if not hasNP: continue
+					
+					stack.pop()
+					if len(stack) == 0: #empty, the NP is done
+						if not Added: 
+							tmpNP.append(word.token)
+							tmp.append(word.token.lower() + "/" + word.pos)
+							Added = True
+						NP.append((" ".join(tmpNP), " ".join(tmp)))
+						tmp = []
+						tmpNP = []
+						hasNP = False
+				else:
+					if hasNP: 
+						if not Added: #add the word only once
+							tmpNP.append(word.token)
+							tmp.append(word.token.lower() + "/" + word.pos)
+							Added = True
+						continue
+					
+					if word.psg[i-1:].startswith('(NP'):
+						hasNP = True
+						stack.append('(')
+						tmpNP.append(word.token)
 						tmp.append(word.token.lower() + "/" + word.pos)
 						Added = True
 		

@@ -1336,12 +1336,13 @@ if __name__ == '__main__':
             'C4_ClusterARank511',
             'Opinosis',
             'OpinosisPhrase',
+            'OpinosisPhraseCluster'
             ]
     
     #models = AllModels()
     
-    #GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
-    #CombineRouges(models = models, outputdir = "../data/")
+    GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
+    CombineRouges(models = models, outputdir = "../data/")
     
     models = ['C4_PhraseMeadLexRankMMR_syntax', 
               #'PhraseMeadMMR_syntax', 

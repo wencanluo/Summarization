@@ -324,16 +324,17 @@ def ExtractNonWord(inputdirpredix, output):
     fio.SaveDict(VOC, output, True)
         
 if __name__ == '__main__':
-    excelfile = "../data/2011Spring.xls"
+    excelfile = "../data/2011Spring_norm.xls"
     prefix = '../data/word_distribution/wd'
     sennadir = '../data/senna/'
     summarydir = '../../mead/data/'
-    #getWordCountDistribution(excelfile, prefix, summarydir)
+    
+    getWordCountDistribution(excelfile, prefix, summarydir)
     #getJSD(prefix, "../data/jsd.txt")
     #getTATextForSenna(excelfile, sennadir)
     #getTASyntax(excelfile, sennadir, sennadir, 'phrase')
     #getTASyntaxDistribution(sennadir, '../data/ta_phrase_distribution.txt', 'phrase')
     
-    ExtractNonWord(prefix, '../data/voc.txt')
+    #ExtractNonWord(prefix, '../data/voc.txt')
     
     print "done"
