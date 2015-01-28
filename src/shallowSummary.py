@@ -10,7 +10,7 @@ import tfidf
 import phraseClusteringKmedoid
 
 stopwordfilename = "../../ROUGE-1.5.5/data/smart_common_words.txt"
-stopwords = [line.lower().strip() for line in fio.readfile(stopwordfilename)]
+stopwords = [line.lower().strip() for line in fio.ReadFile(stopwordfilename)]
 print "stopwords:", len(stopwords)
 
 stopwords = stopwords + ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']

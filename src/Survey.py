@@ -95,6 +95,30 @@ def getTASummary(orig, header, summarykey, type='POI', weight = False):
         return summary, weights
     return summary
 
+def getTitles(titledir):
+    #get title of slides for each lecture
+    sheets = range(0,25)
+    
+    titles = []
+    for sheet in sheets:
+        week = sheet + 1
+        
+        filename = titledir + str(week) + '.TXT'
+        
+        lines = fio.ReadFile(filename)
+        
+        title = []
+        
+        for i in range(len(lines)):
+            if i%3 == 1:
+                line = lines[i].strip()
+                if len(line) > 0:
+                    title.append(line)
+        
+        titles.append(title)
+        
+    return titles
+    
 def WriteTASummary(excelfile, datadir):
     reload(sys)
     sys.setdefaultencoding('utf8')
@@ -293,9 +317,9 @@ def getMeadSummary(datadir, type):
         path = datadir + str(week)+ '/'
         filename = path + type + '.summary'
         
-        if not fio.isExist(filename): continue
+        if not fio.IsExist(filename): continue
         
-        lines = fio.readfile(filename)
+        lines = fio.ReadFile(filename)
         summary = []
         for line in lines:
             summary.append(NormalizeMeadSummary(line))
@@ -317,7 +341,7 @@ def getMeadSummaryList(datadir, type):
         path = datadir + str(week)+ '/'
         filename = path + type + '.summary'
         
-        lines = fio.readfile(filename)
+        lines = fio.ReadFile(filename)
         summary = []
         for line in lines:
             summary.append(NormalizeMeadSummary(line))
@@ -377,7 +401,7 @@ def getCandidatePhrases(dir):
         week = i + 1
         filename = dir + str(week) + ".txt"
         
-        phrases = fio.readfile(filename)
+        phrases = fio.ReadFile(filename)
         #print len(phrases)
         numbers.append(len(phrases))
         for phrase in phrases:

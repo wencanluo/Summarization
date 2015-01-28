@@ -4,15 +4,20 @@ import re
 import fio
 import json
 
-course = "CS2001"
+course = "PHYS0175"
+#course = "CS2001"
 #course = "CS2610"
 maxWeekDict = {"CS2610": 21, 
-               "CS2001": 18}
+               "CS2001": 18,
+               "PHYS0175":30
+               }
 
 WeekLecture = {"CS2610":range(4, 40),
-               "CS2001":range(5, 40)}
+               "CS2001":range(5, 40),
+               "PHYS0175":range(3, 40),
+               }
 
-header = ['cid', 'lecture_number', 'user', 'q1', 'q2', 'q3']
+header = ['cid', 'lecture_number', 'user', 'q1', 'q2']
 TpyeMap = {"POI":'q1_summaries', "MP":'q2_summaries', "LP":'q3_summaries'}
             
 def getStudentResponse(excelfile):
@@ -44,7 +49,8 @@ def getStudentResponse(excelfile):
                 reflections.append(dict)
             else:
                 break
-        except Exception:
+        except Exception as e:
+            print e
             return []
     return reflections
 

@@ -2,7 +2,7 @@
 from connection import register, ParseBase, ParseBatcher
 import json
 
-from six.moves.urllib.parse import urlencode
+#from six.moves.urllib.parse import urlencode
 
 import CourseMirrorSurvey
 
@@ -103,7 +103,8 @@ def saveReflection(output):
 def combineReflection(excelfile):
     reflections = CourseMirrorSurvey.getStudentResponse(excelfile)
     responses = submitData(URL_REFLECTIONS_FRAG, reflections)
-    print responses
+    #print responses
+    print reflections
     
     
 def submitSummary(dir, course, method):
@@ -123,7 +124,8 @@ def submitSummary(dir, course, method):
       
 if __name__ == '__main__':
     
-    #combineReflection("CourseMIRROR Reflections.xls")
+    combineReflection("CourseMIRROR PHYS0175 Reflections (Responses).xls")
+    
     #saveReflection("../../Fall2014/summarization/Summarization/data/reflections.json")
     #submitSummary("../../Fall2014/summarization/mead/data/", "CS2001", "Mead")
     #submitSummary("../../Fall2014/summarization/mead/data/", "CS2610", "Mead")

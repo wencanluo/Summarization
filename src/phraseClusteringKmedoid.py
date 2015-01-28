@@ -17,7 +17,7 @@ import numpy
 import ClusterWrapper
 import SennaParser
 
-stopwords = [line.lower().strip() for line in fio.readfile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
+stopwords = [line.lower().strip() for line in fio.ReadFile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
 punctuations = ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']
 
 def isMalformed(phrase):

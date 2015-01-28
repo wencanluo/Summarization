@@ -49,7 +49,7 @@ def formatSummaryOutput(excelfile, datadir, output):
         
         body.append(row)
             
-    fio.writeMatrix(output, body, head)
+    fio.WriteMatrix(output, body, head)
     
 def GetRougeScore(datadir, models, outputdir):
     for model in models:
@@ -97,7 +97,7 @@ def GetRougeScore(datadir, models, outputdir):
             row.append(numpy.mean(scores))
         body.append(row)
         
-        fio.writeMatrix(outputdir + "rouge." + model + ".txt", body, header)
+        fio.WriteMatrix(outputdir + "rouge." + model + ".txt", body, header)
         
 def GetRougeScoreSingle(datadir, models, outputdir):
     for model in models:
@@ -142,7 +142,7 @@ def GetRougeScoreSingle(datadir, models, outputdir):
             row.append(numpy.mean(scores))
         body.append(row)
         
-        fio.writeMatrix(outputdir + "rouge." + model + ".txt", body, header)
+        fio.WriteMatrix(outputdir + "rouge." + model + ".txt", body, header)
 
 def GetRougeScoreMMRSingle(datadir, models, outputdir): #only keep the average
     for model in models:
@@ -192,7 +192,7 @@ def GetRougeScoreMMRSingle(datadir, models, outputdir): #only keep the average
             body.append(row)
             averagebody.append(arow)
   
-            fio.writeMatrix(outputdir + "rouge." + model + '.' + r + ".txt", body, header)
+            fio.WriteMatrix(outputdir + "rouge." + model + '.' + r + ".txt", body, header)
         
         #get max
         #get the max
@@ -203,7 +203,7 @@ def GetRougeScoreMMRSingle(datadir, models, outputdir): #only keep the average
             row.append(numpy.max(scores))
         averagebody.append(row)
         
-        fio.writeMatrix(outputdir + "rouge." + model + ".txt", averagebody, header)
+        fio.WriteMatrix(outputdir + "rouge." + model + ".txt", averagebody, header)
                 
 def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
     for model in models:
@@ -254,7 +254,7 @@ def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
             body.append(row)
             averagebody.append(arow)
   
-            fio.writeMatrix(outputdir + "rouge." + model + '.' + r + ".txt", body, header)
+            fio.WriteMatrix(outputdir + "rouge." + model + '.' + r + ".txt", body, header)
         
         #get max
         #get the max
@@ -265,10 +265,10 @@ def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
             row.append(numpy.max(scores))
         averagebody.append(row)
         
-        fio.writeMatrix(outputdir + "rouge." + model + ".txt", averagebody, header)
+        fio.WriteMatrix(outputdir + "rouge." + model + ".txt", averagebody, header)
            
 def getWordCount(summary, output):
-    head, body = fio.readMatrix(summary, True)
+    head, body = fio.ReadMatrix(summary, True)
     
     data = []
     
@@ -285,7 +285,7 @@ def getWordCount(summary, output):
         if i==0: continue
         newhead.append("WC_"+head[i])
     
-    fio.writeMatrix(output, data, newhead)
+    fio.WriteMatrix(output, data, newhead)
     
 def getTAWordCountDistribution(excelfile, output):
     reload(sys)
@@ -377,8 +377,37 @@ def getTAWordCountDistribution2(excelfile, output):
         #fio.PrintList(counts[type].values(), sep='\t')
         #fio.PrintDict(counts[type], True)
         #print
+
+def getTAWordCountDistributionNoType(excelfile, output):
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    sheets = range(0,12)
+    
+    datahead = ['Week', '# of sentence POI', '# of sentence POI', '# of sentence POI']
+    
+    counts = {}
+    for sheet in sheets:
+        row = []
+        week = sheet + 1
         
-def getMeadAverageWordCount(summary, output):
+        orig = prData(excelfile, sheet)
+        
+        for type in ['POI', 'MP', 'LP']:
+            summaryList = getTASummary(orig, header, summarykey, type)
+            for summary in summaryList:
+                counts[summary]  = len(summary.split())
+    
+    for type in ['POI', 'MP', 'LP']:
+        print numpy.max(counts.values()),'\t',numpy.min(counts.values()),'\t',numpy.mean(counts.values()),'\t',numpy.median(counts.values()),'\t',numpy.std(counts.values())
+        #fio.PrintList(counts[type].values(), sep='\t')
+        #fio.PrintDict(counts[type], True)
+        #print
+                
+def getMeadAverageWordCount(datadir, output):
     counts = {'POI':{}, 'MP':{}, 'LP':{}}
     
     for type in ['POI', 'MP', 'LP']:
@@ -391,6 +420,21 @@ def getMeadAverageWordCount(summary, output):
     for type in ['POI', 'MP', 'LP']:
         #fio.PrintList(counts[type].values(), sep=',')
         print type,'\t',numpy.max(counts[type].values()),'\t',numpy.min(counts[type].values()),'\t',numpy.mean(counts[type].values()),'\t',numpy.median(counts[type].values()),'\t',numpy.std(counts[type].values())
+
+def getMeadAverageWordCountNoType(datadir, output):
+    counts = {}
+    
+    for type in ['POI', 'MP', 'LP']:
+        summaries = getMeadSummary(datadir, type)
+        for weeksummary in summaries:
+            for summary in weeksummary:
+                counts[summary]=len(summary.split())
+    
+    fio.PrintList(["Type", "Max", "Min", "Mean", "Median", "Std"], "\t")
+    for type in ['POI', 'MP', 'LP']:
+        #fio.PrintList(counts.values(), sep=',')
+        print type,'\t',numpy.max(counts.values()),'\t',numpy.min(counts.values()),'\t',numpy.mean(counts.values()),'\t',numpy.median(counts.values()),'\t',numpy.std(counts.values())
+
 
 def getStudentResponseAverageWords(excelfile, output):
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
@@ -419,7 +463,7 @@ def getStudentResponseAverageWords(excelfile, output):
             row.append(numpy.std(counts[type].values()))
         body.append(row)
             
-    fio.writeMatrix(output, body, ['Week', 'POI', '', 'MP', '', 'LP', '']) 
+    fio.WriteMatrix(output, body, ['Week', 'POI', '', 'MP', '', 'LP', '']) 
 
 def getStudentResponseWordCountDistribution2(excelfile, output):
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
@@ -472,7 +516,7 @@ def getStudentResponseWordCountDistribution2(excelfile, output):
     
     #fio.PrintDict(dict['MP'], SortbyValueflag=False)
     
-    fio.writeMatrix("../data/wordcount.txt", AveBody, AveHead)
+    fio.WriteMatrix("../data/wordcount.txt", AveBody, AveHead)
     
     values = []
     for key in range(0, 46):
@@ -755,7 +799,7 @@ def CombineKMethod(datadir, output, methods, ratios, nps, model_prefix):
         for method in methods: 
             for ratio in ratios:
                 filename = datadir + "rouge." + model_prefix + "_" + str(ratio) + "_"+ method + '_' + np + ".txt"
-                head, body = fio.readMatrix(filename, hasHead=True)
+                head, body = fio.ReadMatrix(filename, hasHead=True)
                 
                 row = []
                 row.append(np)
@@ -775,7 +819,7 @@ def CombineKMethod(datadir, output, methods, ratios, nps, model_prefix):
         row.append(numpy.max(scores))
     newbody.append(row)
     
-    fio.writeMatrix(output, newbody, Header)
+    fio.WriteMatrix(output, newbody, Header)
 
 def CombineRouges(models, outputdir):
     Header = ['method', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F',]
@@ -783,7 +827,7 @@ def CombineRouges(models, outputdir):
     
     for model in models: 
         filename = outputdir + "rouge." + model + ".txt"
-        head, body = fio.readMatrix(filename, hasHead=True)
+        head, body = fio.ReadMatrix(filename, hasHead=True)
         
         row = []
         row.append(model)
@@ -802,7 +846,7 @@ def CombineRouges(models, outputdir):
     newname = outputdir + "_".join(models) + ".txt"
     if len(newname) > 50:
         newname = newname[:50] + "_50.txt"
-    fio.writeMatrix(newname, newbody, Header) 
+    fio.WriteMatrix(newname, newbody, Header) 
         
 def CombineRouges2(models, outputdir):
     Header = ['method', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F']
@@ -810,7 +854,7 @@ def CombineRouges2(models, outputdir):
     
     for model in models: 
         filename = outputdir + "rouge." + model + ".txt"
-        head, body = fio.readMatrix(filename, hasHead=True)
+        head, body = fio.ReadMatrix(filename, hasHead=True)
         
         row = []
         row.append(model)
@@ -829,7 +873,7 @@ def CombineRouges2(models, outputdir):
     newname = outputdir + "_".join(models) + ".txt"
     if len(newname) > 50:
         newname = newname[:50] + "_50.txt"
-    fio.writeMatrix(newname, newbody, Header)    
+    fio.WriteMatrix(newname, newbody, Header)    
 
 def getSingleCoverage(entries, sources, N):
     covered = []
@@ -941,7 +985,7 @@ def getCoverage(modelname, excelfile, npdir, method="unigram"):
     newbody.append(row)
         
     file = "../data/coverage." + modelname + '.txt'
-    fio.writeMatrix(file, newbody, newhead)
+    fio.WriteMatrix(file, newbody, newhead)
 
 def getDiversity(modelname, excelfile, npdir, method="unigram"):
     sheets = range(0,12)
@@ -989,7 +1033,7 @@ def getDiversity(modelname, excelfile, npdir, method="unigram"):
     newbody.append(row)
         
     file = "../data/diversity." + modelname + '.txt'
-    fio.writeMatrix(file, newbody, newhead)
+    fio.WriteMatrix(file, newbody, newhead)
 
 def getHighQualityRatio(modelname, excelfile, npdir, method="unigram"):
     sheets = range(0,12)
@@ -1039,7 +1083,7 @@ def getHighQualityRatio(modelname, excelfile, npdir, method="unigram"):
     newbody.append(row)
         
     file = "../data/quality." + modelname + '.txt'
-    fio.writeMatrix(file, newbody, newhead)
+    fio.WriteMatrix(file, newbody, newhead)
             
 def getCoverageDiversity(modelname, excelfile, npdir, method="unigram"):
     getCoverage(modelname, excelfile, npdir, method)
@@ -1151,14 +1195,14 @@ def PrintCluster():
     
     import json
     
-    body = fio.readMatrix(sourcesfile, False)
+    body = fio.ReadMatrix(sourcesfile, False)
     NPCandidates = [row[0] for row in body]
     sources = [row[1] for row in body]
     
     
     lexdict = fio.LoadDict(lexfile, 'float')
     
-    body = fio.readMatrix(output, False)
+    body = fio.ReadMatrix(output, False)
             
     NPs = [row[0] for row in body]
     clusterids = [row[1] for row in body]
@@ -1263,7 +1307,7 @@ if __name__ == '__main__':
     #datadir = '../data/ShallowSummary_unigram_remove_stop.txt'
     #getCoverage(excelfile, npdir, output, method = 'unigram')
     
-    getStudentResponseWordCountDistribution2(excelfile, '../data/studentword_distribution.txt')
+    #getStudentResponseWordCountDistribution2(excelfile, '../data/studentword_distribution.txt')
     
     #ExtractNPSource(excelfile, sennadatadir, outdir, 'syntax')
     #ExtractNPSource(excelfile, sennadatadir, outdir, 'chunk')
@@ -1295,7 +1339,7 @@ if __name__ == '__main__':
     #ShallowSummary_ClusteringNP_KMedoid_sqrt_npsoft
     #'PhraseMead_chunk', 'PhraseMead_syntax', 'PhraseMead_candidate', 'PhraseMead_candidatestemming'
     
-    PrintCluster()
+    #PrintCluster()
     
     models = [#'ShallowSummary_unigram', #
               #'ShallowSummary_unigram_remove_stop', #'ShallowSummary_unigram_tfidf',
@@ -1341,8 +1385,8 @@ if __name__ == '__main__':
     
     #models = AllModels()
     
-    GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
-    CombineRouges(models = models, outputdir = "../data/")
+    #GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
+    #CombineRouges(models = models, outputdir = "../data/")
     
     models = ['C4_PhraseMeadLexRankMMR_syntax', 
               #'PhraseMeadMMR_syntax', 
@@ -1373,5 +1417,7 @@ if __name__ == '__main__':
 #         
 #     CombineKMethod("../data/", "../data/C4_Clustering_lexrankmax.txt", methods, ratios, nps, 'C4_Clustering_lexrankmax')
 #    
-  
+    #getMeadAverageWordCountNoType("../../mead/data/C4_keyphrase/", "../data/keyphrase.txt")
+    getTAWordCountDistributionNoType(excelfile, None)
+    
     print "done"
