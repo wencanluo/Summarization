@@ -20,7 +20,7 @@ def WriteDocsent(excelfile, folder, sennadatadir, phrasedir, np=None):
     for i, sheet in enumerate(sheets):
         week = i + 1
         
-        for type in ['POI', 'MP', 'LP']:
+        for type in ['POI', 'MP']:#, 'LP'
             student_summaryList = CourseMirrorSurvey.getStudentResponseList(excelfile, course, week, type, withSource=True)
             
             ids = [summary[1] for summary in student_summaryList]
@@ -34,11 +34,11 @@ def WriteDocsent(excelfile, folder, sennadatadir, phrasedir, np=None):
             DID = str(week) + '_' + type
             
             path = folder + str(week)+ '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             path = path + type + '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             path = path + 'docsent/'
-            fio.newPath(path)
+            fio.NewPath(path)
             filename = path + DID + '.docsent'
             
             #create a XML file
@@ -79,14 +79,14 @@ def WriteDocsent(excelfile, folder, sennadatadir, phrasedir, np=None):
 def WriteCluster(excelfile, folder, np=None):
     sheets = range(0,maxWeek)
     
-    for type in ['POI', 'MP', 'LP']:
+    for type in ['POI', 'MP']:#, 'LP']:
         for sheet in sheets:
             week = sheet + 1
             path = folder + str(week)+ '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             
             path = path + type + '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             filename = path + type + '.cluster'
             
             #create a XML file
@@ -108,15 +108,22 @@ def Write2Mead(excelfile, datadir, sennadatadir, phrasedir, np=None):
     WriteCluster(excelfile, datadir)
                 
 if __name__ == '__main__':
-    for c in ["CS2001", "CS2610"]:
+    
+    #Step4: get PhraseMead input
+    
+    for c in ["IE256"]: #["CS2001", "CS2610"]:
         course = c
         maxWeek = maxWeekDict[course]
         
         sennadir = "../data/"+course+"/senna/"
-        excelfile = "../data/reflections.json"
-        phrasedir = "../data/"+course+"/phrases/"
+        excelfile = "../data/CourseMirror/Reflection.json"
+        phrasedir = "../data/"+course+"/np/"
         
         for np in ['syntax']:
             datadir = "../../mead/data/"+course+"_PhraseMead/"
-            fio.deleteFolder(datadir)
-            Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)    
+            fio.DeleteFolder(datadir)
+            Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+            
+    #Step5: get PhraseMead output
+    
+    print "done"

@@ -137,7 +137,7 @@ def Similarity2Distance(similarity):
 def getPhraseClusterCandidateNP(student_summaryList, weightfile, candiatefile, output, ratio=None, MalformedFlilter=False, source=None, np=None):
     NPCandidates, sources = getNPCandiate(student_summaryList, candiatefile, MalformedFlilter, source=source, np=np)
     
-    NPs, matrix = fio.readMatrix(weightfile, hasHead = True)
+    NPs, matrix = fio.ReadMatrix(weightfile, hasHead = True)
     
     matrix = Similarity2Distance(matrix)
 
@@ -178,12 +178,12 @@ def getPhraseClusterCandidateNP(student_summaryList, weightfile, candiatefile, o
         row.append(id)
         body.append(row)    
     
-    fio.writeMatrix(output, body, header = None)
+    fio.WriteMatrix(output, body, header = None)
     
 def getPhraseClusterAll(sennafile, weightfile, output, ratio=None, MalformedFlilter=False, source=None, np=None):
     NPCandidates, sources = getNPs(sennafile, MalformedFlilter, source=source, np=np)
     
-    NPs, matrix = fio.readMatrix(weightfile, hasHead = True)
+    NPs, matrix = fio.ReadMatrix(weightfile, hasHead = True)
     
     #change the similarity to distance
     matrix = Similarity2Distance(matrix)
@@ -226,7 +226,7 @@ def getPhraseClusterAll(sennafile, weightfile, output, ratio=None, MalformedFlil
         row.append(id)
         body.append(row)    
     
-    fio.writeMatrix(output, body, header = None)
+    fio.WriteMatrix(output, body, header = None)
     
 def getPhraseCluster(phrasedir, method='lexicalOverlapComparer', ratio=None):
     sheets = range(0,12)
@@ -237,7 +237,7 @@ def getPhraseCluster(phrasedir, method='lexicalOverlapComparer', ratio=None):
             weightfilename = phrasedir + str(week)+ '/' + type + '.' + method
             print weightfilename
             
-            NPs, matrix = fio.readMatrix(weightfilename, hasHead = True)
+            NPs, matrix = fio.ReadMatrix(weightfilename, hasHead = True)
             
             #change the similarity to method
             for i, row in enumerate(matrix):
@@ -273,7 +273,7 @@ def getPhraseCluster(phrasedir, method='lexicalOverlapComparer', ratio=None):
                 file = phrasedir + '/' + str(week) +'/' + type + ".cluster.kmedoids." + "sqrt" + "." +method
             else:
                 file = phrasedir + '/' + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method
-            fio.writeMatrix(file, body, header = None)
+            fio.WriteMatrix(file, body, header = None)
             
 #             dict2 = {}
 #             for NP, id in zip(NPs, clusterid):
@@ -291,7 +291,7 @@ def getPhraseCluster(phrasedir, method='lexicalOverlapComparer', ratio=None):
 #                 
 #                 body.append(row)
 #             file = phrasedir + '/' + str(week) +'/' + type + ".cluster.kmedoids.count"
-#             fio.writeMatrix(file, body, header)
+#             fio.WriteMatrix(file, body, header)
                 
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"

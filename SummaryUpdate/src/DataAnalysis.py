@@ -10,6 +10,8 @@ def getTime(j1, user, q1, q2, q3):
         if r['user'].lower() != user.lower(): continue
         if r['q1'].lower() != q1.lower(): continue
         if r['q2'].lower() != q2.lower(): continue
+        
+        if q3 == None: continue
         if r['q3'].lower() != q3: continue
         
         return r['Timestamp']
@@ -29,9 +31,9 @@ def CombineTimeStamp(json1, json2, output):
         user = r['user']
         q1 = r['q1']
         q2 = r['q2']
-        q3 = r['q3']
+        #q3 = r['q3']
         
-        t = getTime(j1, user, q1, q2, q3)
+        t = getTime(j1, user, q1, q2, q3=None)
         
         if t == None:
             t = r['createdAt']
@@ -92,7 +94,7 @@ def extractData(refs, lecs, output):
     lectures = json.load(f)
     f.close()
     
-    head = ['cid', 'lecture_number', 'date', 'user', 'submit', 'submitT', 'Lq1', 'Lq2', 'Lq3']
+    head = ['cid', 'lecture_number', 'date', 'user', 'submit', 'submitT', 'Lq1', 'Lq2']
     body = []
     
     times = {}
@@ -132,11 +134,11 @@ def extractData(refs, lecs, output):
         
         row.append(len(NLTKWrapper.wordtokenizer(r['q1'], punct=True)))
         row.append(len(NLTKWrapper.wordtokenizer(r['q2'], punct=True)))
-        row.append(len(NLTKWrapper.wordtokenizer(r['q3'], punct=True)))
+        #row.append(len(NLTKWrapper.wordtokenizer(r['q3'], punct=True)))
         
         body.append(row)
     
-    fio.writeMatrix(output, body, head)
+    fio.WriteMatrix(output, body, head)
     
     N = 0
     for k, v in times.items():
@@ -156,7 +158,72 @@ def extractData(refs, lecs, output):
         else:
             values.append(0)
     fio.PrintList(values, '\n')
+    
+def extractDataLength(refs, lecs, course, output):
+    f = open(refs,'r')
+    reflections = json.load(f)
+    f.close()
+    
+    f = open(lecs,'r')
+    lectures = json.load(f)
+    f.close()
+    
+    LengthList = []
+    
+    head = ['cid', 'lecture_number', 'date', 'user', 'submit', 'submitT', 'Lq1', 'Lq2', 'Lq3']
+    body = []
+    
+    times = {}
+    d = 5*60
+    
+    for r in reflections['results']:
+        row = []
         
+        cid = r['cid']
+        if cid != course: continue
+        
+        row.append(cid)
+        
+        lecture_number = r['lecture_number']
+        row.append(lecture_number)
+        
+        date = getDate(lectures, cid, lecture_number)
+        row.append(date)
+        
+        row.append(r['user'])
+        
+        row.append('Y') #sumbit
+        
+        due = getDueTime(lectures, cid, lecture_number)
+        
+        t = r['TimeStamp']
+        t = time.strptime(t, "%Y-%m-%d %H:%M:%S")
+        t = time.mktime(t)
+        submitT = t - due
+        
+        if submitT > -2000:
+            key = int(submitT/d)
+            
+            if key not in times:
+                 times[key] = 0
+            times[key] = times[key] + 1
+        
+        row.append(submitT) #in seconds
+        
+        LengthList.append(len(NLTKWrapper.wordtokenizer(r['q1'], punct=True)))
+        LengthList.append(len(NLTKWrapper.wordtokenizer(r['q2'], punct=True)))
+        LengthList.append(len(NLTKWrapper.wordtokenizer(r['q3'], punct=True)))
+        
+        row.append(len(NLTKWrapper.wordtokenizer(r['q1'], punct=True)))
+        row.append(len(NLTKWrapper.wordtokenizer(r['q2'], punct=True)))
+        row.append(len(NLTKWrapper.wordtokenizer(r['q3'], punct=True)))
+        
+        body.append(row)
+    
+    fio.SaveList(LengthList, output, "\n")
+    print numpy.max(LengthList),'\t',numpy.min(LengthList),'\t',numpy.mean(LengthList),'\t',numpy.median(LengthList),'\t',numpy.std(LengthList)
+    
+            
 def getUniqValue(matrix, col):
     values = [row[col] for row in matrix]    
     return set(values)
@@ -191,22 +258,22 @@ def getSubmisstionRatio(datafile, lecturefile, output):
     lectureinfo = json.load(f)
     f.close()
     
-    head, body = fio.readMatrix(datafile, True)
+    head, body = fio.ReadMatrix(datafile, True)
     
     course_index = head.index('cid')
     user_index = head.index('user')
     lecture_index = head.index('lecture_number')
     
-    for cid in ['CS2610', 'CS2001']:
+    for cid in ['PHYS0175']:
         users = getUniqValueWithFilter(head, body, 'cid', cid, user_index)
         lectures = getUniqValueWithFilter(head, body, 'cid', cid, lecture_index)
         lectures = sorted([int(lec) for lec in lectures])
         lectures = [str(lec) for lec in lectures]
         
-        ratioHead = ['cid', 'lecture_number', 'date', 'sumbitedN', 'ratio', 'Ave_submitT', 'Ave_Lq1', 'Ave_Lq2', 'Ave_Lq3', 'Std_submitT', 'Std_Lq1', 'Std_Lq2', 'Std_Lq3']
+        ratioHead = ['cid', 'lecture_number', 'date', 'sumbitedN', 'ratio', 'Ave_submitT', 'Ave_Lq1', 'Ave_Lq2', 'Std_submitT', 'Std_Lq1', 'Std_Lq2',]
         ratioBody = []
         
-        newhead = ['cid', 'lecture_number', 'date', 'user', 'submit', 'submitT', 'Lq1', 'Lq2', 'Lq3']
+        newhead = ['cid', 'lecture_number', 'date', 'user', 'submit', 'submitT', 'Lq1', 'Lq2',]
         newbody = []
         for lec in lectures:
             date = getDate(lectureinfo, cid, int(lec))
@@ -219,35 +286,35 @@ def getSubmisstionRatio(datafile, lecturefile, output):
                 newrow = findReflection(body, course_index, lecture_index, user_index, cid, lec, user)
                 if newrow == None:
                     newrow = [cid, lec, date]
-                    newrow = newrow + [user, 'N', 0, 0, 0, 0]
+                    newrow = newrow + [user, 'N', 0, 0, 0]
                 else:
                     count = count + 1
-                    Ave.append(newrow[-4:])
+                    Ave.append(newrow[-3:])
                     
                 newbody.append(newrow)
                 
             ratioRow.append(count)
             ratioRow.append(float(count) / len(users))
 
-            for i in range(4):
+            for i in range(3):
                 values = [float(xx[i]) for xx in Ave]
                 ratioRow.append(numpy.average(values))
             
-            for i in range(4):
+            for i in range(3):
                 values = [float(xx[i]) for xx in Ave]
                 ratioRow.append(numpy.std(values))
                 
             ratioBody.append(ratioRow)
             
-        fio.writeMatrix(output+"_"+cid + ".txt", newbody, newhead)
-        fio.writeMatrix(output+"_"+cid + "_ratio.txt", ratioBody, ratioHead)
+        fio.WriteMatrix(output+"_"+cid + ".txt", newbody, newhead)
+        fio.WriteMatrix(output+"_"+cid + "_ratio.txt", ratioBody, ratioHead)
 
 def getUserSubmisstionInfo(datafile, lecturefile, output):
     f = open(lecturefile,'r')
     lectureinfo = json.load(f)
     f.close()
     
-    head, body = fio.readMatrix(datafile, True)
+    head, body = fio.ReadMatrix(datafile, True)
     
     course_index = head.index('cid')
     user_index = head.index('user')
@@ -298,20 +365,26 @@ def getUserSubmisstionInfo(datafile, lecturefile, output):
                 
             ratioBody.append(ratioRow)
                
-        fio.writeMatrix(output+"_"+cid + ".txt", newbody, newhead)
-        fio.writeMatrix(output+"_"+cid + "_ratio.txt", ratioBody, ratioHead)        
+        fio.WriteMatrix(output+"_"+cid + ".txt", newbody, newhead)
+        fio.WriteMatrix(output+"_"+cid + "_ratio.txt", ratioBody, ratioHead)        
         
 if __name__ == '__main__':
     
-    #CombineTimeStamp('CourseMIRROR_reflections.json', 'Reflection.json', "reflection_time.json")
-    #AddDueTimeforLecture('Lecture.json', 'lecture_time.json')
+    reflect_raw = "../../data/CourseMirror/Reflection.json"
+    reflect_raw_time = "../../data/CourseMirror/Reflection_time.json"
+    lecture_raw = "../../data/CourseMirror/Lecture.json"
+    lecture_raw_time = "../../data/CourseMirror/Lecture_time.json"
     
-    lecturefile = 'lecture_time.json'
+    #CombineTimeStamp('CourseMIRROR_reflections.json', reflect_raw, reflect_raw_time)
+    #AddDueTimeforLecture(lecture_raw, lecture_raw_time)
+    
     datafile = "user_lecture.txt"
-    extractData("reflection_time.json", 'lecture_time.json', datafile)
+    #extractData(reflect_raw_time, lecture_raw_time, datafile)
+    
+    #extractDataLength("reflection_time.json", 'lecture_time.json', "CS2610", "CS2610_Length.txt")
     
     outputprefix = "all_user_lecture"
-    #getSubmisstionRatio(datafile, lecturefile, outputprefix)
+    getSubmisstionRatio(datafile, lecture_raw_time, outputprefix)
     
     outputprefix = "all_users"
     #getUserSubmisstionInfo(datafile, lecturefile, outputprefix)

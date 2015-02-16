@@ -16,7 +16,7 @@ import CourseMirrorSurvey
 from CourseMirrorSurvey import maxWeekDict
 
 stopwordfilename = "../../ROUGE-1.5.5/data/smart_common_words.txt"
-stopwords = [line.lower().strip() for line in fio.readfile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
+stopwords = [line.lower().strip() for line in fio.ReadFile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
 print "stopwords:", len(stopwords)
 
 stopwords = stopwords + ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']
@@ -96,12 +96,13 @@ def getShallowSummary(excelfile, folder, sennadatadir, tfidfdir, np, method, K=3
     for i, sheet in enumerate(sheets):
         week = i + 1
         
-        for type in ['POI', 'MP', 'LP']:
+        #for type in ['POI', 'MP', 'LP']:
+        for type in ['POI', 'MP']:
             print excelfile, sheet, type
             student_summaryList = CourseMirrorSurvey.getStudentResponseList(excelfile, course, week, type, withSource=False)
 
             path = folder + str(week)+ '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             filename = path + type + '.summary'
             
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
@@ -128,19 +129,19 @@ def getShallowSummary(excelfile, folder, sennadatadir, tfidfdir, np, method, K=3
                 #if total_word <= K:
                     Summary.append(key)
             
-            fio.savelist(Summary, filename)
+            fio.SaveList(Summary, filename)
                         
 def ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method, K=30):
     getShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method,  K)
 
 if __name__ == '__main__':
-    for c in ["CS2001", "CS2610"]:
+    #Step3: extract phrases
+    for c in ["IE256"]:
         course = c
         maxWeek = maxWeekDict[course]
         
         sennadir = "../data/"+course+"/senna/"
-        excelfile = "../data/reflections.json"
-        phrasedir = "../data/"+course+"/phrases/"
+        excelfile = "../data/CourseMirror/Reflection.json"
                 
         clusterdir = "../data/"+course+"/np/"
         
@@ -149,6 +150,8 @@ if __name__ == '__main__':
         
         import postProcess
         postProcess.ExtractNP(datadir, clusterdir, 'syntax')
+    
+     
         
     print "done"
     

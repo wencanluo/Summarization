@@ -13,7 +13,9 @@ import phraseClusteringKmedoid
 import CourseMirrorSurvey
 from CourseMirrorSurvey import maxWeekDict
 
-stopwords = [line.lower().strip() for line in fio.readfile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
+import postProcess
+
+stopwords = [line.lower().strip() for line in fio.ReadFile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
 #print "stopwords:", len(stopwords)
 
 stopwords = stopwords + ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']
@@ -41,7 +43,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
     for i, sheet in enumerate(sheets):
         week = i + 1
         
-        for type in ['POI', 'MP', 'LP']:
+        for type in ['POI', 'MP']:
             print excelfile, sheet, type
             
             student_summaryList = CourseMirrorSurvey.getStudentResponseList(excelfile, course, week, type, withSource=True)
@@ -50,14 +52,14 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             summaries = [summary[0] for summary in student_summaryList] 
                             
             path = folder + str(week)+ '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             filename = path + type + '.summary'
             
             #produce the cluster file on the fly
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
             output = clusterdir + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method + '.' + np
             weightfile = clusterdir + str(week)+ '/' + type + '.' + np + '.' + method
-            if not fio.isExist(output):
+            if not fio.IsExist(output):
                 phraseClusteringKmedoid.getPhraseClusterAll(sennafile, weightfile, output, ratio, MalformedFlilter=True, source=ids, np=np)
             
             NPCandidates, sources = phraseClusteringKmedoid.getNPs(sennafile, MalformedFlilter=True, source=ids, np=np)
@@ -67,7 +69,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             
             #for np, id in zip(NPCandidates, sources):
 
-            body = fio.readMatrix(output, False)
+            body = fio.ReadMatrix(output, False)
             
             lexfile = clusterdir + str(week)+ '/' + str(type) + "." + np + "."+lex+".dict"
             lexdict = fio.LoadDict(lexfile, 'float')
@@ -84,19 +86,16 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             Summary = []
             
             #sort the clusters according to the number of phrases
-            dict = defaultdict(float)
-            for row in body: 
-                dict[int(row[1])] = dict[int(row[1])] + 1
+            keys = postProcess.RankCluster(NPs, lexdict, clusterids, sources)
             
-            keys = sorted(dict, key=dict.get, reverse =True)
-            
+                        
             sumarysource = []
             
             total_word = 0
             word_count = 0
             for key in keys:
                 #phrase = NPs[key]
-                phrase, source = getTopRankPhrase(NPs, clusterids, key, lexdict, sources)
+                phrase, source = postProcess.getTopRankPhrase(NPs, clusterids, int(key), lexdict, sources)
                 if phrase in Summary: continue
                 
                 word_count = len(phrase.split())
@@ -106,8 +105,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
                     Summary.append(phrase)
                     sumarysource.append(",".join(source))
             
-            fio.savelist(Summary, filename)
-            fio.savelist(sumarysource, filename + ".source")
+            fio.SaveList(Summary, filename)
+            fio.SaveList(sumarysource, filename + ".source")
             
                         
 def ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=None, ratio=None, np=None, lex='lexrank'):
@@ -130,7 +129,7 @@ def GetLexRankScore(datadir, np, outputdir):
             path = path + type + '/'
             path = path + 'docsent/'
             filename = path + DID + '.docsent'
-            if not fio.isExist(filename): continue
+            if not fio.IsExist(filename): continue
             
             tree = ET.parse(filename)
             root = tree.getroot()
@@ -144,7 +143,7 @@ def GetLexRankScore(datadir, np, outputdir):
             path = path + 'feature/'
             filename = path + type + '.LexRank.sentfeature'
             
-            if fio.isExist(filename):
+            if fio.IsExist(filename):
                 tree = ET.parse(filename)
                 root = tree.getroot()
                 
@@ -165,7 +164,7 @@ def GetLexRankScore(datadir, np, outputdir):
                 dict[phrase.lower()] = score
             
             output = outputdir + str(week)+ '/' + str(type) + "." + np + ".lexrank.dict"
-            fio.newPath(outputdir + str(week)+ '/')
+            fio.NewPath(outputdir + str(week)+ '/')
             fio.SaveDict(dict, output, SortbyValueflag=True)
             
             dict = {}
@@ -179,16 +178,19 @@ def GetLexRankScore(datadir, np, outputdir):
             fio.SaveDict(dict, output, SortbyValueflag=True)
                         
 if __name__ == '__main__':
-    for c in ["CS2001", "CS2610"]:
+    #Step6: get LSA results
+    
+    #Step7: Run Clustering
+    for c in ["IE256"]:
         course = c
         maxWeek = maxWeekDict[course]
         
         sennadir = "../data/"+course+"/senna/"
-        excelfile = "../data/reflections.json"
-        phrasedir = "../data/"+course+"/phrases/"
+        excelfile = "../data/CourseMirror/Reflection.json"
+        #phrasedir = "../data/"+course+"/phrases/"
                 
         clusterdir = "../data/"+course+"/np/"
-        fio.newPath(clusterdir)
+        fio.NewPath(clusterdir)
         
         for np in ['syntax']:
             datadir = "../../mead/data/"+course+"_PhraseMead/"
@@ -199,7 +201,7 @@ if __name__ == '__main__':
                 for np in ['syntax']:
                     for lex in ['lexrankmax']:
                         datadir = "../../mead/data/"+course+"_ClusterARank/"   
-                        fio.deleteFolder(datadir)
+                        fio.DeleteFolder(datadir)
                         ShallowSummary(excelfile, datadir, sennadir, clusterdir, K=4, method=method, ratio=ratio, np=np, lex=lex)
                  
     print "done"

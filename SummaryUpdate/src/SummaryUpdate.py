@@ -6,6 +6,7 @@ import json
 
 import CourseMirrorSurvey
 
+
 # from six.moves.urllib.request import Request, urlopen
 # from six.moves.urllib.error import HTTPError
 # from six.moves.urllib.parse import urlencode
@@ -103,7 +104,7 @@ def saveReflection(output):
 def combineReflection(excelfile):
     reflections = CourseMirrorSurvey.getStudentResponse(excelfile)
     responses = submitData(URL_REFLECTIONS_FRAG, reflections)
-    #print responses
+    print responses
     print reflections
     
     
@@ -112,7 +113,8 @@ def submitSummary(dir, course, method):
     
     print path
     summaries = CourseMirrorSurvey.getSummary(path, course)
-    print len(summaries)
+    #print len(summaries)
+    print summaries
     
     for summary in summaries:
         summary['cid'] = course
@@ -120,19 +122,19 @@ def submitSummary(dir, course, method):
         print summary
         
     responses = submitData(URL_SUMMARIZATION_FRAG, summaries)
-    #print responses
+    print responses
       
 if __name__ == '__main__':
     
-    combineReflection("CourseMIRROR PHYS0175 Reflections (Responses).xls")
+    #combineReflection("CourseMIRROR IE256 Reflections (Responses).xls")
+    #combineReflection("CourseMIRROR PHYS0175 Reflections (Responses).xls")
     
     #saveReflection("../../Fall2014/summarization/Summarization/data/reflections.json")
     #submitSummary("../../Fall2014/summarization/mead/data/", "CS2001", "Mead")
     #submitSummary("../../Fall2014/summarization/mead/data/", "CS2610", "Mead")
     
-#     for course in ['CS2001', 'CS2610']:
-#         #submitSummary("../../Fall2014/summarization/mead/data/", course, "Mead")
-#         #submitSummary("../../Fall2014/summarization/mead/data/", course, "PhraseMead")
-#         submitSummary("../../Fall2014/summarization/mead/data/", course, "ClusterARank")
+    #Step9:
+    for course in ['IE256']:
+        submitSummary("../../../mead/data/", course, "ClusterARank")
     
     print "done"

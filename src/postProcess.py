@@ -69,13 +69,13 @@ def GetRougeScore(datadir, models, outputdir):
             for type in types:
                 week = sheet + 1
                 path = datadir + model + '/' + str(week)+ '/'
-                fio.newPath(path)
+                fio.NewPath(path)
         
                 row = []
                 row.append(week)
                 for scorename in scores:
                     filename = path + type + "_OUT_"+scorename+".csv"
-                    lines = fio.readfile(filename)
+                    lines = fio.ReadFile(filename)
                     try:
                         scorevalues = lines[1].split(',')
                         score = scorevalues[1].strip()
@@ -113,14 +113,14 @@ def GetRougeScoreSingle(datadir, models, outputdir):
         for sheet in sheets:
             week = sheet + 1
             path = datadir + model + '/' + str(week)+ '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             
             row = []
             row.append(week)
             for type in types:
                 for scorename in scores:
                     filename = path + type + "_OUT_"+scorename+".csv"
-                    lines = fio.readfile(filename)
+                    lines = fio.ReadFile(filename)
                     try:
                         scorevalues = lines[1].split(',')
                         score = scorevalues[1].strip()
@@ -159,14 +159,14 @@ def GetRougeScoreMMRSingle(datadir, models, outputdir): #only keep the average
             for sheet in sheets:
                 week = sheet + 1
                 path = datadir + model + '/' + str(week)+ '/'
-                fio.newPath(path)
+                fio.NewPath(path)
                 
                 row = []
                 row.append(week)
                 for type in types:
                     for scorename in scores:
                         filename = path + type + "." + str(r) + "_OUT_"+scorename+".csv"
-                        lines = fio.readfile(filename)
+                        lines = fio.ReadFile(filename)
                         try:
                             scorevalues = lines[1].split(',')
                             score = scorevalues[1].strip()
@@ -222,13 +222,13 @@ def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
                 for sheet in sheets:
                     week = sheet + 1
                     path = datadir + model + '/' + str(week)+ '/'
-                    fio.newPath(path)
+                    fio.NewPath(path)
                 
                     row = []
                     row.append(week)
                     for scorename in scores:
                         filename = path + type + "." + str(r) + "_OUT_"+scorename+".csv"
-                        lines = fio.readfile(filename)
+                        lines = fio.ReadFile(filename)
                         try:
                             scorevalues = lines[1].split(',')
                             score = scorevalues[1].strip()
@@ -538,9 +538,11 @@ def getStudentResponseWordCountDistribution(excelfile, output):
     summarykey = "Top Answers"
     
     #sheets = range(0,25)
-    sheets = range(0,12)
+    sheets = range(0,24)
     
     counts = []
+    
+    CountList = []
     
     dict = {}
     
@@ -556,11 +558,13 @@ def getStudentResponseWordCountDistribution(excelfile, output):
             for summaryList in summaries.values():
                 N = 0
                 for s in summaryList:   
-                    N = N + len(s.split())
-                
+                    #N = N + len(s.split())
+                    N = N + len(NLTKWrapper.wordtokenizer(s, punct=True))
+                    
                 if N==0: continue
                 counts.append(N)
-  
+                CountList.append(N)
+                
                 if N not in dict:
                     dict[N] = 0
                 dict[N] = dict[N] + 1
@@ -574,7 +578,9 @@ def getStudentResponseWordCountDistribution(excelfile, output):
         else:
             values.append(0)
     fio.PrintList(values, ',')
-        
+    
+    fio.SaveList(CountList, "../data/count.txt", "\n")
+    
     #for type in ['POI', 'MP', 'LP']:
     print numpy.max(counts),'\t',numpy.min(counts),'\t',numpy.mean(counts),'\t',numpy.median(counts),'\t',numpy.std(counts)
     #fio.PrintList(counts.values(), sep=',')
@@ -721,14 +727,14 @@ def ExtractNP(datadir, outdir, method="syntax"):
         for type in ['POI', 'MP', 'LP']:
             
             file = datadir + str(week)+ '/' + type + '.summary.keys'
-            if not fio.isExist(file): continue
+            if not fio.IsExist(file): continue
             
             dict = fio.LoadDict(file, 'float')
             keys = sorted(dict, key=dict.get, reverse = True)
             
-            fio.newPath(outdir + str(week)+ '/')
+            fio.NewPath(outdir + str(week)+ '/')
             output = outdir + str(week)+ '/' + type + '.'+method+'.key'
-            fio.savelist(keys, output)
+            fio.SaveList(keys, output)
 
 def ExtractNPSource(excelfile, sennadatadir, outdir, method="syntax"):
     sheets = range(0,12)
@@ -960,7 +966,7 @@ def getCoverage(modelname, excelfile, npdir, method="unigram"):
         for type in ['POI', 'MP', 'LP']:
             path = datadir + str(week)+ '/'
             summaryfile = path + type + '.summary'
-            summaries = [line.strip() for line in fio.readfile(summaryfile)]
+            summaries = [line.strip() for line in fio.ReadFile(summaryfile)]
             
             sourcefile = npdir + str(week)+ '/' + type + '.'+method+'.keys.source'
             student_summaryList = getStudentResponseList(orig, header, summarykey, type, withSource=True)
@@ -1009,7 +1015,7 @@ def getDiversity(modelname, excelfile, npdir, method="unigram"):
         for type in ['POI', 'MP', 'LP']:
             path = datadir + str(week)+ '/'
             summaryfile = path + type + '.summary'
-            summaries = [line.strip() for line in fio.readfile(summaryfile)]
+            summaries = [line.strip() for line in fio.ReadFile(summaryfile)]
             
             sourcefile = npdir + str(week)+ '/' + type + '.'+method+'.keys.source'
             student_summaryList = getStudentResponseList(orig, header, summarykey, type, withSource=True)
@@ -1057,7 +1063,7 @@ def getHighQualityRatio(modelname, excelfile, npdir, method="unigram"):
         for type in ['MP']:
             path = datadir + str(week)+ '/'
             summaryfile = path + type + '.summary'
-            summaries = [line.strip() for line in fio.readfile(summaryfile)]
+            summaries = [line.strip() for line in fio.ReadFile(summaryfile)]
             
             qualitydict = getStudentQuality(orig, header)
             
@@ -1187,6 +1193,36 @@ def RankCluster(NPs, lexdict, clusterids, sources):
 
 def PrintExample():
     pass
+
+def PrintClusterRankSummary(datadir):
+    sheets = range(0,13)
+    
+    head = ['week', 'Point of Interest', "Muddiest Point"]
+    body = []
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        
+        row = []
+        row.append(week+4)
+        
+        for type in ['POI', 'MP']:
+            path = datadir + str(week)+ '/'
+            summaryfile = path + type + '.summary'
+            summaries = [line.strip() for line in fio.ReadFile(summaryfile)]
+            
+            sourcefile = path + type + '.summary.source'
+            sources = [line.split(',') for line in fio.ReadFile(sourcefile)]
+            
+            combinedSummary = []
+            for i, (summary, source) in enumerate(zip(summaries, sources)):
+                summary = summary.replace('"', '\'')
+                combinedSummary.append(str(i+1) + ") " + summary + " [" + str(len(source)) + "]")
+            
+            row.append('"' + chr(10).join(combinedSummary)+ '"') 
+        
+        body.append(row)
+    fio.WriteMatrix(datadir + "summary.txt", body, head)
     
 def PrintCluster():
     output = "../data/np511/3/MP.cluster.kmedoids.sqrt.optimumComparerLSATasa.syntax"
@@ -1323,6 +1359,9 @@ if __name__ == '__main__':
     #getMeadAverageWordCount(formatedsummary, '../data/2011Spring_mead_avaregewordcount.txt')
     #getStudentResponseAverageWords(excelfile, '../data/averageword.txt')
     #getTALengthDistribution(excelfile, '../data/studentword_distribution.txt')
+    
+    PrintClusterRankSummary("../../mead/data/PHYS0175_ClusterARank/")
+    
     #getStudentResponseWordCountDistribution(excelfile, '../data/studentword_distribution.txt')
     #GetRougeScore(datadir_multiple, rougescore_multiple)
     #GetRougeScore(datadir = "../../mead/data/", models = ['2011Spring', 'RandombaselineK3', 'RandombaselineK2', 'RandombaselineK1', 'LongestbaselineK3', 'LongestbaselineK2', 'LongestbaselineK1', 'ShortestbaselineK3', 'ShortestbaselineK2', 'ShortestbaselineK1'], outputdir = "../data/" )
@@ -1418,6 +1457,6 @@ if __name__ == '__main__':
 #     CombineKMethod("../data/", "../data/C4_Clustering_lexrankmax.txt", methods, ratios, nps, 'C4_Clustering_lexrankmax')
 #    
     #getMeadAverageWordCountNoType("../../mead/data/C4_keyphrase/", "../data/keyphrase.txt")
-    getTAWordCountDistributionNoType(excelfile, None)
+    #getTAWordCountDistributionNoType(excelfile, None)
     
     print "done"

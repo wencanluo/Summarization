@@ -7,18 +7,41 @@ import json
 course = "PHYS0175"
 #course = "CS2001"
 #course = "CS2610"
-maxWeekDict = {"CS2610": 21, 
-               "CS2001": 18,
-               "PHYS0175":30
+maxWeekDict = {"CS2610": 21-4+1, 
+               "CS2001": 18-5+1,
+               "PHYS0175":13,
+               "IE256":2,
                }
 
 WeekLecture = {"CS2610":range(4, 40),
                "CS2001":range(5, 40),
-               "PHYS0175":range(3, 40),
+               "PHYS0175": range(5, 24),
+               "IE256": range(1,3),
                }
 
 header = ['cid', 'lecture_number', 'user', 'q1', 'q2']
 TpyeMap = {"POI":'q1_summaries', "MP":'q2_summaries', "LP":'q3_summaries'}
+
+RatingKey = {"slightly": 1, 
+"somewhat": 2,
+"moderately": 3, 
+"mostly":4,
+"completely":5
+}
+
+RateSplitTag = "||Rating: "
+
+def getRatingkey(rate):
+    key = rate.strip().lower()
+    if key in RatingKey:
+        return RatingKey[key]
+    return -1
+
+def NormalizeResponse(response):
+    k = response.find(RateSplitTag)
+    if k == -1:
+        return response
+    return response[:k]
             
 def getStudentResponse(excelfile):
     '''
@@ -45,6 +68,11 @@ def getStudentResponse(excelfile):
                         dict[key] = inst[key].strip().lower()
                     else:
                         dict[key] = inst[key].strip()
+                
+                if 'q1_rate' in inst:
+                    dict["q1"] = dict["q1"] + RateSplitTag + str(getRatingkey(inst['q1_rate']))
+                if 'q2_rate' in inst:
+                    dict["q2"] = dict["q2"] + RateSplitTag + str(getRatingkey(inst['q2_rate']))
                 
                 reflections.append(dict)
             else:
@@ -73,16 +101,16 @@ def getSummary(datadir, course):
         week = sheet + 1
         
         path = datadir + str(week)+ '/'
-        if not fio.isExistPath(path): continue
+        if not fio.IsExistPath(path): continue
         
         dict['lecture_number'] = WeekLecture[course][sheet]
         
         for type in ['POI', 'MP', 'LP']:
             filename = path + type + '.summary'
-            if not fio.isExist(filename): continue
+            if not fio.IsExist(filename): continue
             print filename
             
-            lines = fio.readfile(filename)
+            lines = fio.ReadFile(filename)
             if len(lines) == 0: continue
             
             summary = []
@@ -95,11 +123,11 @@ def getSummary(datadir, course):
             summarydict['summaryText'] = summary
             
             sourcefile = path + type + '.summary.source'
-            if not fio.isExist(sourcefile):
+            if not fio.IsExist(sourcefile):
                 for s in summary:
                     weight.append(1.0)
             else:
-                sources = [line.strip().split(",") for line in fio.readfile(sourcefile)]
+                sources = [line.strip().split(",") for line in fio.ReadFile(sourcefile)]
                 
                 assert(len(sources) == len(summary))
                 summarydict['Sources'] = sources

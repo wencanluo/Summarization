@@ -8,15 +8,43 @@ import json
 #filters = ["?", "[blank]", 'n/a', 'blank', 'none', "no", "nothing"]
 filters = []
 
-header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2', 'q3']
+#header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2', 'q3']
+header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2']
 
 maxWeekDict = {"CS2610": 21-4+1, 
-               "CS2001": 18-5+1}
+               "CS2001": 18-5+1,
+               "PHYS0175":13,
+               "IE256":2,
+               }
 
 WeekLecture = {"CS2610":range(4, 40),
-               "CS2001":range(5, 40)}
+               "CS2001":range(5, 40),
+               "PHYS0175": range(5, 24),
+               "IE256": range(1,3),
+               }
 
 import datetime
+
+RatingKey = {"slightly": 1, 
+"somewhat": 2,
+"moderately": 3, 
+"mostly":4,
+"completely":5
+}
+
+RateSplitTag = "||Rating: "
+
+def getRatingkey(rate):
+    key = rate.strip().lower()
+    if key in RatingKey:
+        return RatingKey[key]
+    return -1
+
+def NormalizeResponse(response):
+    k = response.find(RateSplitTag)
+    if k == -1:
+        return response
+    return response[:k]
 
 def ExtractTimeStamp(excelfile, output):
     header = ['Timestamp', 'user', 'q1', 'q2', 'q3']    
@@ -131,6 +159,7 @@ def getStudentResponseList(excelfile, course, week, type='POI', withSource=False
     
     for id, summaryList in student_summaries.items():
         for s in summaryList:
+            s = NormalizeResponse(s)
             student_summaryList.append((s,id))
             
     if withSource:
@@ -201,7 +230,7 @@ def getMeadSummary(datadir, type):
         path = datadir + str(week)+ '/'
         filename = path + type + '.summary'
         
-        lines = fio.readfile(filename)
+        lines = fio.ReadFile(filename)
         summary = []
         for line in lines:
             summary.append(NormalizeMeadSummary(line))
@@ -223,7 +252,7 @@ def getMeadSummaryList(datadir, type):
         path = datadir + str(week)+ '/'
         filename = path + type + '.summary'
         
-        lines = fio.readfile(filename)
+        lines = fio.ReadFile(filename)
         summary = []
         for line in lines:
             summary.append(NormalizeMeadSummary(line))
@@ -249,26 +278,27 @@ def getStudentResponses4Senna(excelfile, datadir):
             
             filename = datadir + "senna." + str(week) + "." + type + ".input"
             
-            fio.savelist(student_summaryList, filename)
+            fio.SaveList(student_summaryList, filename)
             
 if __name__ == '__main__':
     
     excelfile = "../data/CourseMIRROR Reflections (Responses).xls"
     output = "../data/CourseMIRROR_reflections.json"
     
-    ExtractTimeStamp(excelfile, output)
-     
-    for c in ["CS2001", "CS2610"]:
-         course = c
-         maxWeek = maxWeekDict[course]
-#         
-#         sennadir = "../data/"+course+"/senna/"
-#         excelfile = "../data/reflections.json"
-#         phrasedir = "../data/"+course+"/phrases/"
-#         
-#         fio.newPath(sennadir)
-#         getStudentResponses4Senna(excelfile, sennadir)
+    #ExtractTimeStamp(excelfile, output)
+    
+    #Step1: Prepare Senna Input
+    for c in ["IE256"]:#PHYS0175
+        course = c
+        maxWeek = maxWeekDict[course]
+         
+        sennadir = "../data/"+course+"/senna/"
+        excelfile = "../data/CourseMirror/Reflection.json"
+        phrasedir = "../data/"+course+"/phrases/"
+         
+        fio.NewPath(sennadir)
+        getStudentResponses4Senna(excelfile, sennadir)
 
 
-
+    #Step2: get Senna output
     
