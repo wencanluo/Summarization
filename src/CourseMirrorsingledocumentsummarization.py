@@ -6,10 +6,6 @@ import xml.etree.ElementTree as ET
 
 import CourseMirrorSurvey
 
-course = "CS2001"
-#course = "CS2610"
-maxWeekDict = {"CS2610": 21, 
-               "CS2001": 18}
 
 maxWeek = maxWeekDict[course]
                     

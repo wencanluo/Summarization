@@ -11,7 +11,7 @@ import porter
 import phraseClusteringKmedoid
 import postProcess
 
-stopwords = [line.lower().strip() for line in fio.readfile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
+stopwords = [line.lower().strip() for line in fio.ReadFile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
 #print "stopwords:", len(stopwords)
 
 stopwords = stopwords + ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']
@@ -57,14 +57,14 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             summaries = [summary[0] for summary in student_summaryList] 
                             
             path = folder + str(week)+ '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             filename = path + type + '.summary'
             
             #produce the cluster file on the fly
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
             output = clusterdir + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method + '.' + np
             weightfile = clusterdir + str(week)+ '/' + type + '.' + np + '.' + method
-            if not fio.isExist(output):
+            if not fio.IsExist(output):
             #if True:
                 phraseClusteringKmedoid.getPhraseClusterAll(sennafile, weightfile, output, ratio, MalformedFlilter=True, source=ids, np=np)
             
@@ -75,7 +75,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             
             #for np, id in zip(NPCandidates, sources):
 
-            body = fio.readMatrix(output, False)
+            body = fio.ReadMatrix(output, False)
             
             lexfile = clusterdir + str(week)+ '/' + str(type) + "." + np + "."+lex+".dict"
             lexdict = fio.LoadDict(lexfile, 'float')
@@ -83,7 +83,11 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             NPs = [row[0] for row in body]
             clusterids = [row[1] for row in body]
             
-            assert(NPCandidates == NPs)
+#             print NPCandidates
+#             print 
+#             print NPs
+#             
+#             assert(NPCandidates == NPs)
             
             cluster = {}
             for row in body:
@@ -108,7 +112,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
                 if len(Summary)+1 <= K:
                     Summary.append(phrase)
             
-            fio.savelist(Summary, filename)
+            fio.SaveList(Summary, filename)
 
 #             added_cluster = []
 #             total_word = 0
@@ -230,8 +234,11 @@ if __name__ == '__main__':
             for np in ['syntax']:
                 for lex in ['lexrankmax']:
                     #datadir = "../../mead/data/C4_ClusteringAlone_"+str(ratio)+"_"+method+"_"+np+"/"   
-                    datadir = "../../mead/data/C4_ClusteringAlone/"  
-                    fio.deleteFolder(datadir)
+                    #datadir = "../../mead/data/C4_ClusteringAlone/"  
+                    #datadir = "../../mead/data/C4_ClusteringAlone/"
+                    datadir = "../../mead/data/C4_ClusteringAlone2/"  
+                    #datadir = "../../mead/data/C30_ClusteringAlone/" 
+                    fio.DeleteFolder(datadir)
                     ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=4, method=method, ratio=ratio, np=np, lex=lex)
             
     print "done"

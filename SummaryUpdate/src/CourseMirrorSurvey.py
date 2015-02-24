@@ -7,15 +7,17 @@ import json
 course = "PHYS0175"
 #course = "CS2001"
 #course = "CS2610"
+range1 = range(3,21)
+
 maxWeekDict = {"CS2610": 21-4+1, 
                "CS2001": 18-5+1,
-               "PHYS0175":13,
+               "PHYS0175":len(range1),
                "IE256":2,
                }
 
 WeekLecture = {"CS2610":range(4, 40),
                "CS2001":range(5, 40),
-               "PHYS0175": range(5, 24),
+               "PHYS0175": range1,
                "IE256": range(1,3),
                }
 

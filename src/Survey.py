@@ -131,7 +131,7 @@ def WriteTASummary(excelfile, datadir):
     for sheet in sheets:
         week = sheet + 1
         path = datadir + str(week)+ '/'
-        fio.newPath(path)
+        fio.NewPath(path)
 
         orig = prData(excelfile, sheet)
         for type in types:
@@ -143,7 +143,7 @@ def WriteTASummary(excelfile, datadir):
             print filename
             
             #only save the first 3 points
-            fio.savelist(summary, filename)
+            fio.SaveList(summary, filename)
 
 def getStudentQuality(orig, header):
     '''
@@ -370,9 +370,9 @@ def getStudentResponses4Senna(excelfile, datadir):
             student_summaryList = getStudentResponseList(orig, header, summarykey, type)
             filename = datadir + "senna." + str(week) + "." + type + ".input"
             
-            fio.savelist(student_summaryList, filename + ".2")
-            student_summaryList = [summary[0] for summary in student_summaryList]
-            fio.savelist(student_summaryList, filename)
+            fio.SaveList(student_summaryList, filename)
+            #student_summaryList = [summary[0] for summary in student_summaryList]
+            #fio.SaveList(student_summaryList, filename)
 
 def getStudentResponses4Maui(excelfile, datadir):
     header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
@@ -388,7 +388,7 @@ def getStudentResponses4Maui(excelfile, datadir):
         for type in ['POI', 'MP', 'LP']:
             student_summaryList = getStudentResponseList(orig, header, summarykey, type)
             filename = datadir + "" + str(week) + "." + type + ".txt"
-            fio.savelist(student_summaryList, filename, ".\n")
+            fio.SaveList(student_summaryList, filename, ".\n")
 
 def getCandidatePhrases(dir):
     sheets = range(0,12)
@@ -489,7 +489,7 @@ def getNumberofCandiatePhrase(excel, phrasedir):
                 newrow.append("%.3f" % np.mean(values))
             nbody.append(newrow)
             
-    fio.writeMatrix("../data/numberofcandiatephrase.txt", nbody, ["method", "type"] + localheader)
+    fio.WriteMatrix("../data/numberofcandiatephrase.txt", nbody, ["method", "type"] + localheader)
                                            
 if __name__ == '__main__':
     
@@ -500,8 +500,8 @@ if __name__ == '__main__':
     #fio.newPath(datadir)
     #getStudentResponses4Maui(excelfile, datadir)
     
-    #getStudentResponses4Senna(excelfile, sennadir)
+    getStudentResponses4Senna(excelfile, sennadir)
     
     #getCandidatePhrases("../data/phrases/")
     
-    getNumberofCandiatePhrase(excelfile, "../data/phrases/")
+    #getNumberofCandiatePhrase(excelfile, "../data/phrases/")

@@ -135,8 +135,9 @@ def ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method, K=30)
     getShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method,  K)
 
 if __name__ == '__main__':
+    
     #Step3: extract phrases
-    for c in ["IE256"]:
+    for c in ["PHYS0175"]:
         course = c
         maxWeek = maxWeekDict[course]
         

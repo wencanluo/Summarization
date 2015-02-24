@@ -11,7 +11,7 @@ import porter
 import phraseClusteringKmedoid
 import postProcess
 
-stopwords = [line.lower().strip() for line in fio.readfile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
+stopwords = [line.lower().strip() for line in fio.ReadFile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
 #print "stopwords:", len(stopwords)
 
 stopwords = stopwords + ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']
@@ -41,14 +41,14 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             summaries = [summary[0] for summary in student_summaryList] 
                             
             path = folder + str(week)+ '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             filename = path + type + '.summary'
             
             #produce the cluster file on the fly
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
             output = clusterdir + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method + '.' + np
             weightfile = clusterdir + str(week)+ '/' + type + '.' + np + '.' + method
-            if not fio.isExist(output):
+            if not fio.IsExist(output):
             #if True:
                 phraseClusteringKmedoid.getPhraseClusterAll(sennafile, weightfile, output, ratio, MalformedFlilter=True, source=ids, np=np)
             
@@ -64,14 +64,14 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             sourcelist = clusterdir + str(week) + "/" + type + '.' + np + '.source.txt'
             print sourcelist
             
-            fio.writeMatrix(sourcelist,body,None)
+            fio.WriteMatrix(sourcelist,body,None)
             
             #write the sources
             sourcedict = {}
             
             #for np, id in zip(NPCandidates, sources):
 
-            body = fio.readMatrix(output, False)
+            body = fio.ReadMatrix(output, False)
             
             lexfile = clusterdir + str(week)+ '/' + str(type) + "." + np + "."+lex+".dict"
             lexdict = fio.LoadDict(lexfile, 'float')
@@ -79,7 +79,10 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             NPs = [row[0] for row in body]
             clusterids = [row[1] for row in body]
             
-            assert(NPCandidates == NPs)
+            #print NPCandidates
+            #print NPs
+            
+            #assert(NPCandidates == NPs)
             
             cluster = {}
             for row in body:
@@ -111,8 +114,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
                   
                 word_count = len(phrase.split())
                 total_word = total_word + word_count
-                #if total_word <= K:
-                if len(Summary) + 1 <= K:
+                if total_word <= K:
+                #if len(Summary) + 1 <= K:
                     Summary.append(phrase)
                     sumarysource.append(",".join(source))
             
@@ -139,8 +142,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
 #                     Summary.append(phrase)
 #                     sumarysource.append(",".join(source))
             
-            fio.savelist(Summary, filename)
-            fio.savelist(sumarysource, filename + ".source")
+            fio.SaveList(Summary, filename)
+            fio.SaveList(sumarysource, filename + ".source")
             
                         
 def ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=None, ratio=None, np=None, lex='lexrank'):
@@ -244,9 +247,10 @@ if __name__ == '__main__':
                     #for lex in ['lexrank', 'lexrankmax']:
                     for lex in ['lexrankmax']:
                         #datadir = "../../mead/data/C4_Clustering_"+lex+"_"+str(ratio)+"_"+method+"_"+np+"/"   
-                        datadir = "../../mead/data/C4_ClusterARank"+str(i)+"/"
-                        fio.deleteFolder(datadir)
-                        ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=4, method=method, ratio=ratio, np=np, lex=lex)
+                        #datadir = "../../mead/data/C4_ClusterARank"+str(i)+"/"
+                        datadir = "../../mead/data/C30_ClusterARank/"
+                        fio.DeleteFolder(datadir)
+                        ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=method, ratio=ratio, np=np, lex=lex)
                 
     print "done"
     

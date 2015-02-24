@@ -9,10 +9,7 @@ import NLTKWrapper
 import singledocumentsummarization
 import porter
 
-#course = "CS2001"
 course = "CS2610"
-maxWeekDict = {"CS2610": 5, 
-               "CS2001": 1}
 
 maxWeek = maxWeekDict[course]
 

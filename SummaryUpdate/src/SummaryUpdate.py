@@ -125,6 +125,7 @@ def submitSummary(dir, course, method):
     print responses
       
 if __name__ == '__main__':
+    #Step0: manually combine reflections
     
     #combineReflection("CourseMIRROR IE256 Reflections (Responses).xls")
     #combineReflection("CourseMIRROR PHYS0175 Reflections (Responses).xls")
@@ -134,7 +135,7 @@ if __name__ == '__main__':
     #submitSummary("../../Fall2014/summarization/mead/data/", "CS2610", "Mead")
     
     #Step9:
-    for course in ['IE256']:
+    for course in ['PHYS0175']:
         submitSummary("../../../mead/data/", course, "ClusterARank")
     
     print "done"

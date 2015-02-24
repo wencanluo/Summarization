@@ -10,9 +10,9 @@ def FormatOutputMead(datadir, rate = "word", R = 30):
             #read the output
             path = datadir + str(week)+ '/'
             filename = path + type + '.summary.org'
-            if not fio.isExistPath(path): continue
+            if not fio.IsExistPath(path): continue
             
-            lines = fio.readfile(filename)
+            lines = fio.ReadFile(filename)
             summaries = []
             for line in lines:
                 summaries.append(Survey.NormalizeMeadSummary(line))
@@ -45,10 +45,10 @@ def FormatOutputMead(datadir, rate = "word", R = 30):
             
             #print newSummary
             filename = path + type + '.summary'
-            fio.savelist(newSummary, filename)
+            fio.SaveList(newSummary, filename)
 
 def getTotalWords(file):
-    lines = fio.readfile(file)
+    lines = fio.ReadFile(file)
     summaries = []
     for line in lines:
         summaries.append(Survey.NormalizeMeadSummary(line))
@@ -64,7 +64,8 @@ def getTotalWords(file):
     
     return total_word
                     
-def FormatOutputMeadMMR(datadir, rate = "word", R = 30, w=[1,2,3,4,5,6,7,8]):
+def FormatOutputMeadMMR(datadir, rate = "word", R = 30, ratio = 1.0, w=[1,2,3,4,5,6,7,8]):
+    #get Summary for a paticular parameter
     sheets = range(0,12)
     w.reverse()
     
@@ -78,12 +79,12 @@ def FormatOutputMeadMMR(datadir, rate = "word", R = 30, w=[1,2,3,4,5,6,7,8]):
             for r in w:
                 #read the output
                 path = datadir + str(week)+ '/'
-                filename = path + type + '.summary.'+str(r)+'.org'
+                filename = path + type + '.' + str(ratio)+ '.summary.'+str(r)+'.org'
                 
                 N = getTotalWords(filename)
                 
                 if N <= R:
-                    lines = fio.readfile(filename)
+                    lines = fio.ReadFile(filename)
                     summaries = []
                     for line in lines:
                         summaries.append(Survey.NormalizeMeadSummary(line))
@@ -114,7 +115,7 @@ def FormatOutputMeadMMR(datadir, rate = "word", R = 30, w=[1,2,3,4,5,6,7,8]):
                     
                     #print newSummary
                     filename = path + type + '.summary'
-                    fio.savelist(newSummary, filename)
+                    fio.SaveList(newSummary, filename)
                     break
 
 def FormatOutputMeadMMR2(datadir, rate = "word", R = 30):
@@ -124,12 +125,12 @@ def FormatOutputMeadMMR2(datadir, rate = "word", R = 30):
         
         for type in ['POI', 'MP', 'LP']:
             
-            for r in ['0', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0']:
+            for r in ['0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0']:
                 #read the output
                 path = datadir + str(week)+ '/'
                 filename = path + type + '.' + str(r) + '.summary.org'
                 
-                lines = fio.readfile(filename)
+                lines = fio.ReadFile(filename)
                 summaries = []
                 for line in lines:
                     summaries.append(Survey.NormalizeMeadSummary(line))
@@ -160,7 +161,7 @@ def FormatOutputMeadMMR2(datadir, rate = "word", R = 30):
                 
                 #print newSummary
                 filename = path + type + '.' + str(r) + '.summary'
-                fio.savelist(newSummary, filename)
+                fio.SaveList(newSummary, filename)
                             
 if __name__ == '__main__':
     
@@ -173,12 +174,16 @@ if __name__ == '__main__':
     outputdir = "../data/np/"
     #for np in ['chunk', 'syntax', ]:#'candidate', 'candidatestemming']:
     for np in ['syntax', ]:#'candidate', 'candidatestemming']:
-        for model in ['C30_PhraseMead_syntax', 'C30_PhraseMeadLexRank_syntax', 'C30_LexRank_syntax']:
-        #for model in ['C30_PhraseMeadMMR_syntax', 'C30_PhraseMeadLexRankMMR_syntax', 'C30_LexRankMMR_syntax']:
+        #for model in ['C30_PhraseMead_syntax', 'C30_PhraseMeadLexRank_syntax', 'C30_LexRank_syntax']:
+        for model in ['C30_PhraseMeadMMR_syntax',]:
             datadir = "../../mead/data/"+model+"/"
-            #FormatOutputMeadMMR(datadir, rate, R, w=[1,2,3,4,5,6,7,8])
+            FormatOutputMeadMMR(datadir, rate, R, ratio=0.8, w=[1,2,3,4,5,6,7,8])
+        
+        for model in ['C30_LexRankMMR_syntax']:
+            datadir = "../../mead/data/"+model+"/"
+            FormatOutputMeadMMR(datadir, rate, R, ratio=0.7, w=[1,2,3,4,5,6,7,8])
             #FormatOutputMeadMMR2(datadir, rate, R)
-            FormatOutputMead(datadir, rate, R)
+            #FormatOutputMead(datadir, rate, R)
             #Survey.WriteTASummary(excelfile, datadir)
             
 #         datadir = "../../mead/data/PhraseMead_"+np+"/"

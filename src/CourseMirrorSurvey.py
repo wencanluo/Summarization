@@ -6,20 +6,22 @@ import NLTKWrapper
 import json
 
 #filters = ["?", "[blank]", 'n/a', 'blank', 'none', "no", "nothing"]
-filters = []
+#filters = []
 
 #header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2', 'q3']
 header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2']
 
+range1 = range(3,21)
+
 maxWeekDict = {"CS2610": 21-4+1, 
                "CS2001": 18-5+1,
-               "PHYS0175":13,
+               "PHYS0175":len(range1),
                "IE256":2,
                }
 
 WeekLecture = {"CS2610":range(4, 40),
                "CS2001":range(5, 40),
-               "PHYS0175": range(5, 24),
+               "PHYS0175": range1,
                "IE256": range(1,3),
                }
 
@@ -288,7 +290,7 @@ if __name__ == '__main__':
     #ExtractTimeStamp(excelfile, output)
     
     #Step1: Prepare Senna Input
-    for c in ["IE256"]:#PHYS0175
+    for c in ["PHYS0175"]:#PHYS0175
         course = c
         maxWeek = maxWeekDict[course]
          
@@ -301,4 +303,6 @@ if __name__ == '__main__':
 
 
     #Step2: get Senna output
+    
+    print "done"
     

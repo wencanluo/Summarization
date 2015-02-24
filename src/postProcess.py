@@ -57,6 +57,7 @@ def GetRougeScore(datadir, models, outputdir):
         
         #sheets = range(0,12)
         sheets = [1,2,3,4,5,6,7,10]
+        #sheets = [2,3,4,5,6,7,8,11]
         types = ['POI', 'MP', 'LP']
         scores = ['ROUGE-1','ROUGE-2', 'ROUGE-SUX']
         
@@ -399,8 +400,9 @@ def getTAWordCountDistributionNoType(excelfile, output):
         for type in ['POI', 'MP', 'LP']:
             summaryList = getTASummary(orig, header, summarykey, type)
             for summary in summaryList:
-                counts[summary]  = len(summary.split())
+                counts[summary]  = len(summary.split()) #len(NLTKWrapper.wordtokenizer(summary, punct=True))#
     
+    fio.SaveList(counts.values(), "../data/TA_phrase_counts.txt", "\n")
     for type in ['POI', 'MP', 'LP']:
         print numpy.max(counts.values()),'\t',numpy.min(counts.values()),'\t',numpy.mean(counts.values()),'\t',numpy.median(counts.values()),'\t',numpy.std(counts.values())
         #fio.PrintList(counts[type].values(), sep='\t')
@@ -538,7 +540,7 @@ def getStudentResponseWordCountDistribution(excelfile, output):
     summarykey = "Top Answers"
     
     #sheets = range(0,25)
-    sheets = range(0,24)
+    sheets = range(0,12)
     
     counts = []
     
@@ -558,8 +560,8 @@ def getStudentResponseWordCountDistribution(excelfile, output):
             for summaryList in summaries.values():
                 N = 0
                 for s in summaryList:   
-                    #N = N + len(s.split())
-                    N = N + len(NLTKWrapper.wordtokenizer(s, punct=True))
+                    N = N + len(s.split())
+                    #N = N + len(NLTKWrapper.wordtokenizer(s, punct=True))
                     
                 if N==0: continue
                 counts.append(N)
@@ -579,7 +581,7 @@ def getStudentResponseWordCountDistribution(excelfile, output):
             values.append(0)
     fio.PrintList(values, ',')
     
-    fio.SaveList(CountList, "../data/count.txt", "\n")
+    fio.SaveList(CountList, "../data/students_count.txt", "\n")
     
     #for type in ['POI', 'MP', 'LP']:
     print numpy.max(counts),'\t',numpy.min(counts),'\t',numpy.mean(counts),'\t',numpy.median(counts),'\t',numpy.std(counts)
@@ -719,7 +721,9 @@ def TASummaryCoverage(excelfile, output):
     fio.PrintDict(uncoveried, True)
 
 def ExtractNP(datadir, outdir, method="syntax"):
-    sheets = range(0,25)
+    sheets = range(0,12)
+    
+    phrases = {}
     
     for i, sheet in enumerate(sheets):
         week = i + 1
@@ -735,6 +739,21 @@ def ExtractNP(datadir, outdir, method="syntax"):
             fio.NewPath(outdir + str(week)+ '/')
             output = outdir + str(week)+ '/' + type + '.'+method+'.key'
             fio.SaveList(keys, output)
+            
+            for key in keys:
+                key = key.lower()
+                if key not in phrases:
+                    phrases[key] = 0
+                
+                phrases[key] = phrases[key] + 1
+    fio.SaveDict(phrases, "../data/phrases.txt", True)
+    
+    #get count
+    N = 0
+    N1 = 0
+    for key in phrases:
+        N = N + phrases[key]
+    
 
 def ExtractNPSource(excelfile, sennadatadir, outdir, method="syntax"):
     sheets = range(0,12)
@@ -1360,7 +1379,7 @@ if __name__ == '__main__':
     #getStudentResponseAverageWords(excelfile, '../data/averageword.txt')
     #getTALengthDistribution(excelfile, '../data/studentword_distribution.txt')
     
-    PrintClusterRankSummary("../../mead/data/PHYS0175_ClusterARank/")
+    #PrintClusterRankSummary("../../mead/data/PHYS0175_ClusterARank/")
     
     #getStudentResponseWordCountDistribution(excelfile, '../data/studentword_distribution.txt')
     #GetRougeScore(datadir_multiple, rougescore_multiple)
@@ -1409,23 +1428,35 @@ if __name__ == '__main__':
               #'C4_Clustering_lexrankmax_sqrt_optimumComparerLSATasa_syntax',
               #'C4_Clustering_lexrankmax_4_npsoft_chunk', 'C4_Clustering_lexrankmax_4_npsoft_syntax', 'C4_Clustering_lexrankmax_4_optimumComparerLSATasa_chunk', 'C4_Clustering_lexrankmax_4_optimumComparerLSATasa_syntax',         
               
+              
+            'C30_keyphraseExtractionbasedShallowSummary',
+            'C30_MEAD',
+            'C30_PhraseMead_syntax',
+            'C30_PhraseMeadMMR_syntax',
+            'C30_LexRank_syntax',
+            'C30_LexRankMMR_syntax',
+            'C30_ClusteringAlone',
+            'C30_ClusterARank',
+              
+              #'C4_ClusteringAlone2',
+              
               #'ShallowSummary_unigram_remove_stop_K6', 'ShallowSummary_bigram_K6', 'C6_keyphraseExtractionbasedShallowSummary', 'C6_PhraseMead_syntax', 'C6_PhraseMeadMMR_syntax', 'C6_PhraseMeadLexRank_syntax', 'C6_PhraseMeadLexRankMMR_syntax', 'C6_LexRank_syntax', 'C6_LexRankMMR_syntax','C6_ClusterARank511',
-            'C4_unigram_remove_stop', 'C4_bigram', 'C4_keyphrase', "C4_Mead", 
-            'C4_PhraseMead_syntax', 'C4_PhraseMeadMMR_syntax',
-            'C4_PhraseMeadLexRank_syntax',
-            'C4_PhraseMeadLexRankMMR_syntax', 
-            'C4_LexRank_syntax', 'C4_LexRankMMR_syntax',
-            "C4_ClusteringAlone", 
-            'C4_ClusterARank511',
-            'Opinosis',
-            'OpinosisPhrase',
-            'OpinosisPhraseCluster'
+#             'C4_unigram_remove_stop', 'C4_bigram', 'C4_keyphrase', "C4_Mead", 
+#             'C4_PhraseMead_syntax', 'C4_PhraseMeadMMR_syntax',
+#             'C4_PhraseMeadLexRank_syntax',
+#             'C4_PhraseMeadLexRankMMR_syntax', 
+#             'C4_LexRank_syntax', 'C4_LexRankMMR_syntax',
+#             "C4_ClusteringAlone", 
+#             'C4_ClusterARank511',
+#             'Opinosis',
+#             'OpinosisPhrase',
+#             'OpinosisPhraseCluster'
             ]
     
     #models = AllModels()
     
-    #GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
-    #CombineRouges(models = models, outputdir = "../data/")
+    GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
+    CombineRouges(models = models, outputdir = "../data/")
     
     models = ['C4_PhraseMeadLexRankMMR_syntax', 
               #'PhraseMeadMMR_syntax', 

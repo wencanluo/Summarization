@@ -59,7 +59,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
             output = clusterdir + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method + '.' + np
             weightfile = clusterdir + str(week)+ '/' + type + '.' + np + '.' + method
-            if not fio.IsExist(output):
+            #if not fio.IsExist(output):
+            if True:
                 phraseClusteringKmedoid.getPhraseClusterAll(sennafile, weightfile, output, ratio, MalformedFlilter=True, source=ids, np=np)
             
             NPCandidates, sources = phraseClusteringKmedoid.getNPs(sennafile, MalformedFlilter=True, source=ids, np=np)
@@ -181,7 +182,7 @@ if __name__ == '__main__':
     #Step6: get LSA results
     
     #Step7: Run Clustering
-    for c in ["IE256"]:
+    for c in ["PHYS0175"]:
         course = c
         maxWeek = maxWeekDict[course]
         

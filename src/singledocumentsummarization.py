@@ -22,11 +22,11 @@ def WriteDocsent(excelfile, folder):
             DID = str(week) + '_' + type
             
             path = folder + str(week)+ '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             path = path + type + '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             path = path + 'docsent/'
-            fio.newPath(path)
+            fio.NewPath(path)
             filename = path + DID + '.docsent'
             
             #create a XML file
@@ -52,10 +52,10 @@ def WriteCluster(excelfile, folder):
         for sheet in sheets:
             week = sheet + 1
             path = folder + str(week)+ '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             
             path = path + type + '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             filename = path + type + '.cluster'
             
             #create a XML file
@@ -79,9 +79,9 @@ def Write2Mead(excelfile, datadir, K=3):
    
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
-    datadir = "../../mead/data/C4_Mead/"
+    datadir = "../../mead/data/C30_Mead/"
     
-    fio.deleteFolder(datadir)
+    fio.DeleteFolder(datadir)
     Write2Mead(excelfile, datadir)
     
     #Wrong Mead Summary
