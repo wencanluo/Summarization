@@ -23,3 +23,14 @@
 /doc/*.pdf
 /doc/Zhang, Li - 2009 - Automatic text summarization based on sentences clustering and extraction-annotated.pdf
 /SummaryUpdate/src/*.pyc
+/src/*.txt
+/src/README_CourseMIRROR.txt
+/src/README_XML2Excel.txt
+/src/ref.txt
+/src/simplifications.txt
+/src/wordsEn.txt
+/src/runGetCourseMirrorSummary_batch.bat
+/src/runSennaCourseMirror.bat
+/src/runXML2Excel.bat
+/src/organization_assignment.txt
+/src/README_ClusterARank.txt
