@@ -37,7 +37,7 @@ def formatSummaryOutput(datadir, models, output):
         
         body.append(row)
             
-    fio.writeMatrix(output, body)
+    fio.WriteMatrix(output, body)
 
        
 if __name__ == '__main__':

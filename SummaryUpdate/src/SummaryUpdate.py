@@ -103,39 +103,42 @@ def saveReflection(output):
     
 def combineReflection(excelfile):
     reflections = CourseMirrorSurvey.getStudentResponse(excelfile)
-    responses = submitData(URL_REFLECTIONS_FRAG, reflections)
-    print responses
     print reflections
     
+    responses = submitData(URL_REFLECTIONS_FRAG, reflections)
+    print responses
     
-def submitSummary(dir, course, method):
+    
+def submitSummary(dir, course, method, sheets):
     path = dir + course + "_" + method + "/"
     
     print path
-    summaries = CourseMirrorSurvey.getSummary(path, course)
+    summaries = CourseMirrorSurvey.getSummary(path, course, sheets)
     #print len(summaries)
     print summaries
+    #exit()
     
     for summary in summaries:
         summary['cid'] = course
         summary['method'] = method
         print summary
-        
+
     responses = submitData(URL_SUMMARIZATION_FRAG, summaries)
     print responses
       
 if __name__ == '__main__':
     #Step0: manually combine reflections
-    
+#     
     #combineReflection("CourseMIRROR IE256 Reflections (Responses).xls")
     #combineReflection("CourseMIRROR PHYS0175 Reflections (Responses).xls")
     
     #saveReflection("../../Fall2014/summarization/Summarization/data/reflections.json")
-    #submitSummary("../../Fall2014/summarization/mead/data/", "CS2001", "Mead")
-    #submitSummary("../../Fall2014/summarization/mead/data/", "CS2610", "Mead")
     
     #Step9:
-    for course in ['PHYS0175']:
-        submitSummary("../../../mead/data/", course, "ClusterARank")
-    
+#     for course in ['PHYS0175']:
+#         submitSummary("../../../mead/data/", course, "ClusterARank", sheets=range(38, 39))
+         
+    for course in ['IE256']:
+        submitSummary("../../../mead/data/", course, "ClusterARank", sheets=range(19, 21))
+     
     print "done"

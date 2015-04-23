@@ -52,9 +52,15 @@ def getNPs(sennafile, MalformedFlilter=False, source = None, np=None):
     for i, s in enumerate(sentences):
         if np=='syntax':
             NPs = s.getSyntaxNP()
-        else:
+        elif np == 'chunk':
             NPs = s.getNPrases()
-        
+        elif np == 'sentence':
+            NPs = s.getSentence()
+        elif np.startswith('syntax_'):
+            NPs = s.getSyntaxPhrases(np[len('syntax_'):])
+        else:
+            NPs = s.getSyntaxNP()
+            
         for NP in NPs:
             NP = NP.lower()
             
@@ -113,6 +119,7 @@ def getNPCandiate(student_summaryList, phrasefile, MalformedFlilter=False, sourc
     return np_phrase
 
 def Similarity2Distance(similarity):
+    #http://scikit-learn.org/stable/modules/generated/sklearn.cluster.SpectralClustering.html#sklearn.cluster.SpectralClustering
     distance = copy.deepcopy(similarity)
     
     #change the similarity to distance

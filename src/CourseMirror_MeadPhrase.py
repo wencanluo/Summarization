@@ -27,6 +27,8 @@ def WriteDocsent(excelfile, folder, sennadatadir, phrasedir, np=None):
             summaries = [summary[0] for summary in student_summaryList] 
                             
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
+            if not fio.IsExist(sennafile): continue
+            
             phrasefile = phrasedir + str(week) + ".txt"
             
             sentences = SennaParser.SennaParse(sennafile)
@@ -111,7 +113,7 @@ if __name__ == '__main__':
     
     #Step4: get PhraseMead input
     
-    for c in ["PHYS0175"]: #["CS2001", "CS2610"]:
+    for c in ["PHYS0175", 'IE256']: #["CS2001", "CS2610"]:
         course = c
         maxWeek = maxWeekDict[course]
         

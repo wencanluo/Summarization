@@ -128,6 +128,9 @@ class SennaSentence:
 			words = words + word.token + " "
 		return words.strip()
 	
+	def getSentence(self):
+		return [self.getWords()]
+	
 	def getNPrases(self):
 		NP = []
 		
@@ -191,8 +194,10 @@ class SennaSentence:
 		return words, tags
 	
 	def getSyntaxNP(self):
-		NP = []
-		
+		return self.getSyntaxPhrase()
+	
+	def getSyntaxPhrase(self, type='NP'):
+		Phrase = []
 		#print self.getWords()
 		
 		stack = []
@@ -210,11 +215,11 @@ class SennaSentence:
 					if not hasNP: continue
 					
 					stack.pop()
-					if len(stack) == 0: #empty, the NP is done
+					if len(stack) == 0: #empty, the Phrase is done
 						if not Added: 
 							tmp.append(word.token)
 							Added = True
-						NP.append(" ".join(tmp))
+						Phrase.append(" ".join(tmp))
 						tmp = []
 						hasNP = False
 				else:
@@ -224,13 +229,66 @@ class SennaSentence:
 							Added = True
 						continue
 					
-					if word.psg[i-1:].startswith('(NP'):
+					if word.psg[i-1:].startswith('('+type):
 						hasNP = True
 						stack.append('(')
 						tmp.append(word.token)
 						Added = True
 		
-		return NP
+		return Phrase
+		
+	def getSyntaxPhrasesRedundant(self, phrase_types):
+		types = phrase_types.split('_')
+		
+		#without handing the overlap
+		phrases = []
+		for type in types:
+			phrase = self.getSyntaxPhrase(type)
+			phrases = phrases + phrase
+		return phrases
+
+	def getSyntaxPhrases(self, phrase_types):
+		types = phrase_types.split('_')
+		
+		Phrase = []
+		
+		stack = []
+		tmp = []
+		
+		hasNP = False
+		for word in self.words:
+			Added = False
+			
+			for i, ch in enumerate(word.psg):
+				if ch == '(':
+					if not hasNP: continue
+					stack.append(ch)
+				elif ch == ')':
+					if not hasNP: continue
+					
+					stack.pop()
+					if len(stack) == 0: #empty, the Phrase is done
+						if not Added: 
+							tmp.append(word.token)
+							Added = True
+						Phrase.append(" ".join(tmp))
+						tmp = []
+						hasNP = False
+				else:
+					if hasNP: 
+						if not Added: #add the word only once
+							tmp.append(word.token)
+							Added = True
+						continue
+					
+					for type in types:
+						if word.psg[i-1:].startswith('('+type):
+							hasNP = True
+							stack.append('(')
+							tmp.append(word.token)
+							Added = True
+		
+		return Phrase
 	
 	def getPhrasewithPos(self):#SyntaxNP
 		NP = []

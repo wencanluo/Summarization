@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 import os
 import re
 import time
+import sys
 
 RoleDict = {"002": "Engineer",
             "003": "Messenger",
@@ -133,9 +134,9 @@ def getUtterance(path, xml):
     
     return Utterances
     
-def XML2Excel(path, xml, output):
+def XML2Excel(xml, excel):
     head = ['TeamID', 'Video_Filename', 'Audio_Filename', 'Date', 'Game1or2', 'Game_Order', 'Line_Number', 'Speaker_Role', 'Timestamp_Start', 'Timestamp_End', 'Utterance']
-    tree = ET.parse(path + xml)
+    tree = ET.parse(xml)
     root = tree.getroot()
     
     id = root.attrib['id']
@@ -204,14 +205,23 @@ def XML2Excel(path, xml, output):
         row.append(features)
         body.append(row)
     
-    Write2Excel(head, body, output)
+    Write2Excel(head, body, excel)
 
 if __name__ == '__main__':
-    path = "E:/project/Audio/"
-    xml = "ref.xml"
     
-    #XML2Excel(path, xml, path + "Team1251.xls")
-    ut = NormalizedTranscription("(--) Ok. Um shore up two tiles for one action. We do?")
-    print ut
+    if len(sys.argv) != 2:
+        print "argument is wrong"
+        print "The first argument is the absolute filename of the xml file"
+        print "The second argument is the absolute filenae of the excel output file"
+        print "example: python Transcibe_XML2Excel.py E:/project/Transcription/Team1251transcriptionTeamTrainingandGame1.xml E:/project/Transcription/Team1251transcriptionTeamTrainingandGame1.xls"
     
+    xml = sys.argv[1]
+    excel = sys.argv[2]
+    
+    try:
+        XML2Excel(xml, excel)
+    except Exception as e:
+        print e
+        print "Something wrong happened"
+        exit(-1)
     print "done"

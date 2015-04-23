@@ -7,6 +7,7 @@ import MaximalMatchTokenizer
 import numpy as np
 import math
 import SennaParser
+import json
 
 filters = ["?", "[blank]", 'n/a', 'blank'] #a classifier to predict whether the student has problem
 #filters = []
@@ -35,7 +36,7 @@ def getWeight(summary):
         weight = g.group(1).strip()
         return int(weight)
     
-    return 1
+    return 0
 
 def NormalizedTASummary(summary):
     summary = summary.strip()
@@ -94,6 +95,22 @@ def getTASummary(orig, header, summarykey, type='POI', weight = False):
     if weight:
         return summary, weights
     return summary
+
+def getTitle(titlefile):
+    """
+    get the slide titles for one single lecture
+    """
+    lines = fio.ReadFile(titlefile)
+        
+    title = []
+    
+    for i in range(len(lines)):
+        if i%3 == 1:
+            line = lines[i].strip()
+            if len(line) > 0:
+                title.append(line)
+    
+    return title
 
 def getTitles(titledir):
     #get title of slides for each lecture
@@ -490,17 +507,84 @@ def getNumberofCandiatePhrase(excel, phrasedir):
             nbody.append(newrow)
             
     fio.WriteMatrix("../data/numberofcandiatephrase.txt", nbody, ["method", "type"] + localheader)
-                                           
+
+def Excel2Json(excelfile, jsonfile):
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    #sheets = range(0,25)
+    sheets = range(0,12)
+    
+    data = {}
+    data['Questions'] = {'POI':'Describe what you found most interesting in today\'s class.',
+                         'MP':'Describe what was confusing or needed more detail.',
+                         'LP':'Describe what you learned about how you learn.',
+                         }
+    data['Lectures'] = []
+    
+    index = 1
+    IDIndex = {}
+        
+    for i, sheet in enumerate(sheets):
+        dict = {}
+        
+        week = i + 1
+        orig = prData(excelfile, sheet)
+        
+        dict['lecture_number'] = week
+            
+        summarydict = {}
+        responsedict = {}
+        
+        for type in ['POI', 'MP', 'LP']:
+            #student_summaryList = getStudentResponseList(orig, header, summarykey, type)
+            responses = getStudentResponse(orig, header, summarykey, type)
+            for id, response in responses.items():
+                if id not in IDIndex:
+                    sid = 'S' + str(index)
+                    IDIndex[id] = sid
+                    index = index + 1
+                else:
+                    sid = IDIndex[id]
+                    
+                if sid not in responsedict:
+                    responsedict[sid] = {}
+                assert(type not in responsedict[sid])
+                responsedict[sid][type] = response
+            
+            if HasSummary(orig, header, summarykey):
+                ta_summaries, weight = getTASummary(orig, header, summarykey, type, weight=True)
+                
+                summary = []
+                for w, s in zip(weight, ta_summaries):
+                    if w==0:
+                        summary.append(s)
+                    else:
+                        summary.append(s + ' [' + str(w) + ']')
+                summarydict[type] = summary
+        
+        dict['Student_Responses'] = responsedict
+        
+        dict['TA_summary'] = summarydict
+        
+        data['Lectures'].append(dict)
+    
+    with open(jsonfile, 'w') as outfile:
+        json.dump(data, outfile, indent=2)
+    
+    fio.SaveDict(IDIndex, "../data/students.txt")
+                                         
 if __name__ == '__main__':
     
     excelfile = "../data/2011Spring.xls"
     datadir = "../../Maui1.2/data/2011Spring/"
     sennadir = "../data/senna/"
     
+    Excel2Json("../data/anotated_corpus_phrase_summarization.xls", "../data/data.json")
     #fio.newPath(datadir)
     #getStudentResponses4Maui(excelfile, datadir)
     
-    getStudentResponses4Senna(excelfile, sennadir)
+    #getStudentResponses4Senna(excelfile, sennadir)
     
     #getCandidatePhrases("../data/phrases/")
     

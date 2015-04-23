@@ -11,14 +11,94 @@ import porter
 import phraseClusteringKmedoid
 
 import CourseMirrorSurvey
-from CourseMirrorSurvey import maxWeekDict
+from CourseMirrorSurvey import maxWeekDict, WeekLecture
 
 import postProcess
 
 stopwords = [line.lower().strip() for line in fio.ReadFile("../../ROUGE-1.5.5/data/smart_common_words.txt")]
 #print "stopwords:", len(stopwords)
 
+noremove = ['nothing', 'none']
+for w in noremove:
+    if w in stopwords:
+        index = stopwords.index(w)
+        stopwords.pop(index)
+
 stopwords = stopwords + ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']
+
+DateDict = {'PHYS0175':
+            {1:'1/5/2015',
+            2:'1/7/2015',
+            3:'1/9/2015',
+            4:'1/12/2015',
+            5:'1/14/2015',
+            6:'1/16/2015',
+            7:'1/21/2015',
+            8:'1/23/2015',
+            9:'1/26/2015',
+            10:'1/28/2015',
+            11:'1/30/2015',
+            12:'2/2/2015',
+            13:'2/4/2015',
+            14:'2/6/2015',
+            15:'2/9/2015',
+            16:'2/11/2015',
+            17:'2/13/2015',
+            18:'2/16/2015',
+            19:'2/18/2015',
+            20:'2/20/2015',
+            21:'2/23/2015',
+            22:'2/25/2015',
+            23:'2/27/2015',
+            24:'3/2/2015',
+            25:'3/4/2015',
+            26:'3/6/2015',
+            27:'3/16/2015',
+            28:'3/18/2015',
+            29:'3/20/2015',
+            30:'3/23/2015',
+            31:'3/25/2015',
+            32:'3/27/2015',
+            33:'3/30/2015',
+            34:'4/1/2015',
+            35:'4/3/2015',
+            36:'4/6/2015',
+            37:'4/8/2015',
+            38:'4/10/2015',
+            39:'4/13/2015',
+            40:'4/15/2015',
+            41:'4/17/2015',
+            },
+
+    'IE256':{
+        26:'5/15/2015',
+        25:'5/12/2015',
+        24:'5/8/2015',
+        23:'5/5/2015',
+        22:'5/1/2015',
+        21:'4/28/2015',
+        20:'4/17/2015',
+        19:'4/14/2015',
+        18:'4/10/2015',
+        17:'4/7/2015',
+        16:'4/3/2015',
+        15:'3/31/2015',
+        14:'3/27/2015',
+        13:'3/24/2015',
+        12:'3/20/2015',
+        11:'3/17/2015',
+        10:'3/13/2015',
+        9:'3/10/2015',
+        8:'3/6/2015',
+        7:'3/3/2015',
+        6:'2/27/2015',
+        5:'2/24/2015',
+        4:'2/20/2015',
+        3:'2/17/2015',
+        2:'2/13/2015',
+        1:'2/10/2015',
+    }
+}
 
 def getTopRankPhrase(NPs, clusterids, cid, lexdict, sources):
     #get cluster NP, and scores
@@ -57,6 +137,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             
             #produce the cluster file on the fly
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
+            if not fio.IsExist(sennafile): continue
+            
             output = clusterdir + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method + '.' + np
             weightfile = clusterdir + str(week)+ '/' + type + '.' + np + '.' + method
             #if not fio.IsExist(output):
@@ -114,7 +196,7 @@ def ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=No
     getShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K, method, ratio, np, lex)
 
 def GetLexRankScore(datadir, np, outputdir):
-    sheets = range(0,25)
+    sheets = range(0,40)
     
     for type in ['POI', 'MP', 'LP']:
         for sheet in sheets:
@@ -130,6 +212,7 @@ def GetLexRankScore(datadir, np, outputdir):
             path = path + type + '/'
             path = path + 'docsent/'
             filename = path + DID + '.docsent'
+            print filename
             if not fio.IsExist(filename): continue
             
             tree = ET.parse(filename)
@@ -177,26 +260,64 @@ def GetLexRankScore(datadir, np, outputdir):
             
             output = outputdir + str(week)+ '/' + str(type) + "." + np + ".lexrankmax.dict"
             fio.SaveDict(dict, output, SortbyValueflag=True)
-                        
+
+
+
+def PrintClusterRankSummary(datadir):
+    maxWeek = maxWeekDict[course]
+    
+    sheets = range(0,maxWeek)
+    
+    head = ['week', 'data', 'Point of Interest', "Muddiest Point"]
+    body = []
+    
+    for i, sheet in enumerate(sheets):        
+        row = []
+        week = WeekLecture[course][i]
+        
+        row.append(week)
+        row.append(DateDict[course][week])
+        
+        for type in ['POI', 'MP']:
+            path = datadir + str(i+1)+ '/'
+            summaryfile = path + type + '.summary'
+            if not fio.IsExist(summaryfile): continue
+            
+            summaries = [line.strip() for line in fio.ReadFile(summaryfile)]
+            
+            sourcefile = path + type + '.summary.source'
+            sources = [line.split(',') for line in fio.ReadFile(sourcefile)]
+            
+            combinedSummary = []
+            for j, (summary, source) in enumerate(zip(summaries, sources)):
+                summary = summary.replace('"', '\'')
+                combinedSummary.append(str(j+1) + ") " + summary + " [" + str(len(source)) + "]")
+            
+            row.append('"' + chr(10).join(combinedSummary)+ '"') 
+        
+        body.append(row)
+    fio.WriteMatrix(datadir + "summary.txt", body, head)
+                            
 if __name__ == '__main__':
     #Step6: get LSA results
     
     #Step7: Run Clustering
-    for c in ["PHYS0175"]:
+    #'''
+    for c in ["IE256", "PHYS0175",]:#'IE256'
         course = c
         maxWeek = maxWeekDict[course]
-        
+          
         sennadir = "../data/"+course+"/senna/"
         excelfile = "../data/CourseMirror/Reflection.json"
         #phrasedir = "../data/"+course+"/phrases/"
-                
+                  
         clusterdir = "../data/"+course+"/np/"
         fio.NewPath(clusterdir)
-        
+          
         for np in ['syntax']:
             datadir = "../../mead/data/"+course+"_PhraseMead/"
             GetLexRankScore(datadir, np, clusterdir)
-            
+              
         for ratio in ["sqrt"]:
             for method in ['optimumComparerLSATasa']:
                 for np in ['syntax']:
@@ -204,6 +325,13 @@ if __name__ == '__main__':
                         datadir = "../../mead/data/"+course+"_ClusterARank/"   
                         fio.DeleteFolder(datadir)
                         ShallowSummary(excelfile, datadir, sennadir, clusterdir, K=4, method=method, ratio=ratio, np=np, lex=lex)
+    
+    #'''      
+    for c in ['IE256', 'PHYS0175']: #"PHYS0175", 
+        course = c
+        maxWeek = maxWeekDict[course]
+        datadir = "../../mead/data/"+course+"_ClusterARank/"   
+        PrintClusterRankSummary(datadir)
                  
     print "done"
     

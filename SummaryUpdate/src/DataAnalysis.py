@@ -121,6 +121,12 @@ def extractData(refs, lecs, output):
         t = r['TimeStamp']
         t = time.strptime(t, "%Y-%m-%d %H:%M:%S")
         t = time.mktime(t)
+        
+#         try:
+#             submitT = t - due
+#         except Exception as e:
+#             print cid, lecture_number
+#             print e
         submitT = t - due
         
         if submitT > -2000:
@@ -320,16 +326,16 @@ def getUserSubmisstionInfo(datafile, lecturefile, output):
     user_index = head.index('user')
     lecture_index = head.index('lecture_number')
     
-    for cid in ['CS2610', 'CS2001']:
+    for cid in ['PHYS0175', 'IE256']:
         users = getUniqValueWithFilter(head, body, 'cid', cid, user_index)
         lectures = getUniqValueWithFilter(head, body, 'cid', cid, lecture_index)
         lectures = sorted([int(lec) for lec in lectures])
         lectures = [str(lec) for lec in lectures]
         
-        newhead = ['user', 'cid', 'lecture_number', 'date', 'submit', 'submitT', 'Lq1', 'Lq2', 'Lq3']
+        newhead = ['user', 'cid', 'lecture_number', 'date', 'submit', 'submitT', 'Lq1', 'Lq2']
         newbody = []
         
-        ratioHead = ['user', 'SumbmitN', 'ratio', 'Ave_submitT', 'Ave_Lq1', 'Ave_Lq2', 'Ave_Lq3', 'Std_submitT', 'Std_Lq1', 'Std_Lq2', 'Std_Lq3']
+        ratioHead = ['user', 'SumbmitN', 'ratio', 'Ave_submitT', 'Ave_Lq1', 'Ave_Lq2', 'Std_submitT', 'Std_Lq1', 'Std_Lq2']
         ratioBody = []
         for user in users:
             ratioRow = [user]
@@ -344,10 +350,10 @@ def getUserSubmisstionInfo(datafile, lecturefile, output):
                 
                 trow = findReflection(body, course_index, lecture_index, user_index, cid, lec, user)
                 if trow == None:
-                    newrow = newrow + ['N', 0, 0, 0, 0]
+                    newrow = newrow + ['N', 0, 0, 0]
                 else:
-                    newrow = newrow + trow[-5:]
-                    Ave.append(newrow[-4:])
+                    newrow = newrow + trow[-4:]
+                    Ave.append(newrow[-3:])
                     count = count + 1
                 
                 newbody.append(newrow)
@@ -355,11 +361,11 @@ def getUserSubmisstionInfo(datafile, lecturefile, output):
             ratioRow.append(count)
             ratioRow.append(float(count) / len(lectures))
 
-            for i in range(4):
+            for i in range(3):
                 values = [float(xx[i]) for xx in Ave]
                 ratioRow.append(numpy.average(values))
             
-            for i in range(4):
+            for i in range(3):
                 values = [float(xx[i]) for xx in Ave]
                 ratioRow.append(numpy.std(values))
                 
@@ -375,19 +381,19 @@ if __name__ == '__main__':
     lecture_raw = "../../data/CourseMirror/Lecture.json"
     lecture_raw_time = "../../data/CourseMirror/Lecture_time.json"
     
-    #CombineTimeStamp('CourseMIRROR_reflections.json', reflect_raw, reflect_raw_time)
-    #AddDueTimeforLecture(lecture_raw, lecture_raw_time)
+    CombineTimeStamp('CourseMIRROR_reflections.json', reflect_raw, reflect_raw_time)
+    AddDueTimeforLecture(lecture_raw, lecture_raw_time)
     
     datafile = "user_lecture.txt"
-    #extractData(reflect_raw_time, lecture_raw_time, datafile)
+    extractData(reflect_raw_time, lecture_raw_time, datafile)
     
     #extractDataLength("reflection_time.json", 'lecture_time.json', "CS2610", "CS2610_Length.txt")
     
     outputprefix = "all_user_lecture"
-    getSubmisstionRatio(datafile, lecture_raw_time, outputprefix)
+    #getSubmisstionRatio(datafile, lecture_raw_time, outputprefix)
     
     outputprefix = "all_users"
-    #getUserSubmisstionInfo(datafile, lecturefile, outputprefix)
+    getUserSubmisstionInfo(datafile, lecture_raw_time, outputprefix)
     print "done"
     
     

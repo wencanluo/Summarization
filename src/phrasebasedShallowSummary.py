@@ -104,7 +104,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, tfidfdir, np, method, K=3
             student_summaryList = getStudentResponseList(orig, header, summarykey, type)
 
             path = folder + str(week)+ '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             filename = path + type + '.summary'
             
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
@@ -113,7 +113,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, tfidfdir, np, method, K=3
             
             if method == 'tfidf':
                 dict = fio.LoadDict(tfidfdir + str(week)+ '/' + type + '.' + np + '.tfidf.dict')
-            if method.startswith('lexrank'):
+            elif method != None and method.startswith('lexrank'):
                 dict = fio.LoadDict(tfidfdir + str(week)+ '/' + type + '.' + np + '.'+method+'.dict')
             else:
                 dict = getKeyPhrases(student_summaryList, sennafile, save2file=filename + ".keys")
@@ -136,7 +136,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, tfidfdir, np, method, K=3
                 #if total_word <= K:
                     Summary.append(key)
             
-            fio.savelist(Summary, filename)
+            fio.SaveList(Summary, filename)
                         
 def ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method, K=30):
     getShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method,  K)
@@ -176,7 +176,7 @@ def computeTFIDF(excelfile, datadir, sennadatadir, np):
             dict = my_tfidf.get_doc_keywords_withterms(NPs)
             
             path = datadir + str(week)+ '/'
-            fio.newPath(path)
+            fio.NewPath(path)
             fio.SaveDict(dict, path + type + '.' + np + '.tfidf.dict', SortbyValueflag = True)
 
 def getTFIDF(excelfile, datadir, sennadatadir, np):
@@ -185,13 +185,13 @@ def getTFIDF(excelfile, datadir, sennadatadir, np):
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     
-    sennadatadir = "../data/senna/"
+    sennadir = "../data/senna/"
 
-    tfidfdir = "../data/np/"
+    clusterdir = "../data/np/"
     
-    datadir = "../../mead/data/C4_ShallowSummary_bigram/" 
-    ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np=None, method="bigram", K=4)
-#     fio.newPath(tfidfdir)
+    #datadir = "../../mead/data/C4_ShallowSummary_bigram/" 
+    #ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np=None, method="bigram", K=4)
+#     fio.NewPath(tfidfdir)
 #     
 #     for np in ['chunk', 'syntax']:
 #         getTFIDF(excelfile, tfidfdir, sennadatadir, np)
@@ -202,15 +202,21 @@ if __name__ == '__main__':
 #         fio.deleteFolder(datadir)
 #         ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method="tfidf", K=30)
     
-    for np in ['chunk', 'syntax']:
-        datadir = "../../mead/data/Phrase_"+np+"_lexrank/"
-        fio.deleteFolder(datadir)
-        ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method="lexrankmax", K=4)
+#     for np in ['syntax']:
+#         datadir = "../../mead/data/Phrase_"+np+"_lexrank/"
+#         fio.deleteFolder(datadir)
+#         ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method="lexrankmax", K=4)
     
+    datadir = "../../mead/data/C4_NPSoft_Syntax/" 
+    ShallowSummary(excelfile, datadir, sennadir, tfidfdir=None, np="syntax", method=None, K=4)
+        
 #     for np in ['chunk', 'syntax']:
 #         datadir = "../../mead/data/C4_Phrase_"+np+"_lexrank/"
 #         fio.deleteFolder(datadir)
 #         ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method="lexrankmax", K=4)
-        
+    
+    import postProcess
+    postProcess.ExtractNP(datadir, clusterdir, 'syntax')
+                
     print "done"
     

@@ -106,6 +106,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, tfidfdir, np, method, K=3
             filename = path + type + '.summary'
             
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
+            if not fio.IsExist(sennafile): continue
             
             Summary = []
             
@@ -137,7 +138,7 @@ def ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method, K=30)
 if __name__ == '__main__':
     
     #Step3: extract phrases
-    for c in ["PHYS0175"]:
+    for c in ["PHYS0175", 'IE256']:
         course = c
         maxWeek = maxWeekDict[course]
         
@@ -150,7 +151,7 @@ if __name__ == '__main__':
         ShallowSummary(excelfile, datadir, sennadir, tfidfdir=None, np="syntax", method=None, K=4)
         
         import postProcess
-        postProcess.ExtractNP(datadir, clusterdir, 'syntax')
+        postProcess.ExtractNP(datadir, clusterdir, 'syntax', range(1,40))
     
      
         

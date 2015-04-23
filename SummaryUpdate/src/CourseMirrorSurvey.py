@@ -7,18 +7,19 @@ import json
 course = "PHYS0175"
 #course = "CS2001"
 #course = "CS2610"
-range1 = range(3,21)
+range1 = range(3,42)
+range4 = range(1,21)
 
 maxWeekDict = {"CS2610": 21-4+1, 
                "CS2001": 18-5+1,
                "PHYS0175":len(range1),
-               "IE256":2,
+               "IE256":len(range4),
                }
 
 WeekLecture = {"CS2610":range(4, 40),
                "CS2001":range(5, 40),
                "PHYS0175": range1,
-               "IE256": range(1,3),
+               "IE256": range4,
                }
 
 header = ['cid', 'lecture_number', 'user', 'q1', 'q2']
@@ -58,7 +59,7 @@ def getStudentResponse(excelfile):
     
     for k, inst in enumerate(orig._data):
         try:
-            token = inst[tokenIndex].lower().strip()
+            token = str(inst[tokenIndex]).lower().strip()
             
             if len(token) > 0:
                 
@@ -67,7 +68,7 @@ def getStudentResponse(excelfile):
                     if key == "lecture_number":
                         dict[key] = int(inst[key])
                     elif key == "user":
-                        dict[key] = inst[key].strip().lower()
+                        dict[key] = str(inst[key]).strip().lower()
                     else:
                         dict[key] = inst[key].strip()
                 
@@ -84,13 +85,14 @@ def getStudentResponse(excelfile):
             return []
     return reflections
 
-def getSummary(datadir, course):
+def getSummary(datadir, course, sheets = None):
     #return a list of summaries, week by week. The summary for each week is also a list
     
-    maxWeek = maxWeekDict[course]
-    print maxWeek
-    
-    sheets = range(0, maxWeek)
+    if sheets == None:
+        maxWeek = maxWeekDict[course]
+        print maxWeek
+        
+        sheets = range(0, maxWeek)
         
     #reload(sys)
     #sys.setdefaultencoding('utf8')

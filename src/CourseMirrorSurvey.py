@@ -5,24 +5,25 @@ import fio
 import NLTKWrapper
 import json
 
-#filters = ["?", "[blank]", 'n/a', 'blank', 'none', "no", "nothing"]
+filters = ["?", "[blank]", 'n/a', 'blank',] #'none', "no", "nothing"
 #filters = []
 
 #header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2', 'q3']
 header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2']
 
-range1 = range(3,21)
+range1 = range(3,42)
+range4 = range(1,21)
 
 maxWeekDict = {"CS2610": 21-4+1, 
                "CS2001": 18-5+1,
                "PHYS0175":len(range1),
-               "IE256":2,
+               "IE256":len(range4),
                }
 
 WeekLecture = {"CS2610":range(4, 40),
                "CS2001":range(5, 40),
                "PHYS0175": range1,
-               "IE256": range(1,3),
+               "IE256": range4,
                }
 
 import datetime
@@ -151,7 +152,8 @@ def getStudentResponse(excelfile, course, week, type='POI'):
                     summaries[token] = summary
             else:
                 break
-        except Exception:
+        except Exception as e:
+            print e
             return summaries
     return summaries
 
@@ -281,26 +283,69 @@ def getStudentResponses4Senna(excelfile, datadir):
             filename = datadir + "senna." + str(week) + "." + type + ".input"
             
             fio.SaveList(student_summaryList, filename)
+
+def getStudentResponses4Annotation(excelfile, datadir):
+    sheets = range(0, maxWeek)
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        
+        for type in ['POI', 'MP', 'LP']:
+            head = ['student_id', 'sentence_id', 'responses']
+            body = []
+        
+            student_summaryList = getStudentResponseList(excelfile, course, week, type, True)
+            if len(student_summaryList) == 0: continue
             
+            filename = datadir + "response." + str(week) + "." + type + ".txt"
+            
+            old = ""
+            i = 1
+            for summary,id in student_summaryList:
+                row = []
+                summary = summary.replace('"', '\'')
+                if len(summary.strip()) == 0: continue
+                
+                if id == old:
+                    row.append(" ")
+                else:
+                    row.append(id)
+                row.append(i)
+                row.append(summary)
+                body.append(row)
+                i = i + 1
+                old = id
+                
+            fio.WriteMatrix(filename, body, head)
+                        
 if __name__ == '__main__':
     
     excelfile = "../data/CourseMIRROR Reflections (Responses).xls"
     output = "../data/CourseMIRROR_reflections.json"
     
-    #ExtractTimeStamp(excelfile, output)
+    #jsonfile = '../data/CourseMIRROR/Reflection.json'
     
-    #Step1: Prepare Senna Input
-    for c in ["PHYS0175"]:#PHYS0175
+    #ExtractTimeStamp(excelfile, output)
+    outputdir = '../data/annotation/'
+    
+#     #Step1: Prepare Senna Input
+    for c in ["PHYS0175", 'IE256']:#PHYS0175
         course = c
         maxWeek = maxWeekDict[course]
-         
+           
         sennadir = "../data/"+course+"/senna/"
         excelfile = "../data/CourseMirror/Reflection.json"
         phrasedir = "../data/"+course+"/phrases/"
-         
+           
         fio.NewPath(sennadir)
         getStudentResponses4Senna(excelfile, sennadir)
-
+   
+    for c in ["IE256"]:#PHYS0175     
+        course = c
+        maxWeek = maxWeekDict[course]
+          
+        excelfile = "../data/CourseMirror/Reflection.json"
+        getStudentResponses4Annotation(excelfile, outputdir)
 
     #Step2: get Senna output
     

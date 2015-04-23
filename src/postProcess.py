@@ -12,7 +12,30 @@ import shallowSummary
 
 from Survey import *
                     
+def ExtractNPFromRaw(excelfile, sennadatadir, outdir, method="syntax", weekrange=range(0,12)):
+    sheets = weekrange
+    
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        
+        orig = prData(excelfile, sheet)
+        
+        for type in ['POI', 'MP', 'LP']:
             
+            sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
+            
+            student_summaryList = getStudentResponseList(orig, header, summarykey, type, withSource=True)
+            ids = [summary[1] for summary in student_summaryList]
+            NPs, sources = phraseClusteringKmedoid.getNPs(sennafile, MalformedFlilter=False, source=ids, np=method)
+            
+            keys = set(NPs)
+            
+            fio.NewPath(outdir + str(week)+ '/')
+            output = outdir + str(week)+ '/' + type + '.'+method+'.key'
+            fio.SaveList(keys, output)            
                     
 def formatSummaryOutput(excelfile, datadir, output):
     reload(sys)
@@ -57,6 +80,8 @@ def GetRougeScore(datadir, models, outputdir):
         
         #sheets = range(0,12)
         sheets = [1,2,3,4,5,6,7,10]
+		#Test: 2, 3, 4, 5, 6, 7, 8, 11
+		#Dev: 1, 9, 10, 12
         #sheets = [2,3,4,5,6,7,8,11]
         types = ['POI', 'MP', 'LP']
         scores = ['ROUGE-1','ROUGE-2', 'ROUGE-SUX']
@@ -720,8 +745,7 @@ def TASummaryCoverage(excelfile, output):
     
     fio.PrintDict(uncoveried, True)
 
-def ExtractNP(datadir, outdir, method="syntax"):
-    sheets = range(0,12)
+def ExtractNP(datadir, outdir, method="syntax", sheets=range(0,12)):
     
     phrases = {}
     
@@ -1213,35 +1237,7 @@ def RankCluster(NPs, lexdict, clusterids, sources):
 def PrintExample():
     pass
 
-def PrintClusterRankSummary(datadir):
-    sheets = range(0,13)
-    
-    head = ['week', 'Point of Interest', "Muddiest Point"]
-    body = []
-    
-    for i, sheet in enumerate(sheets):
-        week = i + 1
-        
-        row = []
-        row.append(week+4)
-        
-        for type in ['POI', 'MP']:
-            path = datadir + str(week)+ '/'
-            summaryfile = path + type + '.summary'
-            summaries = [line.strip() for line in fio.ReadFile(summaryfile)]
-            
-            sourcefile = path + type + '.summary.source'
-            sources = [line.split(',') for line in fio.ReadFile(sourcefile)]
-            
-            combinedSummary = []
-            for i, (summary, source) in enumerate(zip(summaries, sources)):
-                summary = summary.replace('"', '\'')
-                combinedSummary.append(str(i+1) + ") " + summary + " [" + str(len(source)) + "]")
-            
-            row.append('"' + chr(10).join(combinedSummary)+ '"') 
-        
-        body.append(row)
-    fio.WriteMatrix(datadir + "summary.txt", body, head)
+
     
 def PrintCluster():
     output = "../data/np511/3/MP.cluster.kmedoids.sqrt.optimumComparerLSATasa.syntax"
@@ -1379,7 +1375,7 @@ if __name__ == '__main__':
     #getStudentResponseAverageWords(excelfile, '../data/averageword.txt')
     #getTALengthDistribution(excelfile, '../data/studentword_distribution.txt')
     
-    #PrintClusterRankSummary("../../mead/data/PHYS0175_ClusterARank/")
+    PrintClusterRankSummary("../../mead/data/PHYS0175_ClusterARank/")
     
     #getStudentResponseWordCountDistribution(excelfile, '../data/studentword_distribution.txt')
     #GetRougeScore(datadir_multiple, rougescore_multiple)
@@ -1429,14 +1425,16 @@ if __name__ == '__main__':
               #'C4_Clustering_lexrankmax_4_npsoft_chunk', 'C4_Clustering_lexrankmax_4_npsoft_syntax', 'C4_Clustering_lexrankmax_4_optimumComparerLSATasa_chunk', 'C4_Clustering_lexrankmax_4_optimumComparerLSATasa_syntax',         
               
               
-            'C30_keyphraseExtractionbasedShallowSummary',
-            'C30_MEAD',
-            'C30_PhraseMead_syntax',
-            'C30_PhraseMeadMMR_syntax',
-            'C30_LexRank_syntax',
-            'C30_LexRankMMR_syntax',
-            'C30_ClusteringAlone',
-            'C30_ClusterARank',
+#             'C30_keyphraseExtractionbasedShallowSummary',
+#             'C30_MEAD',
+#             'C30_PhraseMead_syntax',
+#             'C30_PhraseMeadMMR_syntax',
+#             'C30_LexRank_syntax',
+#             'C30_LexRankMMR_syntax',
+#             'C30_ClusteringAlone',
+#             'C30_ClusterARank',
+              
+              'C4_PhraseMead_syntax_NP_PP_VP',
               
               #'C4_ClusteringAlone2',
               
@@ -1455,8 +1453,8 @@ if __name__ == '__main__':
     
     #models = AllModels()
     
-    GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
-    CombineRouges(models = models, outputdir = "../data/")
+    #GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
+    #CombineRouges(models = models, outputdir = "../data/")
     
     models = ['C4_PhraseMeadLexRankMMR_syntax', 
               #'PhraseMeadMMR_syntax', 
