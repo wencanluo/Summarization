@@ -14,6 +14,7 @@ from collections import defaultdict
 import nltk
 import re
 
+from SumBasic_word import get_sentences
 import SumBasic_word as SumBasic
 
 def summarize(distribution, clean_sentences, processed_sentences, N):
@@ -29,8 +30,10 @@ def summarize(distribution, clean_sentences, processed_sentences, N):
 
     """
 
-    if N == 0: return ''
-
+    Summary = []
+    
+    if N == 0: return Summary
+    
     # sort words by probability
     words = sorted(distribution, key=distribution.get, reverse=True)
 
@@ -49,13 +52,14 @@ def summarize(distribution, clean_sentences, processed_sentences, N):
 
             # if sentence fits, add sentence to summary
             if N > 0:
+                Summary += [original]
                 # update distribution
                 for word in candidate: distribution[word] = distribution[word]**2
 
-                return original + ' ' + summarize(distribution, \
+                return Summary + summarize(distribution, \
                         clean_sentences, processed_sentences, (N - 1))
        
-    return ''
+    return Summary
 
 def main():
     """
@@ -78,7 +82,7 @@ def main():
         sys.stderr.write('N must be greater than 0. No output produced.')
         sys.exit()
     
-    distribution, clean_sentences, processed_sentences = SumBasic.get_sentences(sys.argv[1])
+    distribution, clean_sentences, processed_sentences = get_sentences(sys.argv[1])
     summary = summarize(distribution, clean_sentences, processed_sentences, N)
     print summary
     html =  SumBasic.convert_to_html(summary, N)

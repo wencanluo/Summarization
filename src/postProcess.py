@@ -1375,8 +1375,6 @@ if __name__ == '__main__':
     #getStudentResponseAverageWords(excelfile, '../data/averageword.txt')
     #getTALengthDistribution(excelfile, '../data/studentword_distribution.txt')
     
-    PrintClusterRankSummary("../../mead/data/PHYS0175_ClusterARank/")
-    
     #getStudentResponseWordCountDistribution(excelfile, '../data/studentword_distribution.txt')
     #GetRougeScore(datadir_multiple, rougescore_multiple)
     #GetRougeScore(datadir = "../../mead/data/", models = ['2011Spring', 'RandombaselineK3', 'RandombaselineK2', 'RandombaselineK1', 'LongestbaselineK3', 'LongestbaselineK2', 'LongestbaselineK1', 'ShortestbaselineK3', 'ShortestbaselineK2', 'ShortestbaselineK1'], outputdir = "../data/" )
@@ -1434,7 +1432,9 @@ if __name__ == '__main__':
 #             'C30_ClusteringAlone',
 #             'C30_ClusterARank',
               
-              'C4_PhraseMead_syntax_NP_PP_VP',
+              #'C4_PhraseMead_syntax_NP_PP_VP',
+              
+              'C4_SumBasic',
               
               #'C4_ClusteringAlone2',
               
@@ -1453,8 +1453,8 @@ if __name__ == '__main__':
     
     #models = AllModels()
     
-    #GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
-    #CombineRouges(models = models, outputdir = "../data/")
+    GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
+    CombineRouges(models = models, outputdir = "../data/")
     
     models = ['C4_PhraseMeadLexRankMMR_syntax', 
               #'PhraseMeadMMR_syntax', 
