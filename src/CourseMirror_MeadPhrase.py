@@ -113,7 +113,7 @@ if __name__ == '__main__':
     
     #Step4: get PhraseMead input
     
-    for c in ["PHYS0175", 'IE256']: #["CS2001", "CS2610"]:
+    for c in ['IE256']: #["CS2001", "CS2610"]:
         course = c
         maxWeek = maxWeekDict[course]
         

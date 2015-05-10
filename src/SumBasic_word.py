@@ -71,8 +71,9 @@ def summarize(distribution, clean_sentences, processed_sentences, N):
     @return -- summary pieces as strings
 
     """
-
-    if N == 0 or N == 1: return ''
+    Summary = []
+    
+    if N == 0: return Summary
 
     # sort words by probability
     words = sorted(distribution, key=distribution.get, reverse=True)
@@ -92,14 +93,15 @@ def summarize(distribution, clean_sentences, processed_sentences, N):
 
             # if sentence fits, add sentence to summary
             if len(original.split()) <= N:
-        
+                Summary += [original]
+                
                 # update distribution
                 for word in candidate: distribution[word] = distribution[word]**2
 
-                return original + ' ' + summarize(distribution, \
+                return Summary + summarize(distribution, \
                         clean_sentences, processed_sentences, (N - len(original.split())))
        
-    return ''
+    return Summary
 
 def sentence_averages(distribution, sentences):
     """

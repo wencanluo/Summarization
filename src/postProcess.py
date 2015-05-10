@@ -1435,6 +1435,18 @@ if __name__ == '__main__':
               #'C4_PhraseMead_syntax_NP_PP_VP',
               
               'C4_SumBasic',
+              "C4_KLSum",
+              "C4_TopicSum",
+              "C4_SumBasicPhrase",
+              "C4_KLSumPhrase",
+              "C4_TopicSumPhrase",
+              
+              'C30_SumBasic',
+              "C30_KLSum",
+              "C30_TopicSumPhrase",
+              "C30_SumBasicPhrase",
+              "C30_KLSumPhrase",
+              "C30_TopicSumPhrase",
               
               #'C4_ClusteringAlone2',
               

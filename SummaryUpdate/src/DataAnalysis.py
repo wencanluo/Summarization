@@ -270,7 +270,7 @@ def getSubmisstionRatio(datafile, lecturefile, output):
     user_index = head.index('user')
     lecture_index = head.index('lecture_number')
     
-    for cid in ['PHYS0175']:
+    for cid in ['PHYS0175', 'IE256']:
         users = getUniqValueWithFilter(head, body, 'cid', cid, user_index)
         lectures = getUniqValueWithFilter(head, body, 'cid', cid, lecture_index)
         lectures = sorted([int(lec) for lec in lectures])
@@ -390,10 +390,10 @@ if __name__ == '__main__':
     #extractDataLength("reflection_time.json", 'lecture_time.json', "CS2610", "CS2610_Length.txt")
     
     outputprefix = "all_user_lecture"
-    #getSubmisstionRatio(datafile, lecture_raw_time, outputprefix)
+    getSubmisstionRatio(datafile, lecture_raw_time, outputprefix)
     
     outputprefix = "all_users"
-    getUserSubmisstionInfo(datafile, lecture_raw_time, outputprefix)
+    #getUserSubmisstionInfo(datafile, lecture_raw_time, outputprefix)
     print "done"
     
     

@@ -129,7 +129,7 @@ def submitSummary(dir, course, method, sheets):
 if __name__ == '__main__':
     #Step0: manually combine reflections
 #     
-    #combineReflection("CourseMIRROR IE256 Reflections (Responses).xls")
+    
     #combineReflection("CourseMIRROR PHYS0175 Reflections (Responses).xls")
     
     #saveReflection("../../Fall2014/summarization/Summarization/data/reflections.json")
@@ -137,8 +137,9 @@ if __name__ == '__main__':
     #Step9:
 #     for course in ['PHYS0175']:
 #         submitSummary("../../../mead/data/", course, "ClusterARank", sheets=range(38, 39))
-         
+    
+    #combineReflection("CourseMIRROR IE256 Reflections (Responses).xls")
     for course in ['IE256']:
-        submitSummary("../../../mead/data/", course, "ClusterARank", sheets=range(19, 21))
+        submitSummary("../../../mead/data/", course, "ClusterARank", sheets=range(23, 25))
      
     print "done"

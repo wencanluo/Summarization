@@ -8,7 +8,7 @@ course = "PHYS0175"
 #course = "CS2001"
 #course = "CS2610"
 range1 = range(3,42)
-range4 = range(1,21)
+range4 = range(1,25)
 
 maxWeekDict = {"CS2610": 21-4+1, 
                "CS2001": 18-5+1,

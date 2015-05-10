@@ -113,7 +113,11 @@ def getTitle(titlefile):
     return title
 
 def getTitles(titledir):
-    #get title of slides for each lecture
+    #get title of slides for each lecture, 
+    # 0: week 1
+    # 1: week 2
+    # ...
+    # 24: week 25
     sheets = range(0,25)
     
     titles = []

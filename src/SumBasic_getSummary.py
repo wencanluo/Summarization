@@ -6,7 +6,7 @@ from Survey import *
 import random
 import NLTKWrapper
 
-import SumBasic_sentence as SumBasic
+import SumBasic_word as SumBasic
             
 def getShallowSummary(excelfile, folder, K):
     #K is the number of words per points
@@ -46,10 +46,9 @@ if __name__ == '__main__':
     
     sennadatadir = "../data/senna/"
     
-    for model in ['unigram_remove_stop', 'bigram']:
-        datadir = "../../mead/data/C4_SumBasic/"  
-        fio.DeleteFolder(datadir)
-        ShallowSummary(excelfile, datadir, K=4)
+    datadir = "../../mead/data/C30_SumBasic/"  
+    fio.DeleteFolder(datadir)
+    ShallowSummary(excelfile, datadir, K=30)
 
     print 'done'
     

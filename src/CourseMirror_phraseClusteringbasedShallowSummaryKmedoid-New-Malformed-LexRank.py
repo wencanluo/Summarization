@@ -303,7 +303,7 @@ if __name__ == '__main__':
     
     #Step7: Run Clustering
     #'''
-    for c in ["IE256", "PHYS0175",]:#'IE256'
+    for c in ["IE256",]:#'IE256'
         course = c
         maxWeek = maxWeekDict[course]
           
@@ -327,7 +327,7 @@ if __name__ == '__main__':
                         ShallowSummary(excelfile, datadir, sennadir, clusterdir, K=4, method=method, ratio=ratio, np=np, lex=lex)
     
     #'''      
-    for c in ['IE256', 'PHYS0175']: #"PHYS0175", 
+    for c in ['IE256']: #"PHYS0175", 
         course = c
         maxWeek = maxWeekDict[course]
         datadir = "../../mead/data/"+course+"_ClusterARank/"   

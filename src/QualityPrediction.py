@@ -3,27 +3,20 @@ from OrigReader import prData
 import sys
 import NLTKWrapper
 
-#Write Quality to Weka
-def getQuality(excelfile):
-    Data = []
-    
-    sheets = range(1,24)
-    for i, sheet in enumerate(sheets):
-        week = i + 1
-        orig = prData(excelfile, sheet)
-        
-        MPs = Survey.getMPQualityPoint(orig)
-        if len(MPs) == 0:
-            print week
-        
-        Data = Data + MPs
-    
-    return Data
+topicDict = {2:1,3:1,
+             4:2,5:2,6:2,7:2,
+             8:3,9:3,
+             10:4,11:4,
+             12:5,13:5,14:5,15:5,16:5,
+             17:6,18:6,19:6,
+             20:7,21:7,22:7,
+             23:8,24:8,
+             }
 
-def getQualitywithLecture(excelfile):
+#Write Quality to Weka
+def getQualitywithLecture(excelfile, sheets=range(0,25)):
     Data = []
     
-    sheets = range(1,24)
     for i, sheet in enumerate(sheets):
         week = i + 1
         orig = prData(excelfile, sheet)
@@ -36,46 +29,88 @@ def getQualitywithLecture(excelfile):
     
     return Data
 
+def getQuality(excelfile):
+    Data = []
+    
+    sheets = range(0,25)
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        orig = prData(excelfile, sheet)
+        
+        MPs = Survey.getMPQualityPoint(orig)
+        if len(MPs) == 0:
+            print week
+        
+        Data = Data + MPs
+    
+    return Data
+
 def getQualityDistribution(excelfile, output):
-    MPs = getQuality(excelfile)
+    MPs = getQualitywithLecture(excelfile)
+    
+    MPLectures = getQualitywithLecture(excelfile)
     
     dict = {}
-    for MP, score in MPs:
-        if score not in dict:
-            dict[score] = 0
-        dict[score] = dict[score] + 1
+    for i, MPs in enumerate(MPLectures):
+        for MP, score in MPs:
+            if score not in dict:
+                dict[score] = 0
+            dict[score] = dict[score] + 1
     
     fio.SaveDict(dict, output, SortbyValueflag = False)
 
-def getQualityText(excelfile, output):
-    MPs = getQuality(excelfile)
+def getQualityText(excelfile, outputdir, sheets=range(0,25)):
+    MPLectures = getQualitywithLecture(excelfile, sheets)
     
-    Text = []
-    for MP, _ in MPs:
-        MP = ' '.join(NLTKWrapper.wordtokenizer(MP))
-        #if len(MP.strip()) == 0: continue
-        Text.append(MP)
+    for i, MPs in enumerate(MPLectures):
+        week = i + 1
+        Text = []
+        for MP, _ in MPs:
+            MP = ' '.join(NLTKWrapper.wordtokenizer(MP))
+            Text.append(MP)
+        
+        path = outputdir + str(week) + "/"
+        fio.NewPath(path)
+        filename = path + "MP.txt"
+        fio.SaveList(Text, filename)
     
-    fio.savelist(Text, output)
+def PostProcessProb(excelfile, datadir, sheets=range(0,25)):
+    MPLectures = getQualitywithLecture(excelfile, sheets)
     
-def PostProcessProb(excelfile, prob, output):
-    MPs = getQuality(excelfile)
-    
-    probs = [line.strip() for line in fio.ReadFile(prob)]
-    
-    i = 0
-    P = []
-    for MP, _ in MPs:
-        MP = ' '.join(NLTKWrapper.wordtokenizer(MP))
-        if len(MP.strip()) == 0: 
-            P.append("0")
+    for i, MPs in enumerate(MPLectures):
+        week = i + 1
+        
+        path = datadir + str(week) + "/"
+        filename = path + "MP.raw.prob"
+        if not fio.IsExist(filename):
             continue
         
-        P.append(probs[i])
-        i = i + 1
+        probs = [line.strip() for line in fio.ReadFile(filename)]
+    
+        k = 0
+        P = []
+        for MP, _ in MPs:
+            MP = ' '.join(NLTKWrapper.wordtokenizer(MP))
+            if len(MP.strip()) == 0: 
+                P.append("0")
+                continue
+            
+            P.append(probs[k])
+            k = k + 1
         
-    fio.savelist(P, output)
+        assert(len(P) == len(MPs))
+        filename = path + "MP.prob"    
+        fio.SaveList(P, filename)
+
+def getMPProb(lecture, datadir):
+    path = datadir + str(lecture) + "/"
+    filename = path + "MP.prob"
+    if not fio.IsExist(filename):
+        return []
         
+    probs = [float(line.strip()) for line in fio.ReadFile(filename)]
+    return probs
+            
 def WriteQuality2Weka_WC(excelfile, output):
     MPs = getQuality(excelfile)
     
@@ -100,6 +135,7 @@ def WriteQuality2Weka_WC(excelfile, output):
         row.append(N)
         row.append(score)
         
+        if score == 'a': continue
         data.append(row)
    
     fio.ArffWriter(output, head, types, "Quality", data)
@@ -125,6 +161,7 @@ def WriteQuality2Weka_Unigram(excelfile, output):
         row.append(MP)
         row.append(score)
         
+        if score == 'a': continue
         data.append(row)
    
     fio.ArffWriter(output, head, types, "Quality", data)
@@ -152,6 +189,7 @@ def WriteQuality2Weka_SpecitellerProb(excelfile, prob, output):
         row.append(probs[i])
         row.append(score)
         
+        if score == 'a': continue
         data.append(row)
    
     fio.ArffWriter(output, head, types, "Quality", data)
@@ -179,11 +217,12 @@ def WriteQuality2Weka_SpecitellerBinary(excelfile, prob, output):
         row.append('1' if probs[i] >= 0.5 else '0')
         row.append(score)
         
+        if score == 'a': continue
         data.append(row)
    
     fio.ArffWriter(output, head, types, "Quality", data)
-    
-def WriteQuality2Weka_WC_Ngram(excelfile, prob, output):
+
+def WriteQuality2Weka_WC_Unigam(excelfile, prob, output):
     probs = [float(line.strip()) for line in fio.ReadFile(prob)]
     
     MPs = getQuality(excelfile)
@@ -191,15 +230,11 @@ def WriteQuality2Weka_WC_Ngram(excelfile, prob, output):
     head = []
     head = head + ['Text']
     head = head + ['WC']
-    #head = head + ['Prob']
-    #head = head + ['ProbBinary']
     head = head + ['@class@']
     
     types = []
     types = types + ['String']
     types = types + ['Continuous']
-    #types = types + ['Continuous']
-    #types = types + ['Category']
     types = types + ['Category']
     
     data = []
@@ -211,15 +246,16 @@ def WriteQuality2Weka_WC_Ngram(excelfile, prob, output):
         
         row.append(MP)
         row.append(N)
-        #row.append(probs[i])
-        #row.append('1' if probs[i] >= 0.5 else '0')
         row.append(score)
         
+        if score == 'a': continue
         data.append(row)
    
     fio.ArffWriter(output, head, types, "Quality", data)
 
-def WriteQuality2Weka_DT(excelfile, prob, titledir, output):#feature are inspired from decision tree
+
+
+def WriteQuality2Weka_WC_Unigam_NonZero(excelfile, prob, titledir, output):#feature are inspired from decision tree
     reload(sys)
     sys.setdefaultencoding('utf8')
     
@@ -232,38 +268,22 @@ def WriteQuality2Weka_DT(excelfile, prob, titledir, output):#feature are inspire
     MPLectures = getQualitywithLecture(excelfile)
     
     head = []
-    head = head + ['Text'] #ngram
-    head = head + ['WC'] #word count
+    head = head + ['Text']
+    head = head + ['WC']
     head = head + ['NoneZero'] #length > 0?
-    head = head + ['Content']
-    head = head + ['OrgAssign']
-    head = head + ['Title']
-    head = head + ['WCTitle']
-    head = head + ['RatioTitle']
-
-    head = head + ['Prob'] #Specific
-    head = head + ['ProbBinary']
-    
     head = head + ['@class@']
     
     types = []
     types = types + ['String']
-    types = types + ['Continuous'] #word count
-    types = types + ['Category']    #length > 0?
-    types = types + ['Category']
-    types = types + ['Category']
-    
-    types = types + ['Category'] #title
-    types = types + ['Continuous']#WCTitle
-    types = types + ['Continuous']#RatioTitle
-    
     types = types + ['Continuous']
-    types = types + ['Category']
+    types = types + ['Category']    #length > 0?
     types = types + ['Category']
     
     i = 0
     data = []
     for week, MPs in enumerate(MPLectures):
+        if MPs == []: continue
+        
         lecture = week + 1
         titles = titleList[week]
         
@@ -313,63 +333,337 @@ def WriteQuality2Weka_DT(excelfile, prob, titledir, output):#feature are inspire
                 for word in unigrams:
                     if word.lower() in titledict:
                         titleCount = titleCount + 1
-                        
-            row.append(MP) #unigram
-            row.append(N)  #
+            
+            row.append(MP)
+            row.append(N)            
             row.append(N > 0)
             
-            row.append(hasContentWord)
-            row.append(OrgAssign)
-            
-            row.append(titleRepeat)
-            row.append(titleCount)
-            row.append(titleCount / float(N) if N > 0 else 0)
-            
-            row.append(probs[i])
-            row.append(probs[i] >= 0.5)
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
         
-def WriteQuality2Weka_ALL(excelfile, prob, output):
+def WriteQuality2Weka_WC_Unigam_Content(excelfile, prob, titledir, output):#feature are inspired from decision tree
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
     probs = [float(line.strip()) for line in fio.ReadFile(prob)]
     
-    MPs = getQuality(excelfile)
+    contentwords = [line.strip().lower() for line in fio.ReadFile("content.txt")]
+    orgnizationwords = [line.strip().lower() for line in fio.ReadFile("organization_assignment.txt")]
+    titleList = Survey.getTitles(titledir)
+    
+    MPLectures = getQualitywithLecture(excelfile)
     
     head = []
     head = head + ['Text']
     head = head + ['WC']
-    head = head + ['Prob']
-    head = head + ['ProbBinary']
+    head = head + ['Content']
     head = head + ['@class@']
     
     types = []
     types = types + ['String']
     types = types + ['Continuous']
+    types = types + ['Category']
+    types = types + ['Category']
+    
+    i = 0
+    data = []
+    for week, MPs in enumerate(MPLectures):
+        if MPs == []: continue
+        
+        lecture = week + 1
+        titles = titleList[week]
+        
+        titledict = {}
+        newTitles = []
+        for title in titles:
+            unigrams = NLTKWrapper.wordtokenizer(title)
+            title = ' '.join(unigrams)
+            newTitles.append(title.lower())
+            for word in unigrams:
+                titledict[word.lower()] = True
+                
+        titles = newTitles
+        
+        for MP, score in MPs:
+            row = []
+            
+            unigrams = NLTKWrapper.wordtokenizer(MP)
+            MP = ' '.join(unigrams)
+            
+            N = len(MP.split())
+            
+            hasContentWord = False
+            for word in unigrams:
+                if word.lower() in contentwords:
+                    hasContentWord = True
+                    break
+            
+            OrgAssign = False
+            for word in unigrams:
+                if word.lower() in orgnizationwords:
+                    OrgAssign = True
+                    break
+            
+            titleRepeat = False
+            if len(MP) > 0:
+                for title in titles:
+                    try:
+                        if title.find(MP.lower()) != -1:
+                            titleRepeat = True
+                            break
+                    except UnicodeDecodeError:
+                        pass
+            
+            titleCount = 0
+            if len(MP) > 0:
+                for word in unigrams:
+                    if word.lower() in titledict:
+                        titleCount = titleCount + 1
+            
+            row.append(MP)
+            row.append(N)            
+            row.append(hasContentWord)
+            row.append(score)
+            i = i + 1
+            
+            if score == 'a': continue
+            data.append(row)
+       
+        fio.ArffWriter(output, head, types, "Quality", data)
+        
+def WriteQuality2Weka_WC_Unigam_OrgAssign(excelfile, prob, titledir, output):#feature are inspired from decision tree
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
+    probs = [float(line.strip()) for line in fio.ReadFile(prob)]
+    
+    contentwords = [line.strip().lower() for line in fio.ReadFile("content.txt")]
+    orgnizationwords = [line.strip().lower() for line in fio.ReadFile("organization_assignment.txt")]
+    titleList = Survey.getTitles(titledir)
+    
+    MPLectures = getQualitywithLecture(excelfile)
+    
+    head = []
+    head = head + ['Text']
+    head = head + ['WC']
+    head = head + ['OrgAssign']
+    head = head + ['@class@']
+    
+    types = []
+    types = types + ['String']
     types = types + ['Continuous']
     types = types + ['Category']
     types = types + ['Category']
     
+    i = 0
     data = []
-    for i, (MP, score) in enumerate(MPs):
-        row = []
+    for week, MPs in enumerate(MPLectures):
+        if MPs == []: continue
         
-        MP = ' '.join(NLTKWrapper.wordtokenizer(MP))
-        N = len(MP.split())
+        lecture = week + 1
+        titles = titleList[week]
         
-        row.append(MP)
-        row.append(N)
-        row.append(probs[i])
-        row.append('1' if probs[i] >= 0.5 else '0')
-        row.append(score)
+        titledict = {}
+        newTitles = []
+        for title in titles:
+            unigrams = NLTKWrapper.wordtokenizer(title)
+            title = ' '.join(unigrams)
+            newTitles.append(title.lower())
+            for word in unigrams:
+                titledict[word.lower()] = True
+                
+        titles = newTitles
         
-        data.append(row)
-   
-    fio.ArffWriter(output, head, types, "Quality", data)
+        for MP, score in MPs:
+            row = []
+            
+            unigrams = NLTKWrapper.wordtokenizer(MP)
+            MP = ' '.join(unigrams)
+            
+            N = len(MP.split())
+            
+            hasContentWord = False
+            for word in unigrams:
+                if word.lower() in contentwords:
+                    hasContentWord = True
+                    break
+            
+            OrgAssign = False
+            for word in unigrams:
+                if word.lower() in orgnizationwords:
+                    OrgAssign = True
+                    break
+            
+            titleRepeat = False
+            if len(MP) > 0:
+                for title in titles:
+                    try:
+                        if title.find(MP.lower()) != -1:
+                            titleRepeat = True
+                            break
+                    except UnicodeDecodeError:
+                        pass
+            
+            titleCount = 0
+            if len(MP) > 0:
+                for word in unigrams:
+                    if word.lower() in titledict:
+                        titleCount = titleCount + 1
+            
+            row.append(MP)
+            row.append(N)            
+            row.append(OrgAssign)
+            row.append(score)
+            i = i + 1
+            
+            if score == 'a': continue
+            data.append(row)
+       
+        fio.ArffWriter(output, head, types, "Quality", data)
 
+def WriteQuality2Weka_WC_Unigam_Speciteller(excelfile, speciteller_datadir, wekafile):
+    head = []
+    head = head + ['Text']
+    head = head + ['WC']
+    head = head + ['ProbBinary']
+    head = head + ['Prob']
+    head = head + ['@class@']
+    
+    types = []
+    types = types + ['String']
+    types = types + ['Continuous']
+    types = types + ['Category']
+    types = types + ['Continuous']
+    types = types + ['Category']
+    
+    data = []
+    
+    MPLectures = getQualitywithLecture(excelfile)
+    
+    for i, MPs in enumerate(MPLectures):
+        week = i + 1
+        probs = getMPProb(week, speciteller_datadir)
+        
+        if MPs == []: continue
+        
+        for k, (MP, score) in enumerate(MPs):
+            row = []
+            
+            MP = ' '.join(NLTKWrapper.wordtokenizer(MP))
+            N = len(MP.split())
+            
+            row.append(MP)
+            row.append(N)
+            row.append('True' if probs[k] >= 0.5 else 'False')
+            row.append(probs[k])
+            row.append(score)
+            
+            if score == 'a': continue
+            data.append(row)
+   
+    fio.ArffWriter(wekafile, head, types, "Quality", data)
+        
+def WriteQuality2Weka_WC_Unigam_Title(excelfile, prob, titledir, output):#feature are inspired from decision tree
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
+    probs = [float(line.strip()) for line in fio.ReadFile(prob)]
+    
+    contentwords = [line.strip().lower() for line in fio.ReadFile("content.txt")]
+    orgnizationwords = [line.strip().lower() for line in fio.ReadFile("organization_assignment.txt")]
+    titleList = Survey.getTitles(titledir)
+    
+    MPLectures = getQualitywithLecture(excelfile)
+    
+    head = []
+    head = head + ['Text']
+    head = head + ['WC']
+    head = head + ['Title']
+    head = head + ['WCTitle']
+    head = head + ['RatioTitle']
+    head = head + ['@class@']
+    
+    types = []
+    types = types + ['String']
+    types = types + ['Continuous']
+    types = types + ['Category'] #title
+    types = types + ['Continuous']#WCTitle
+    types = types + ['Continuous']#RatioTitle
+    types = types + ['Category']
+    
+    i = 0
+    data = []
+    for week, MPs in enumerate(MPLectures):
+        if MPs == []: continue
+        
+        lecture = week + 1
+        titles = titleList[week]
+        
+        titledict = {}
+        newTitles = []
+        for title in titles:
+            unigrams = NLTKWrapper.wordtokenizer(title)
+            title = ' '.join(unigrams)
+            newTitles.append(title.lower())
+            for word in unigrams:
+                titledict[word.lower()] = True
+                
+        titles = newTitles
+        
+        for MP, score in MPs:
+            row = []
+            
+            unigrams = NLTKWrapper.wordtokenizer(MP)
+            MP = ' '.join(unigrams)
+            
+            N = len(MP.split())
+            
+            hasContentWord = False
+            for word in unigrams:
+                if word.lower() in contentwords:
+                    hasContentWord = True
+                    break
+            
+            OrgAssign = False
+            for word in unigrams:
+                if word.lower() in orgnizationwords:
+                    OrgAssign = True
+                    break
+            
+            titleRepeat = False
+            if len(MP) > 0:
+                for title in titles:
+                    try:
+                        if title.find(MP.lower()) != -1:
+                            titleRepeat = True
+                            break
+                    except UnicodeDecodeError:
+                        pass
+            
+            titleCount = 0
+            if len(MP) > 0:
+                for word in unigrams:
+                    if word.lower() in titledict:
+                        titleCount = titleCount + 1
+            
+            row.append(MP)
+            row.append(N)            
+            row.append(titleRepeat)
+            row.append(titleCount)
+            row.append(titleCount / float(N) if N > 0 else 0)
+            row.append(score)
+            i = i + 1
+            
+            if score == 'a': continue
+            data.append(row)
+       
+        fio.ArffWriter(output, head, types, "Quality", data)
+        
 def WriteQuality2Weka_DT_WC(excelfile, prob, titledir, output):#feature are inspired from decision tree
     reload(sys)
     sys.setdefaultencoding('utf8')
@@ -481,10 +775,129 @@ def WriteQuality2Weka_DT_WC(excelfile, prob, titledir, output):#feature are insp
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
-   
+
+def WriteQuality2Weka_DT(excelfile, prob, titledir, output):#feature are inspired from decision tree
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
+    probs = [float(line.strip()) for line in fio.ReadFile(prob)]
+    
+    contentwords = [line.strip().lower() for line in fio.ReadFile("content.txt")]
+    orgnizationwords = [line.strip().lower() for line in fio.ReadFile("organization_assignment.txt")]
+    titleList = Survey.getTitles(titledir)
+    
+    MPLectures = getQualitywithLecture(excelfile)
+    
+    head = []
+    head = head + ['Text'] #ngram
+    head = head + ['WC'] #word count
+    head = head + ['NoneZero'] #length > 0?
+    head = head + ['Content']
+    head = head + ['OrgAssign']
+    head = head + ['Title']
+    head = head + ['WCTitle']
+    head = head + ['RatioTitle']
+
+    head = head + ['Prob'] #Specific
+    head = head + ['ProbBinary']
+    
+    head = head + ['@class@']
+    
+    types = []
+    types = types + ['String']
+    types = types + ['Continuous'] #word count
+    types = types + ['Category']    #length > 0?
+    types = types + ['Category']
+    types = types + ['Category']
+    
+    types = types + ['Category'] #title
+    types = types + ['Continuous']#WCTitle
+    types = types + ['Continuous']#RatioTitle
+    
+    types = types + ['Continuous']
+    types = types + ['Category']
+    types = types + ['Category']
+    
+    i = 0
+    data = []
+    for week, MPs in enumerate(MPLectures):
+        if MPs == []: continue
+        
+        lecture = week + 1
+        titles = titleList[week]
+        
+        titledict = {}
+        newTitles = []
+        for title in titles:
+            unigrams = NLTKWrapper.wordtokenizer(title)
+            title = ' '.join(unigrams)
+            newTitles.append(title.lower())
+            for word in unigrams:
+                titledict[word.lower()] = True
+                
+        titles = newTitles
+        
+        for MP, score in MPs:
+            row = []
+            
+            unigrams = NLTKWrapper.wordtokenizer(MP)
+            MP = ' '.join(unigrams)
+            
+            N = len(MP.split())
+            
+            hasContentWord = False
+            for word in unigrams:
+                if word.lower() in contentwords:
+                    hasContentWord = True
+                    break
+            
+            OrgAssign = False
+            for word in unigrams:
+                if word.lower() in orgnizationwords:
+                    OrgAssign = True
+                    break
+            
+            titleRepeat = False
+            if len(MP) > 0:
+                for title in titles:
+                    try:
+                        if title.find(MP.lower()) != -1:
+                            titleRepeat = True
+                            break
+                    except UnicodeDecodeError:
+                        pass
+            
+            titleCount = 0
+            if len(MP) > 0:
+                for word in unigrams:
+                    if word.lower() in titledict:
+                        titleCount = titleCount + 1
+                        
+            row.append(MP) #unigram
+            row.append(N)  #
+            row.append(N > 0)
+            
+            row.append(hasContentWord)
+            row.append(OrgAssign)
+            
+            row.append(titleRepeat)
+            row.append(titleCount)
+            row.append(titleCount / float(N) if N > 0 else 0)
+            
+            row.append(probs[i])
+            row.append(probs[i] >= 0.5)
+            row.append(score)
+            i = i + 1
+            
+            if score == 'a': continue
+            data.append(row)
+       
+        fio.ArffWriter(output, head, types, "Quality", data)
+           
 def WriteQuality2Weka_DT_Ngram(excelfile, prob, titledir, output):#feature are inspired from decision tree
     reload(sys)
     sys.setdefaultencoding('utf8')
@@ -596,6 +1009,7 @@ def WriteQuality2Weka_DT_Ngram(excelfile, prob, titledir, output):#feature are i
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
@@ -711,6 +1125,7 @@ def WriteQuality2Weka_DT_NoneZero(excelfile, prob, titledir, output):#feature ar
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
@@ -826,6 +1241,7 @@ def WriteQuality2Weka_DT_Content(excelfile, prob, titledir, output):#feature are
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
@@ -941,21 +1357,22 @@ def WriteQuality2Weka_DT_OrgAssign(excelfile, prob, titledir, output):#feature a
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
    
-def WriteQuality2Weka_DT_Title(excelfile, prob, titledir, output):#feature are inspired from decision tree
+def WriteQuality2Weka_DT_Title(excelfile, speciteller_datadir, titledir, output, sheets=range(0,25)):#feature are inspired from decision tree
     reload(sys)
     sys.setdefaultencoding('utf8')
     
-    probs = [float(line.strip()) for line in fio.ReadFile(prob)]
+    #probs = [float(line.strip()) for line in fio.ReadFile(prob)]
     
     contentwords = [line.strip().lower() for line in fio.ReadFile("content.txt")]
     orgnizationwords = [line.strip().lower() for line in fio.ReadFile("organization_assignment.txt")]
     titleList = Survey.getTitles(titledir)
     
-    MPLectures = getQualitywithLecture(excelfile)
+    MPLectures = getQualitywithLecture(excelfile, sheets)
     
     head = []
     head = head + ['Text'] #ngram
@@ -987,7 +1404,6 @@ def WriteQuality2Weka_DT_Title(excelfile, prob, titledir, output):#feature are i
     types = types + ['Category']
     types = types + ['Category']
     
-    i = 0
     data = []
     for week, MPs in enumerate(MPLectures):
         lecture = week + 1
@@ -1004,7 +1420,9 @@ def WriteQuality2Weka_DT_Title(excelfile, prob, titledir, output):#feature are i
                 
         titles = newTitles
         
-        for MP, score in MPs:
+        probs = getMPProb(lecture, speciteller_datadir)
+        
+        for k, (MP, score) in enumerate(MPs):
             row = []
             
             unigrams = NLTKWrapper.wordtokenizer(MP)
@@ -1051,11 +1469,11 @@ def WriteQuality2Weka_DT_Title(excelfile, prob, titledir, output):#feature are i
 #             row.append(titleCount)
 #             row.append(titleCount / float(N) if N > 0 else 0)
             
-            row.append(probs[i])
-            row.append(probs[i] >= 0.5)
+            row.append(probs[k])
+            row.append(probs[k] >= 0.5)
             row.append(score)
-            i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
@@ -1171,6 +1589,7 @@ def WriteQuality2Weka_DT_Specific(excelfile, prob, titledir, output):#feature ar
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
@@ -1286,6 +1705,7 @@ def WriteQuality2Weka_DT_Ngram_WC(excelfile, prob, titledir, output):#feature ar
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
@@ -1401,6 +1821,7 @@ def WriteQuality2Weka_DT_Ngram_NoneZero(excelfile, prob, titledir, output):#feat
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
@@ -1516,6 +1937,7 @@ def WriteQuality2Weka_DT_Ngram_Content(excelfile, prob, titledir, output):#featu
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
@@ -1631,6 +2053,7 @@ def WriteQuality2Weka_DT_Ngram_OrgAssign(excelfile, prob, titledir, output):#fea
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
@@ -1746,6 +2169,7 @@ def WriteQuality2Weka_DT_Ngram_Title(excelfile, prob, titledir, output):#feature
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
@@ -1861,6 +2285,7 @@ def WriteQuality2Weka_DT_Ngram_Specific(excelfile, prob, titledir, output):#feat
             row.append(score)
             i = i + 1
             
+            if score == 'a': continue
             data.append(row)
        
         fio.ArffWriter(output, head, types, "Quality", data)
@@ -1912,6 +2337,8 @@ def WriteQuality2Weka_CrossLecture_DT(excelfile, prob, titledir, output):#featur
         data = []
         test = []
         for week, MPs in enumerate(MPLectures):
+            if len(MPs) == 0: continue
+            
             lecture = week + 1
             titles = titleList[week]
             
@@ -1978,6 +2405,7 @@ def WriteQuality2Weka_CrossLecture_DT(excelfile, prob, titledir, output):#featur
                 row.append(score)
                 i = i + 1
                 
+                if score == 'a': continue
                 if week == fold:
                     test.append(row)
                 else:
@@ -1989,7 +2417,7 @@ def WriteQuality2Weka_CrossLecture_DT(excelfile, prob, titledir, output):#featur
             outputfile = output + "_" + str(fold) + "_test.arff"
             fio.ArffWriter(outputfile, head, types, "Quality", test)
  
-def WriteQuality2Weka_CrossLecture_DT_Unigram(excelfile, prob, titledir, output):#feature are inspired from decision tree
+def WriteQuality2Weka_CrossLecture_WC_Unigram(excelfile, prob, titledir, output):#feature are inspired from decision tree
     reload(sys)
     sys.setdefaultencoding('utf8')
     
@@ -2002,33 +2430,13 @@ def WriteQuality2Weka_CrossLecture_DT_Unigram(excelfile, prob, titledir, output)
     MPLectures = getQualitywithLecture(excelfile)
     
     head = []
-    #head = head + ['Text'] #ngram
+    head = head + ['Text'] #ngram
     head = head + ['WC'] #word count
-    head = head + ['NoneZero'] #length > 0?
-    head = head + ['Content']
-    head = head + ['OrgAssign']
-    head = head + ['Title']
-    head = head + ['WCTitle']
-    head = head + ['RatioTitle']
-
-    head = head + ['Prob'] #Specific
-    head = head + ['ProbBinary']
-    
     head = head + ['@class@']
     
     types = []
-    #types = types + ['String']
+    types = types + ['String']
     types = types + ['Continuous'] #word count
-    types = types + ['Category']    #length > 0?
-    types = types + ['Category']
-    types = types + ['Category']
-    
-    types = types + ['Category'] #title
-    types = types + ['Continuous']#WCTitle
-    types = types + ['Continuous']#RatioTitle
-    
-    types = types + ['Continuous']
-    types = types + ['Category']
     types = types + ['Category']
     
     for fold in range(len(MPLectures)):
@@ -2036,6 +2444,8 @@ def WriteQuality2Weka_CrossLecture_DT_Unigram(excelfile, prob, titledir, output)
         data = []
         test = []
         for week, MPs in enumerate(MPLectures):
+            if len(MPs) == 0: continue
+            
             lecture = week + 1
             titles = titleList[week]
             
@@ -2086,7 +2496,125 @@ def WriteQuality2Weka_CrossLecture_DT_Unigram(excelfile, prob, titledir, output)
                         if word.lower() in titledict:
                             titleCount = titleCount + 1
                             
-                #row.append(MP) #unigram
+                row.append(MP) #unigram
+                row.append(N)  #
+                row.append(score)
+                i = i + 1
+                
+                if score == 'a': continue
+                if week == fold:
+                    test.append(row)
+                else:
+                    data.append(row)
+            
+            outputfile = output + "_" + str(fold) + "_train.arff"
+            fio.ArffWriter(outputfile, head, types, "Quality", data)
+            
+            outputfile = output + "_" + str(fold) + "_test.arff"
+            fio.ArffWriter(outputfile, head, types, "Quality", test)
+
+def WriteQuality2Weka_CrossTopic_DT(excelfile, prob, titledir, output):#feature are inspired from decision tree
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
+    probs = [float(line.strip()) for line in fio.ReadFile(prob)]
+    
+    contentwords = [line.strip().lower() for line in fio.ReadFile("content.txt")]
+    orgnizationwords = [line.strip().lower() for line in fio.ReadFile("organization_assignment.txt")]
+    titleList = Survey.getTitles(titledir)
+    
+    MPLectures = getQualitywithLecture(excelfile)
+    
+    topics = sorted(set(topicDict.values()))
+    
+    head = []
+    head = head + ['Text'] #ngram
+    head = head + ['WC'] #word count
+    head = head + ['NoneZero'] #length > 0?
+    head = head + ['Content']
+    head = head + ['OrgAssign']
+    head = head + ['Title']
+    head = head + ['WCTitle']
+    head = head + ['RatioTitle']
+
+    head = head + ['Prob'] #Specific
+    head = head + ['ProbBinary']
+    
+    head = head + ['@class@']
+    
+    types = []
+    types = types + ['String']
+    types = types + ['Continuous'] #word count
+    types = types + ['Category']    #length > 0?
+    types = types + ['Category']
+    types = types + ['Category']
+    
+    types = types + ['Category'] #title
+    types = types + ['Continuous']#WCTitle
+    types = types + ['Continuous']#RatioTitle
+    
+    types = types + ['Continuous']
+    types = types + ['Category']
+    types = types + ['Category']
+    
+    for fold in topics:
+        i = 0
+        data = []
+        test = []
+        for week, MPs in enumerate(MPLectures):
+            if len(MPs) == 0: continue
+            
+            lecture = week + 1
+            titles = titleList[week]
+            
+            titledict = {}
+            newTitles = []
+            for title in titles:
+                unigrams = NLTKWrapper.wordtokenizer(title)
+                title = ' '.join(unigrams)
+                newTitles.append(title.lower())
+                for word in unigrams:
+                    titledict[word.lower()] = True
+                    
+            titles = newTitles
+            
+            for MP, score in MPs:
+                row = []
+                
+                unigrams = NLTKWrapper.wordtokenizer(MP)
+                MP = ' '.join(unigrams)
+                
+                N = len(MP.split())
+                
+                hasContentWord = False
+                for word in unigrams:
+                    if word.lower() in contentwords:
+                        hasContentWord = True
+                        break
+                
+                OrgAssign = False
+                for word in unigrams:
+                    if word.lower() in orgnizationwords:
+                        OrgAssign = True
+                        break
+                
+                titleRepeat = False
+                if len(MP) > 0:
+                    for title in titles:
+                        try:
+                            if title.find(MP.lower()) != -1:
+                                titleRepeat = True
+                                break
+                        except UnicodeDecodeError:
+                            pass
+                
+                titleCount = 0
+                if len(MP) > 0:
+                    for word in unigrams:
+                        if word.lower() in titledict:
+                            titleCount = titleCount + 1
+                            
+                row.append(MP) #unigram
                 row.append(N)  #
                 row.append(N > 0)
                 
@@ -2102,7 +2630,8 @@ def WriteQuality2Weka_CrossLecture_DT_Unigram(excelfile, prob, titledir, output)
                 row.append(score)
                 i = i + 1
                 
-                if week == fold:
+                if score == 'a': continue
+                if topicDict[lecture] == fold:
                     test.append(row)
                 else:
                     data.append(row)
@@ -2112,86 +2641,168 @@ def WriteQuality2Weka_CrossLecture_DT_Unigram(excelfile, prob, titledir, output)
             
             outputfile = output + "_" + str(fold) + "_test.arff"
             fio.ArffWriter(outputfile, head, types, "Quality", test)
+
+def WriteQuality2Weka_CrossTopic_MC_Unigram(excelfile, prob, titledir, output):#feature are inspired from decision tree
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+    
+    probs = [float(line.strip()) for line in fio.ReadFile(prob)]
+    
+    contentwords = [line.strip().lower() for line in fio.ReadFile("content.txt")]
+    orgnizationwords = [line.strip().lower() for line in fio.ReadFile("organization_assignment.txt")]
+    titleList = Survey.getTitles(titledir)
+    
+    MPLectures = getQualitywithLecture(excelfile)
+    
+    topics = sorted(set(topicDict.values()))
+    
+    head = []
+    head = head + ['Text'] #ngram
+    head = head + ['WC'] #word count 
+    head = head + ['@class@']
+    
+    types = []
+    types = types + ['String']
+    types = types + ['Continuous'] #word count
+    types = types + ['Category']
+    
+    for fold in topics:
+        i = 0
+        data = []
+        test = []
+        for week, MPs in enumerate(MPLectures):
+            if len(MPs) == 0: continue
+            
+            lecture = week + 1
+            titles = titleList[week]
+            
+            titledict = {}
+            newTitles = []
+            for title in titles:
+                unigrams = NLTKWrapper.wordtokenizer(title)
+                title = ' '.join(unigrams)
+                newTitles.append(title.lower())
+                for word in unigrams:
+                    titledict[word.lower()] = True
+                    
+            titles = newTitles
+            
+            for MP, score in MPs:
+                row = []
                 
+                unigrams = NLTKWrapper.wordtokenizer(MP)
+                MP = ' '.join(unigrams)
+                
+                N = len(MP.split())
+                
+                hasContentWord = False
+                for word in unigrams:
+                    if word.lower() in contentwords:
+                        hasContentWord = True
+                        break
+                
+                OrgAssign = False
+                for word in unigrams:
+                    if word.lower() in orgnizationwords:
+                        OrgAssign = True
+                        break
+                
+                titleRepeat = False
+                if len(MP) > 0:
+                    for title in titles:
+                        try:
+                            if title.find(MP.lower()) != -1:
+                                titleRepeat = True
+                                break
+                        except UnicodeDecodeError:
+                            pass
+                
+                titleCount = 0
+                if len(MP) > 0:
+                    for word in unigrams:
+                        if word.lower() in titledict:
+                            titleCount = titleCount + 1
+                            
+                row.append(MP) #unigram
+                row.append(N)  #
+                row.append(score)
+                i = i + 1
+                
+                if score == 'a': continue
+                if topicDict[lecture] == fold:
+                    test.append(row)
+                else:
+                    data.append(row)
+            
+            outputfile = output + "_" + str(fold) + "_train.arff"
+            fio.ArffWriter(outputfile, head, types, "Quality", data)
+            
+            outputfile = output + "_" + str(fold) + "_test.arff"
+            fio.ArffWriter(outputfile, head, types, "Quality", test)
+
+def WriteQuality2Weka_CrossCourse_DT(excelfile, prob, titledir, wekafile):
+    train_weka = wekafile + '_train.arff'
+    WriteQuality2Weka_DT_Title(excelfile, prob, titledir, train_weka)
+    
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
   
     #dis = "../data/q_dis.txt"
     #getQualityDistribution(excelfile, dis)
     
-    text = "../../speciteller/MP.txt"
+    speciteller_datadir = "../data/speciteller/"
+    #getQualityText(excelfile, datadir)
+    
     prob = "../data/MP.prob"
-    #getQualityText(excelfile, text)
-    #PostProcessProb(excelfile, "../../speciteller/MP.prob", "../data/MP.prob")
-    
-#     wekafile = "../data/quality_wc.arff"
-#     WriteQuality2Weka_WC(excelfile, wekafile)
-#   
-#     wekafile = "../data/quality_unigram.arff"
-#     WriteQuality2Weka_Unigram(excelfile, wekafile)
-#      
-#     wekafile = "../data/quality_specitellerProb.arff"
-#     WriteQuality2Weka_SpecitellerProb(excelfile, prob, wekafile)
-#      
-#     wekafile = "../data/quality_specitellerBinary.arff"
-#     WriteQuality2Weka_SpecitellerBinary(excelfile, prob, wekafile)
-#      
-#     wekafile = "../data/quality_all.arff"
-#     WriteQuality2Weka_ALL(excelfile, prob, wekafile)
-# 
-#     wekafile = "../data/quality_wc_unigram.arff"
-#     WriteQuality2Weka_WC_Ngram(excelfile, prob, wekafile)
-    
+    #PostProcessProb(excelfile, speciteller_datadir)
     titledir = "E:/Dropbox/reflection project_LRDC/250 Sp11 CLIC All Lecs .2G/titles/"
     
-#     wekafile = "../data/quality_DT.arff"
+#     wekafile = "../data/weka/quality_DT.arff"
 #     WriteQuality2Weka_DT(excelfile, prob, titledir, wekafile)
-#      
-#     wekafile = "../data/quality_DT_WC.arff"
-#     WriteQuality2Weka_DT_WC(excelfile, prob, titledir, wekafile)
-#      
-#     wekafile = "../data/quality_DT_Ngram.arff"
-#     WriteQuality2Weka_DT_Ngram(excelfile, prob, titledir, wekafile)
-#      
-#     wekafile = "../data/quality_DT_NoneZero.arff"
-#     WriteQuality2Weka_DT_NoneZero(excelfile, prob, titledir, wekafile)
-#      
-#     wekafile = "../data/quality_DT_Content.arff"
-#     WriteQuality2Weka_DT_Content(excelfile, prob, titledir, wekafile)
-#      
-#     wekafile = "../data/quality_DT_OrgAssign.arff"
-#     WriteQuality2Weka_DT_OrgAssign(excelfile, prob, titledir, wekafile)
-#      
-#     wekafile = "../data/quality_DT_Specific.arff"
-#     WriteQuality2Weka_DT_Specific(excelfile, prob, titledir, wekafile)
-#      
-#     wekafile = "../data/quality_DT_Title.arff"
-#     WriteQuality2Weka_DT_Title(excelfile, prob, titledir, wekafile)
-    
-#     wekafile = "../data/quality_DT_Ngram_WC.arff"
-#     WriteQuality2Weka_DT_Ngram_WC(excelfile, prob, titledir, wekafile)
-#     
-#     wekafile = "../data/quality_DT_Ngram_NoneZero.arff"
-#     WriteQuality2Weka_DT_Ngram_NoneZero(excelfile, prob, titledir, wekafile)
+#          
+#     wekafile = "../data/weka/quality_WC_Unigram.arff"
+#     WriteQuality2Weka_WC_Unigam(excelfile, prob, wekafile)
+#  
+#     wekafile = "../data/weka/quality_WC_Unigam_NonZero.arff"
+#     WriteQuality2Weka_WC_Unigam_NonZero(excelfile, prob, titledir, wekafile)
 #       
-#     wekafile = "../data/quality_DT_Ngram_Content.arff"
-#     WriteQuality2Weka_DT_Ngram_Content(excelfile, prob, titledir, wekafile)
+#     wekafile = "../data/weka/quality_WC_Unigam_Content.arff"
+#     WriteQuality2Weka_WC_Unigam_Content(excelfile, prob, titledir, wekafile)
 #       
-#     wekafile = "../data/quality_DT_Ngram_OrgAssign.arff"
-#     WriteQuality2Weka_DT_Ngram_OrgAssign(excelfile, prob, titledir, wekafile)
+#     wekafile = "../data/weka/quality_WC_Unigam_OrgAssign.arff"
+#     WriteQuality2Weka_WC_Unigam_OrgAssign(excelfile, prob, titledir, wekafile)
 #       
-#     wekafile = "../data/quality_DT_Ngram_Specific.arff"
-#     WriteQuality2Weka_DT_Ngram_Specific(excelfile, prob, titledir, wekafile)
+#     wekafile = "../data/weka/quality_WC_Unigam_Speciteller.arff"
+#     WriteQuality2Weka_WC_Unigam_Speciteller(excelfile, speciteller_datadir, wekafile)
 #       
-#     wekafile = "../data/quality_DT_Ngram_Title.arff"
-#     WriteQuality2Weka_DT_Ngram_Title(excelfile, prob, titledir, wekafile)
-    
-#     wekafile = "../data/quality_DT"
+#     wekafile = "../data/weka/quality_WC_Unigam_Title.arff"
+#     WriteQuality2Weka_WC_Unigam_Title(excelfile, prob, titledir, wekafile)
+#       
+#     wekafile = "../data/weka/quality_CrossLecture_DT"
 #     WriteQuality2Weka_CrossLecture_DT(excelfile, prob, titledir, wekafile)
+#        
+#     wekafile = "../data/weka/quality_CrossLecture_WC_Unigram"
+#     WriteQuality2Weka_CrossLecture_WC_Unigram(excelfile, prob, titledir, wekafile)
+#      
+#     wekafile = "../data/weka/quality_CrossTopic_DT"
+#     WriteQuality2Weka_CrossTopic_DT(excelfile, prob, titledir, wekafile)
 #     
-#     wekafile = "../data/quality_DT_Unigram"
-#     WriteQuality2Weka_CrossLecture_DT_Unigram(excelfile, prob, titledir, wekafile)
+#     wekafile = "../data/weka/quality_CrossTopic_WC_Unigram"
+#     WriteQuality2Weka_CrossTopic_MC_Unigram(excelfile, prob, titledir, wekafile)
+#
     
-    fio.ExtractWekaScore("../../QualityPrediction/log.txt", "../data/quality_DT_Ngram_CrossLecture.txt")
+    excelfile_2010 = "../data/2010Spring.xls"
+    speciteller_datadir_2010 = "../data/speciteller_2010/"
+    #getQualityText(excelfile_2010, speciteller_datadir_2010, sheets=range(0,4))
+    
+    #PostProcessProb(excelfile_2010, speciteller_datadir_2010, sheets=range(0,4))
+    
+    wekafile = "../data/weka/quality_CrossCourse_DT_train.arff"
+    WriteQuality2Weka_DT_Title(excelfile, speciteller_datadir, titledir, wekafile)
+    
+    wekafile = "../data/weka/quality_CrossCourse_DT_test.arff"
+    WriteQuality2Weka_DT_Title(excelfile_2010, speciteller_datadir_2010, titledir, wekafile, sheets=range(0,4))
+    
+    #fio.ExtractWekaScore("../../QualityPrediction/log.txt", "../data/weka/quality_DT_Ngram_CrossLecture.txt")
     
     print "done"
