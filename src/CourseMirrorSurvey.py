@@ -12,7 +12,7 @@ filters = ["?", "[blank]", 'n/a', 'blank',] #'none', "no", "nothing"
 header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2']
 
 range1 = range(3,42)
-range4 = range(1,25)
+range4 = range(1,26)
 
 maxWeekDict = {"CS2610": 21-4+1, 
                "CS2001": 18-5+1,
