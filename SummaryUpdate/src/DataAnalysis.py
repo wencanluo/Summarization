@@ -29,11 +29,15 @@ def CombineTimeStamp(json1, json2, output):
         
     for r in j2['results']:
         user = r['user']
-        q1 = r['q1']
-        q2 = r['q2']
-        #q3 = r['q3']
         
-        t = getTime(j1, user, q1, q2, q3=None)
+        if 'q1' in r and 'q2' in r:
+            q1 = r['q1']
+            q2 = r['q2']
+            #q3 = r['q3']
+            
+            t = getTime(j1, user, q1, q2, q3=None)
+        else:
+            t = None
         
         if t == None:
             t = r['createdAt']
@@ -127,6 +131,8 @@ def extractData(refs, lecs, output):
 #         except Exception as e:
 #             print cid, lecture_number
 #             print e
+        if due == None:
+            print cid, lecture_number
         submitT = t - due
         
         if submitT > -2000:
@@ -138,8 +144,15 @@ def extractData(refs, lecs, output):
         
         row.append(submitT) #in seconds
         
-        row.append(len(NLTKWrapper.wordtokenizer(r['q1'], punct=True)))
-        row.append(len(NLTKWrapper.wordtokenizer(r['q2'], punct=True)))
+        if 'q1' in r:
+            row.append(len(NLTKWrapper.wordtokenizer(r['q1'], punct=True)))
+        else:
+            row.append(0)
+        
+        if 'q2' in r:
+            row.append(len(NLTKWrapper.wordtokenizer(r['q2'], punct=True)))
+        else:
+            row.append(0)
         #row.append(len(NLTKWrapper.wordtokenizer(r['q3'], punct=True)))
         
         body.append(row)
@@ -393,7 +406,7 @@ if __name__ == '__main__':
     getSubmisstionRatio(datafile, lecture_raw_time, outputprefix)
     
     outputprefix = "all_users"
-    #getUserSubmisstionInfo(datafile, lecture_raw_time, outputprefix)
+    getUserSubmisstionInfo(datafile, lecture_raw_time, outputprefix)
     print "done"
     
     

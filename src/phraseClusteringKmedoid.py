@@ -190,6 +190,8 @@ def getPhraseClusterCandidateNP(student_summaryList, weightfile, candiatefile, o
 def getPhraseClusterAll(sennafile, weightfile, output, ratio=None, MalformedFlilter=False, source=None, np=None):
     NPCandidates, sources = getNPs(sennafile, MalformedFlilter, source=source, np=np)
     
+    if len(NPCandidates) == 0: return
+    
     NPs, matrix = fio.ReadMatrix(weightfile, hasHead = True)
     
     #change the similarity to distance

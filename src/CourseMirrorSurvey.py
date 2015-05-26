@@ -11,18 +11,19 @@ filters = ["?", "[blank]", 'n/a', 'blank',] #'none', "no", "nothing"
 #header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2', 'q3']
 header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2']
 
-range1 = range(3,42)
+range2 = range(2,24)
+range3 = range(3,42)
 range4 = range(1,26)
 
 maxWeekDict = {"CS2610": 21-4+1, 
-               "CS2001": 18-5+1,
-               "PHYS0175":len(range1),
+               "CS2001": len(range2),
+               "PHYS0175":len(range3),
                "IE256":len(range4),
                }
 
 WeekLecture = {"CS2610":range(4, 40),
-               "CS2001":range(5, 40),
-               "PHYS0175": range1,
+               "CS2001":range2,
+               "PHYS0175": range3,
                "IE256": range4,
                }
 
@@ -329,7 +330,7 @@ if __name__ == '__main__':
     outputdir = '../data/annotation/'
     
 #     #Step1: Prepare Senna Input
-    for c in ['IE256']:#PHYS0175
+    for c in ['CS2001']:#PHYS0175
         course = c
         maxWeek = maxWeekDict[course]
            
@@ -340,13 +341,6 @@ if __name__ == '__main__':
         fio.NewPath(sennadir)
         getStudentResponses4Senna(excelfile, sennadir)
    
-    for c in ["IE256"]:#PHYS0175     
-        course = c
-        maxWeek = maxWeekDict[course]
-          
-        excelfile = "../data/CourseMirror/Reflection.json"
-        getStudentResponses4Annotation(excelfile, outputdir)
-
     #Step2: get Senna output
     
     print "done"

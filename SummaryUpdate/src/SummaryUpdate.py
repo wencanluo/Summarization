@@ -138,8 +138,8 @@ if __name__ == '__main__':
 #     for course in ['PHYS0175']:
 #         submitSummary("../../../mead/data/", course, "ClusterARank", sheets=range(38, 39))
     
-    combineReflection("CourseMIRROR IE256 Reflections (Responses).xls")
-#     for course in ['IE256']:
-#         submitSummary("../../../mead/data/", course, "ClusterARank", sheets=range(24, 26))
+    #combineReflection("CourseMIRROR IE256 Reflections (Responses).xls")
+    for course in ['CS2001']:
+         submitSummary("../../../mead/data/", course, "ClusterARank", sheets=range(2, 25))
      
     print "done"

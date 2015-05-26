@@ -20,8 +20,9 @@ def WriteDocsent(excelfile, folder, sennadatadir, phrasedir, np=None):
     for i, sheet in enumerate(sheets):
         week = i + 1
         
-        for type in ['POI', 'MP']:#, 'LP'
+        for type in ['POI', 'MP', 'LP']:
             student_summaryList = CourseMirrorSurvey.getStudentResponseList(excelfile, course, week, type, withSource=True)
+            if len(student_summaryList) == 0: continue
             
             ids = [summary[1] for summary in student_summaryList]
             summaries = [summary[0] for summary in student_summaryList] 
@@ -81,7 +82,7 @@ def WriteDocsent(excelfile, folder, sennadatadir, phrasedir, np=None):
 def WriteCluster(excelfile, folder, np=None):
     sheets = range(0,maxWeek)
     
-    for type in ['POI', 'MP']:#, 'LP']:
+    for type in ['POI', 'MP', 'LP']:
         for sheet in sheets:
             week = sheet + 1
             path = folder + str(week)+ '/'
@@ -113,7 +114,7 @@ if __name__ == '__main__':
     
     #Step4: get PhraseMead input
     
-    for c in ['IE256']: #["CS2001", "CS2610"]:
+    for c in ['CS2001']: #["CS2001", "CS2610"]:
         course = c
         maxWeek = maxWeekDict[course]
         

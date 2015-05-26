@@ -96,11 +96,12 @@ def getShallowSummary(excelfile, folder, sennadatadir, tfidfdir, np, method, K=3
     for i, sheet in enumerate(sheets):
         week = i + 1
         
-        #for type in ['POI', 'MP', 'LP']:
-        for type in ['POI', 'MP']:
+        for type in ['POI', 'MP', 'LP']:
+        #for type in ['POI', 'MP']:
             print excelfile, sheet, type
             student_summaryList = CourseMirrorSurvey.getStudentResponseList(excelfile, course, week, type, withSource=False)
-
+            if len(student_summaryList) == 0: continue
+            
             path = folder + str(week)+ '/'
             fio.NewPath(path)
             filename = path + type + '.summary'
@@ -138,7 +139,7 @@ def ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method, K=30)
 if __name__ == '__main__':
     
     #Step3: extract phrases
-    for c in ['IE256']:
+    for c in ['CS2001']:
         course = c
         maxWeek = maxWeekDict[course]
         

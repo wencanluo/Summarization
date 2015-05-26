@@ -26,7 +26,8 @@ for w in noremove:
 
 stopwords = stopwords + ['.', '?', '-', ',', '[', ']', '-', ';', '\'', '"', '+', '&', '!', '/', '>', '<', ')', '(', '#', '=']
 
-DateDict = {'PHYS0175':
+DateDict = {
+            'PHYS0175':
             {1:'1/5/2015',
             2:'1/7/2015',
             3:'1/9/2015',
@@ -97,6 +98,32 @@ DateDict = {'PHYS0175':
         3:'2/17/2015',
         2:'2/13/2015',
         1:'2/10/2015',
+    },
+    'CS2001':{
+        24:'12/09/2014',
+        23:'12/04/2014',
+        22:'12/02/2014',
+        21:'11/25/2014',
+        20:'11/20/2014',
+        19:'11/18/2014',
+        18:'11/13/2014',
+        17:'11/11/2014',
+        16:'11/06/2014',
+        15:'11/04/2014',
+        14:'10/30/2014',
+        13:'10/28/2014',
+        12:'10/23/2014',
+        11:'10/21/2014',
+        10:'10/16/2014',
+        9:'10/09/2014',
+        8:'10/07/2014',
+        7:'10/02/2014',
+        6:'09/30/2014',
+        5:'09/25/2014',
+        4:'09/23/2014',
+        3:'09/18/2014',
+        2:'09/16/2014',
+        1:'09/11/2014',
     }
 }
 
@@ -123,7 +150,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
     for i, sheet in enumerate(sheets):
         week = i + 1
         
-        for type in ['POI', 'MP']:
+        for type in ['POI', 'MP', 'LP']:
             print excelfile, sheet, type
             
             student_summaryList = CourseMirrorSurvey.getStudentResponseList(excelfile, course, week, type, withSource=True)
@@ -141,8 +168,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             
             output = clusterdir + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method + '.' + np
             weightfile = clusterdir + str(week)+ '/' + type + '.' + np + '.' + method
-            #if not fio.IsExist(output):
-            if True:
+            if not fio.IsExist(output):
                 phraseClusteringKmedoid.getPhraseClusterAll(sennafile, weightfile, output, ratio, MalformedFlilter=True, source=ids, np=np)
             
             NPCandidates, sources = phraseClusteringKmedoid.getNPs(sennafile, MalformedFlilter=True, source=ids, np=np)
@@ -160,7 +186,11 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             NPs = [row[0] for row in body]
             clusterids = [row[1] for row in body]
             
-            assert(NPCandidates == NPs)
+            #assert(NPCandidates == NPs)
+            if NPCandidates != NPs: 
+                print NPCandidates
+                print NPs
+                
             
             cluster = {}
             for row in body:
@@ -303,7 +333,7 @@ if __name__ == '__main__':
     
     #Step7: Run Clustering
     #'''
-    for c in ["IE256",]:#'IE256'
+    for c in ["CS2001",]:#'IE256'
         course = c
         maxWeek = maxWeekDict[course]
           
@@ -327,7 +357,7 @@ if __name__ == '__main__':
                         ShallowSummary(excelfile, datadir, sennadir, clusterdir, K=4, method=method, ratio=ratio, np=np, lex=lex)
     
     #'''      
-    for c in ['IE256']: #"PHYS0175", 
+    for c in ['CS2001']: #"PHYS0175", 
         course = c
         maxWeek = maxWeekDict[course]
         datadir = "../../mead/data/"+course+"_ClusterARank/"   

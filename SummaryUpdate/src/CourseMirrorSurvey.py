@@ -5,23 +5,22 @@ import fio
 import json
 
 course = "PHYS0175"
-#course = "CS2001"
-#course = "CS2610"
-range1 = range(3,42)
+
+range2 = range(2,24)
+range3 = range(3,42)
 range4 = range(1,26)
 
 maxWeekDict = {"CS2610": 21-4+1, 
-               "CS2001": 18-5+1,
-               "PHYS0175":len(range1),
+               "CS2001": len(range2),
+               "PHYS0175":len(range3),
                "IE256":len(range4),
                }
 
 WeekLecture = {"CS2610":range(4, 40),
-               "CS2001":range(5, 40),
-               "PHYS0175": range1,
+               "CS2001":range2,
+               "PHYS0175": range3,
                "IE256": range4,
                }
-
 header = ['cid', 'lecture_number', 'user', 'q1', 'q2']
 TpyeMap = {"POI":'q1_summaries', "MP":'q2_summaries', "LP":'q3_summaries'}
 
