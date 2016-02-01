@@ -1,22 +1,86 @@
-
 import time, datetime
 import json
 import fio
 import NLTKWrapper
 import numpy
+import CourseMirrorSurvey
 
-def getTime(j1, user, q1, q2, q3):
+def getTime(j1, user, lecture, q1, q2, q3):
     for r in j1:
         if r['user'].lower() != user.lower(): continue
         if r['q1'].lower() != q1.lower(): continue
         if r['q2'].lower() != q2.lower(): continue
+        if lecture != None:
+            if r['lecture_number'] != lecture: continue
         
-        if q3 == None: continue
-        if r['q3'].lower() != q3: continue
+        if q3 != None:
+            if r['q3'].lower() != q3: continue
         
         return r['Timestamp']
     return None
 
+def exceltime2python(t):
+    return (t - 25569) * 86400.0
+    
+def get_time_distribution(reflections_json, cid, lecture_time_json, output):
+    f = open(reflections_json,'r')
+    data = json.load(f)
+    f.close()
+    
+    f = open(lecture_time_json,'r')
+    lecture_time = json.load(f)
+    f.close()
+    
+    times = {}
+    d = 5*60
+    
+    for ref in data:
+        if ref['cid'] == cid:
+            t = ref['Timestamp']
+            t = time.strptime(t, "%m/%d/%Y %H:%M:%S")
+            t = time.mktime(t)
+            
+            tt = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(t))
+            #print tt
+            
+            lecture = ref['lecture_number']
+            due_t = getDueTime(lecture_time, cid, lecture)
+            tt = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(due_t))
+            #print tt
+            
+            if due_t == None:
+                print lecture
+                
+            dt = t - due_t
+            #print dt
+            
+    
+            if dt > -2000:
+                key = int(dt/d)
+            
+                if key not in times:
+                     times[key] = 0
+                times[key] = times[key] + 1
+    
+    keys = times.keys()
+    
+    values = []
+    for i in range(numpy.min(keys), numpy.max(keys) + 1):
+        if i in times:
+            #values.append(times[i])
+            if i%6 == 0:
+                print i, '\t', i/12., '\t', times[i]
+            else:
+                print i, '\t', '', '\t', times[i]
+        else:
+            #values.append(0)
+            if i%6 == 0:
+                print i, '\t', i/12., '\t', 0
+            else:
+                print i, '\t', '', '\t', 0
+            
+    #fio.PrintList(values, '\n')
+                
 def CombineTimeStamp(json1, json2, output):
     
     f = open(json1,'r')
@@ -30,14 +94,28 @@ def CombineTimeStamp(json1, json2, output):
     for r in j2['results']:
         user = r['user']
         
-        if 'q1' in r and 'q2' in r:
-            q1 = r['q1']
-            q2 = r['q2']
-            #q3 = r['q3']
-            
-            t = getTime(j1, user, q1, q2, q3=None)
-        else:
+        if r['cid'] == 'CS2001' or r['cid'] == 'CS2610':
             t = None
+        else:
+            if 'q1' in r and 'q2' in r:
+                q1 = r['q1'].split('||')[0]
+                q2 = r['q2'].split('||')[0]
+                #q3 = r['q3']
+                
+                if user == 'm1994':
+                    debug = 1
+                lecture = r['lecture_number']
+                
+                t = getTime(j1, user, lecture, q1, q2, q3=None)
+                
+                if t != None:
+                    #t0 = (datetime.datetime(1970,1,1) - datetime.datetime(1899,12,30)).total_seconds()
+                    
+                    t = exceltime2python(t)
+                    #t = t+t0
+                
+            else:
+                t = None
         
         if t == None:
             t = r['createdAt']
@@ -50,6 +128,7 @@ def CombineTimeStamp(json1, json2, output):
     f = open(output,'w')
     json.dump(j2,f,indent=2)
     f.close()
+
     
 def AddDueTimeforLecture(jfile, output):
     f = open(jfile,'r')
@@ -59,8 +138,27 @@ def AddDueTimeforLecture(jfile, output):
     for r in lectures['results']:
         if r['cid'] == 'CS2001':
             t = "14:15:00"
-        else:
+        elif r['cid'] == 'CS2610':
             t = "15:45:00"
+        elif r['cid'] == 'PHYS0175':
+            lecture_date = r['date']
+            
+            date_object = time.strptime(lecture_date, '%m/%d/%Y')
+            
+            if date_object.tm_wday == 2:
+                t = '09:50:00'
+            else:
+                t = '08:50:00'
+        elif r['cid'] == 'IE256':
+            lecture_date = r['date']
+            
+            date_object = time.strptime(lecture_date, '%m/%d/%Y')
+            
+            if date_object.tm_wday == 1:
+                t = '02:50:00'
+            else:
+                t = '03:50:00'
+        
             
         r['Due'] = r['date'] + ' ' + t
     
@@ -82,9 +180,19 @@ def getDueTime(lectures, cid, lecture_number):
         if lec['cid'] != cid: continue
         if lec['number'] != lecture_number: continue
         
-        t = lec['Due']
+        t = lec['date'] + ' ' + lec['Due']
+        
         t = time.strptime(t, "%m/%d/%Y %H:%M:%S")
         t = time.mktime(t)
+        #est_t = eastern.localize(t)
+        
+        #t = datetime.datetime.strptime(t, "%m/%d/%Y %H:%M:%S")
+        #t = time.mktime(est_t.timetuple())
+        #t = t.replace(tzinfo=pytz.timezone('US/Eastern'))
+        
+        #print time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(t))
+        
+        #t = time.mktime(t.timetuple())
         return t
         
     return None
@@ -241,7 +349,6 @@ def extractDataLength(refs, lecs, course, output):
     
     fio.SaveList(LengthList, output, "\n")
     print numpy.max(LengthList),'\t',numpy.min(LengthList),'\t',numpy.mean(LengthList),'\t',numpy.median(LengthList),'\t',numpy.std(LengthList)
-    
             
 def getUniqValue(matrix, col):
     values = [row[col] for row in matrix]    
@@ -394,19 +501,27 @@ if __name__ == '__main__':
     lecture_raw = "../../data/CourseMirror/Lecture.json"
     lecture_raw_time = "../../data/CourseMirror/Lecture_time.json"
     
-    CombineTimeStamp('CourseMIRROR_reflections.json', reflect_raw, reflect_raw_time)
-    AddDueTimeforLecture(lecture_raw, lecture_raw_time)
+    google_reflections = '../../data/CourseMirror/Google_reflections.json'
+    excels = ["CourseMIRROR PHYS0175 Reflections (Responses).xls",
+              "CourseMIRROR IE256 Reflections (Responses).xls",
+              ]
+    #CourseMirrorSurvey.GoogleStudentResponsetoJson(excels, google_reflections)
+    
+    #CombineTimeStamp(google_reflections, reflect_raw, reflect_raw_time)
+    #AddDueTimeforLecture(lecture_raw, lecture_raw_time)
+    
+    get_time_distribution(google_reflections, 'IE256', lecture_raw, 'IE256_time_distribution.txt')
     
     datafile = "user_lecture.txt"
-    extractData(reflect_raw_time, lecture_raw_time, datafile)
+    #extractData(reflect_raw_time, lecture_raw_time, datafile)
     
     #extractDataLength("reflection_time.json", 'lecture_time.json', "CS2610", "CS2610_Length.txt")
     
     outputprefix = "all_user_lecture"
-    getSubmisstionRatio(datafile, lecture_raw_time, outputprefix)
+    #getSubmisstionRatio(datafile, lecture_raw_time, outputprefix)
     
     outputprefix = "all_users"
-    getUserSubmisstionInfo(datafile, lecture_raw_time, outputprefix)
+    #getUserSubmisstionInfo(datafile, lecture_raw_time, outputprefix)
     print "done"
     
     

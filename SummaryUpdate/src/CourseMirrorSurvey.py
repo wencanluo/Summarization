@@ -3,6 +3,7 @@ import sys
 import re
 import fio
 import json
+import codecs
 
 course = "PHYS0175"
 
@@ -44,6 +45,55 @@ def NormalizeResponse(response):
     if k == -1:
         return response
     return response[:k]
+
+def getStudentResponseRaw(excelfile):
+    '''
+    return a list of dictionary of the students' summary
+    '''
+    orig = prData(excelfile, 0)
+    tokenIndex = 'user'
+    couseIndex = 'cid'
+    lectureIndex = 'lecture_number'
+    
+    reflections = []
+    
+    for k, inst in enumerate(orig._data):
+        try:
+            token = str(inst[tokenIndex]).lower().strip()
+            
+            if len(token) > 0:
+                
+                dict = {}
+                for key in orig._fea:
+                    if key == "lecture_number":
+                        dict[key] = int(inst[key])
+                    elif key == "user":
+                        dict[key] = str(inst[key]).strip().lower()
+                    else:
+                        dict[key] = inst[key]
+                
+                if 'q1_rate' in inst:
+                    dict["q1"] = dict["q1"] + RateSplitTag + str(getRatingkey(inst['q1_rate']))
+                if 'q2_rate' in inst:
+                    dict["q2"] = dict["q2"] + RateSplitTag + str(getRatingkey(inst['q2_rate']))
+                
+                reflections.append(dict)
+            else:
+                break
+        except Exception as e:
+            print e
+            return []
+    return reflections
+
+def GoogleStudentResponsetoJson(excelfiles, output):
+    reflections = []
+    
+    for excelfile in excelfiles:
+        reflection = getStudentResponseRaw(excelfile)
+        reflections += reflection
+    
+    with codecs.open(output, 'w', 'utf-8') as fout:
+        json.dump(reflections, fout, indent=2)
             
 def getStudentResponse(excelfile):
     '''

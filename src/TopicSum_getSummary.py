@@ -12,6 +12,7 @@ import SumBasic_word as SumBasic
 
 import KLSum_getSummary
 
+#TOPICSUM_EXE = "E:/project/Fall2014/summarization/summarizer/src/run_TopicSum_sentence.exe"
 TOPICSUM_EXE = "../../summarizer/src/run_TopicSum_sentence.exe"
                      
 def getShallowSummary(excelfile, folder, K):
@@ -51,13 +52,16 @@ def ShallowSummary(excelfile, datadir, K=30):
     WriteTASummary(excelfile, datadir)
         
 if __name__ == '__main__':
-    excelfile = "../data/2011Spring.xls"
+    #excelfile = "../data/2011Spring.xls"
+    excelfile = "../data/2011Spring_norm.xls"
     
     sennadatadir = "../data/senna/"
     
-    datadir = "../../mead/data/C4_TopicSum/"  
-    fio.DeleteFolder(datadir)
-    ShallowSummary(excelfile, datadir, K=4)
+    datadir = "../../mead/data/ILP_TopicSum/"
+    #datadir = "E:/project/Fall2014/summarization/mead/data/ILP_TopicSum/"
+    
+    #fio.DeleteFolder(datadir)
+    ShallowSummary(excelfile, datadir, K=30)
 
     print 'done'
     

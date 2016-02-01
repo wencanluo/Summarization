@@ -139,7 +139,7 @@ def ShallowSummary(excelfile, datadir, sennadatadir, tfidfdir, np, method, K=30)
 if __name__ == '__main__':
     
     #Step3: extract phrases
-    for c in ['CS2001']:
+    for c in ['IE256']:
         course = c
         maxWeek = maxWeekDict[course]
         
@@ -149,12 +149,10 @@ if __name__ == '__main__':
         clusterdir = "../data/"+course+"/np/"
         
         datadir = "../../mead/data/"+course+"_NPSoft/" 
-        ShallowSummary(excelfile, datadir, sennadir, tfidfdir=None, np="syntax", method=None, K=4)
+        ShallowSummary(excelfile, datadir, sennadir, tfidfdir=None, np="syntax", method=None, K=5)
         
         import postProcess
-        postProcess.ExtractNP(datadir, clusterdir, 'syntax', range(1,40))
+        postProcess.ExtractNP(datadir, clusterdir, 'sentence', range(1,40))
     
-     
-        
     print "done"
     

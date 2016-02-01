@@ -42,11 +42,12 @@ def ShallowSummary(excelfile, datadir, K=30):
     WriteTASummary(excelfile, datadir)
         
 if __name__ == '__main__':
-    excelfile = "../data/2011Spring.xls"
+    #excelfile = "../data/2011Spring.xls"
+    excelfile = "../data/2011Spring_norm.xls"
     
-    sennadatadir = "../data/senna/"
+    #sennadatadir = "../data/senna/"
     
-    datadir = "../../mead/data/C30_SumBasic/"  
+    datadir = "../../mead/data/ILP_SumBasic/"  
     fio.DeleteFolder(datadir)
     ShallowSummary(excelfile, datadir, K=30)
 

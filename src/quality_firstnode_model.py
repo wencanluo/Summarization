@@ -7,8 +7,8 @@ from collections import defaultdict
 class_label = '@class@'
 import QualityPrediction
  
-def first_node_baseline(excelfile, prob, titledir, output):
-    head, types, data = QualityPrediction.get_Quality_RubricFeatures(excelfile, prob, titledir)
+def first_node_baseline(excelfile, speciteller_datadir, titledir, output):
+    head, types, data = QualityPrediction.get_Quality_RubricFeatures(excelfile, speciteller_datadir, titledir)
     
     class_index = head.index(class_label)
     
@@ -39,7 +39,6 @@ def first_node_baseline(excelfile, prob, titledir, output):
             new_body.append(row)
     fio.ArffWriter(output, head, types, "Quality", new_body)
 
-        
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     speciteller_datadir = "../data/speciteller/"
@@ -50,4 +49,4 @@ if __name__ == '__main__':
 #     WriteQuality2Weka_Binary(excelfile, prob, titledir, wekafile)
     
     output = "../data/weka/quality_firstnode.arff"
-    first_node_baseline(excelfile, prob, titledir, output)
+    first_node_baseline(excelfile, speciteller_datadir, titledir, output)

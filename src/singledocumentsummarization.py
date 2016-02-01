@@ -78,8 +78,9 @@ def Write2Mead(excelfile, datadir, K=3):
     WriteTASummary(excelfile, datadir)
    
 if __name__ == '__main__':
-    excelfile = "../data/2011Spring.xls"
-    datadir = "../../mead/data/C30_Mead/"
+    #excelfile = "../data/2011Spring.xls"
+    excelfile = "../data/2011Spring_norm.xls"
+    datadir = "../../mead/data/ILP_Mead/"
     
     fio.DeleteFolder(datadir)
     Write2Mead(excelfile, datadir)

@@ -168,7 +168,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             
             output = clusterdir + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method + '.' + np
             weightfile = clusterdir + str(week)+ '/' + type + '.' + np + '.' + method
-            if not fio.IsExist(output):
+            if True:#not fio.IsExist(output):
                 phraseClusteringKmedoid.getPhraseClusterAll(sennafile, weightfile, output, ratio, MalformedFlilter=True, source=ids, np=np)
             
             NPCandidates, sources = phraseClusteringKmedoid.getNPs(sennafile, MalformedFlilter=True, source=ids, np=np)
@@ -200,8 +200,7 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             
             #sort the clusters according to the number of phrases
             keys = postProcess.RankCluster(NPs, lexdict, clusterids, sources)
-            
-                        
+                   
             sumarysource = []
             
             total_word = 0
@@ -333,7 +332,7 @@ if __name__ == '__main__':
     
     #Step7: Run Clustering
     #'''
-    for c in ["CS2001",]:#'IE256'
+    for c in ["IE256",]:#'IE256'
         course = c
         maxWeek = maxWeekDict[course]
           
@@ -354,14 +353,14 @@ if __name__ == '__main__':
                     for lex in ['lexrankmax']:
                         datadir = "../../mead/data/"+course+"_ClusterARank/"   
                         fio.DeleteFolder(datadir)
-                        ShallowSummary(excelfile, datadir, sennadir, clusterdir, K=4, method=method, ratio=ratio, np=np, lex=lex)
+                        ShallowSummary(excelfile, datadir, sennadir, clusterdir, K=5, method=method, ratio=ratio, np=np, lex=lex)
     
     #'''      
-    for c in ['CS2001']: #"PHYS0175", 
-        course = c
-        maxWeek = maxWeekDict[course]
-        datadir = "../../mead/data/"+course+"_ClusterARank/"   
-        PrintClusterRankSummary(datadir)
-                 
+#     for c in ['CS2001']: #"PHYS0175", 
+#         course = c
+#         maxWeek = maxWeekDict[course]
+#         datadir = "../../mead/data/"+course+"_ClusterARank/"   
+#         PrintClusterRankSummary(datadir)
+#                  
     print "done"
     

@@ -4,6 +4,7 @@ import re
 import fio
 import NLTKWrapper
 import json
+import os
 
 filters = ["?", "[blank]", 'n/a', 'blank',] #'none', "no", "nothing"
 #filters = []
@@ -14,17 +15,20 @@ header = ['Timestamp', 'cid', 'lecture_number', 'user', 'q1', 'q2']
 range2 = range(2,24)
 range3 = range(3,42)
 range4 = range(1,26)
+range5 = range(2,26)
 
 maxWeekDict = {"CS2610": 21-4+1, 
                "CS2001": len(range2),
                "PHYS0175":len(range3),
                "IE256":len(range4),
+               "IE312":len(range5),
                }
 
 WeekLecture = {"CS2610":range(4, 40),
                "CS2001":range2,
                "PHYS0175": range3,
                "IE256": range4,
+               "IE312": range5,
                }
 
 import datetime
@@ -51,13 +55,12 @@ def NormalizeResponse(response):
     return response[:k]
 
 def ExtractTimeStamp(excelfile, output):
-    header = ['Timestamp', 'user', 'q1', 'q2', 'q3']    
     orig = prData(excelfile, 0)
     
     data = []
     for inst in orig._data:
         dict = {}
-        for h in header:
+        for h in orig._fea:
             if h == "Timestamp":
                 seconds = (inst[h] - 25569) * 86400.0
                 t = datetime.datetime.utcfromtimestamp(seconds)
@@ -285,6 +288,20 @@ def getStudentResponses4Senna(excelfile, datadir):
             
             fio.SaveList(student_summaryList, filename)
 
+def getStudentResponses4Mari(excelfile, datadir):
+    sheets = range(0, maxWeek)
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+
+        for type in ['POI', 'MP', 'LP']:
+            student_summaryList = getStudentResponseList(excelfile, course, week, type)
+            if len(student_summaryList) == 0: continue
+            
+            filename = os.path.join(datadir, str(week) + "." + type + ".txt")
+            
+            fio.SaveList(student_summaryList, filename)
+            
 def getStudentResponses4Annotation(excelfile, datadir):
     sheets = range(0, maxWeek)
     
@@ -326,21 +343,34 @@ if __name__ == '__main__':
     
     #jsonfile = '../data/CourseMIRROR/Reflection.json'
     
+    outputs = [
+               'PHYS0175_time.json',
+               'IE256_time.json',
+               ]
+    excels = ["CourseMIRROR PHYS0175 Reflections (Responses).xls",
+              "CourseMIRROR IE256 Reflections (Responses).xls",
+              ]
     #ExtractTimeStamp(excelfile, output)
-    outputdir = '../data/annotation/'
+    
     
 #     #Step1: Prepare Senna Input
-    for c in ['CS2001']:#PHYS0175
+    for c in ['IE312']:#PHYS0175
         course = c
         maxWeek = maxWeekDict[course]
            
         sennadir = "../data/"+course+"/senna/"
         excelfile = "../data/CourseMirror/Reflection.json"
         phrasedir = "../data/"+course+"/phrases/"
-           
+        
+        maridir = "../../Maui1.2/data/IE256/"
+        
         fio.NewPath(sennadir)
         getStudentResponses4Senna(excelfile, sennadir)
-   
+        #fio.NewPath(maridir)
+        #getStudentResponses4Mari(excelfile, maridir)
+        
+        outputdir = '../data/annotation/'+course+'/'
+        getStudentResponses4Annotation(excelfile, outputdir)
     #Step2: get Senna output
     
     print "done"

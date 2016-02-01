@@ -74,16 +74,15 @@ def formatSummaryOutput(excelfile, datadir, output):
             
     fio.WriteMatrix(output, body, head)
     
-def GetRougeScore(datadir, models, outputdir):
+def GetRougeScore(datadir, models, outputdir, sheets=range(0,26), types=['POI', 'MP', 'LP']):
     for model in models:
         print model
         
-        #sheets = range(0,12)
-        sheets = [1,2,3,4,5,6,7,10]
+        #sheets = [1,2,3,4,5,6,7,10]
 		#Test: 2, 3, 4, 5, 6, 7, 8, 11
 		#Dev: 1, 9, 10, 12
         #sheets = [2,3,4,5,6,7,8,11]
-        types = ['POI', 'MP', 'LP']
+        #types = ['POI', 'MP', 'LP']
         scores = ['ROUGE-1','ROUGE-2', 'ROUGE-SUX']
         
         #header = ['week', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4', 'R1', 'R2', 'R-SU4']
@@ -91,16 +90,22 @@ def GetRougeScore(datadir, models, outputdir):
         header = ['week', 'R1-R', 'R1-P', 'R1-F', 'R2-R', 'R2-P', 'R2-F', 'RSU4-R', 'RSU4-P', 'RSU4-F',]
         
         body = []
-        for sheet in sheets:
-            for type in types:
+        for type in types:
+            for sheet in sheets:
                 week = sheet + 1
                 path = datadir + model + '/' + str(week)+ '/'
-                fio.NewPath(path)
-        
+                
+                flag = False
                 row = []
                 row.append(week)
                 for scorename in scores:
                     filename = path + type + "_OUT_"+scorename+".csv"
+                    print filename
+                    
+                    if not fio.IsExist(filename): 
+                        flag = True
+                        continue
+                    
                     lines = fio.ReadFile(filename)
                     try:
                         scorevalues = lines[1].split(',')
@@ -112,6 +117,8 @@ def GetRougeScore(datadir, models, outputdir):
                         row.append(score)
                     except Exception:
                         print filename, scorename, lines
+                
+                if flag: continue
                 body.append(row)
         
         #get average
@@ -1240,9 +1247,9 @@ def PrintExample():
 
     
 def PrintCluster():
-    output = "../data/np511/3/MP.cluster.kmedoids.sqrt.optimumComparerLSATasa.syntax"
-    lexfile = "../data/np511/3/MP.syntax.lexrankmax.dict"
-    sourcesfile = "../data/np511/3/MP.syntax.source.txt"
+    output = "../data/np511/4/MP.cluster.kmedoids.sqrt.optimumComparerLSATasa.syntax"
+    lexfile = "../data/np511/4/MP.syntax.lexrankmax.dict"
+    sourcesfile = "../data/np511/4/MP.syntax.source.txt"
     
     import json
     
@@ -1328,6 +1335,8 @@ if __name__ == '__main__':
     output = "../data/2011Spring_overivew.txt"
     summaryoutput = "../data/2011Spring_summary.txt"
     
+    #PrintCluster()
+    #exit()
     
     #datadir_multiple = "../../mead/data/2011SpringMutiple/"
     
@@ -1433,20 +1442,25 @@ if __name__ == '__main__':
 #             'C30_ClusterARank',
               
               #'C4_PhraseMead_syntax_NP_PP_VP',
-              
-              'C4_SumBasic',
-              "C4_KLSum",
-              "C4_TopicSum",
-              "C4_SumBasicPhrase",
-              "C4_KLSumPhrase",
-              "C4_TopicSumPhrase",
-              
-              'C30_SumBasic',
-              "C30_KLSum",
-              "C30_TopicSumPhrase",
-              "C30_SumBasicPhrase",
-              "C30_KLSumPhrase",
-              "C30_TopicSumPhrase",
+#               'ILP_Mead',
+#               'ILP_LexRank',
+#               'ILP_SumBasic',
+              #"ILP_KLSum",
+              #"ILP_TopicSum",
+#               'C4_SumBasic',
+#               "C4_KLSum",
+#               "C4_TopicSum",
+#               "C4_SumBasicPhrase",
+#               "C4_KLSumPhrase",
+#               "C4_TopicSumPhrase",
+#    
+            'C30_Mead',
+#             'C30_SumBasic',
+#             "C30_KLSum",
+#             "C30_TopicSumPhrase",
+#             "C30_SumBasicPhrase",
+#             "C30_KLSumPhrase",
+#             "C30_TopicSumPhrase",
               
               #'C4_ClusteringAlone2',
               
@@ -1457,17 +1471,31 @@ if __name__ == '__main__':
 #             'C4_PhraseMeadLexRankMMR_syntax', 
 #             'C4_LexRank_syntax', 'C4_LexRankMMR_syntax',
 #             "C4_ClusteringAlone", 
-#             'C4_ClusterARank511',
+#               'C4_ClusterARank',
 #             'Opinosis',
 #             'OpinosisPhrase',
 #             'OpinosisPhraseCluster'
+
+#                 'IE256_keyphrase',
+#                 'IE256_Mead',
+#                 'IE256_PhraseMead',
+#                 'IE256_PhraseMeadMMR',
+#                 'IE256_PhraseLexRank',
+#                 'IE256_PhraseLexRankMMR',
+#                 'IE256_ClusterARank',
+            
+#                 'ILP_Baseline_Sentence',
+#                 'ILP_Sentence_MC',
+#                 'ILP_Sentence_Supervised_FeatureWeightingAveragePerceptron',
             ]
-    
-    #models = AllModels()
     
     GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
     CombineRouges(models = models, outputdir = "../data/")
     
+#     path =  "../../../../AbstractPhraseSummarization/data/IE256/"
+#     GetRougeScore(datadir = path, models = models, outputdir = path, sheets=range(0,26), types=['q1', 'q2'])
+#     CombineRouges(models = models, outputdir = path)
+#     
     models = ['C4_PhraseMeadLexRankMMR_syntax', 
               #'PhraseMeadMMR_syntax', 
               #'PhraseMeadMMR_chunk'

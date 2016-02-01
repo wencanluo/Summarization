@@ -10,20 +10,21 @@ import SennaParser
 import porter
                  
 def getShallowSummary(excelfile, folder, keyhphrasedir, K=30):
-    sheets = range(0,12)
+    sheets = range(0,25)
     
     for i, sheet in enumerate(sheets):
         week = i + 1
-        for type in ['POI', 'MP', 'LP']:
+        for type in ['POI', 'MP']:#, 'LP'
             print excelfile, sheet, type
             
-            
             path = folder + str(week)+ '/'
-            fio.newPath(path)
             filename = path + type + '.summary'
             
             keyphrasefilename = keyhphrasedir + str(week) + "." + type + '.key'
-            keyphrases = [line.strip() for line in fio.readfile(keyphrasefilename)]
+            if not fio.IsExist(keyphrasefilename): continue
+            
+            fio.NewPath(path)
+            keyphrases = [line.strip() for line in fio.ReadFile(keyphrasefilename)]
 
             Summary = []
             
@@ -38,7 +39,7 @@ def getShallowSummary(excelfile, folder, keyhphrasedir, K=30):
                 if len(Summary) +1 <= K:
                     Summary.append(phrase)
             
-            fio.savelist(Summary, filename)
+            fio.SaveList(Summary, filename)
                         
 def ShallowSummary(excelfile, datadir, keyhphrasedir, K=30):
     getShallowSummary(excelfile, datadir, keyhphrasedir, K)
@@ -46,8 +47,8 @@ def ShallowSummary(excelfile, datadir, keyhphrasedir, K=30):
         
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
-    keyhphrasedir = "../../Maui1.2/data/2011Spring/"
-    datadir = "../../mead/data/C4_keyphrase/"  
+    keyhphrasedir = "../../Maui1.2/data/IE256/"
+    datadir = "../../mead/data/IE256_keyphrase/"  
     
-    fio.deleteFolder(datadir)
-    ShallowSummary(excelfile, datadir, keyhphrasedir, K=4)    
+    fio.DeleteFolder(datadir)
+    ShallowSummary(excelfile, datadir, keyhphrasedir, K=5)    

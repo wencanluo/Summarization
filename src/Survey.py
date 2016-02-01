@@ -112,14 +112,12 @@ def getTitle(titlefile):
     
     return title
 
-def getTitles(titledir):
+def getTitles(titledir, sheets=range(0,25)):
     #get title of slides for each lecture, 
     # 0: week 1
     # 1: week 2
     # ...
     # 24: week 25
-    sheets = range(0,25)
-    
     titles = []
     for sheet in sheets:
         week = sheet + 1
@@ -212,11 +210,11 @@ def getStudentResponse(orig, header, summarykey=None, type='POI'):
             
             if len(value) > 0:
                 content = inst[key].strip()
-                #if content.lower() in filters: continue
+                if content.lower() in filters: continue
                 #if len(content) > 0:
                 
-                if content.lower() in filters: 
-                    content = ""
+                #if content.lower() in filters: 
+                #    content = ""
                 
                 if True:
                     summary = NLTKWrapper.splitSentence(content)
@@ -227,7 +225,16 @@ def getStudentResponse(orig, header, summarykey=None, type='POI'):
             return summaries
     return summaries
 
-def getMPQualityPoint(orig):
+def NormalizationMP(content):
+    empty_response = ["?", "[blank]", 'n/a', 'blank', '_', '__', '___', '_____', 'na']
+    
+    if content.lower() in empty_response:
+        content = ""
+        print "@",
+    
+    return content
+    
+def getMPQualityPoint(orig, filters=None):
     '''
     return a list of the students' muddiest point with scores
     '''
@@ -245,15 +252,23 @@ def getMPQualityPoint(orig):
             value = inst['ID'].lower().strip()
             if value == 'top answers': continue
             
+            if filters != None:
+                if value not in filters: continue
+                
             if len(value) > 0:
                 content = inst[key].strip()
                 score = inst[pointkey]
+                
+                if score == 'a': score = 0.0
+                
+                content = NormalizationMP(content)
                 
                 summaries.append((content, score))
             else:
                 break
         except Exception:
             return summaries
+    
     return summaries
 
 def getStudentResponseList(orig, header, summarykey, type='POI', withSource=False):
@@ -584,11 +599,11 @@ if __name__ == '__main__':
     datadir = "../../Maui1.2/data/2011Spring/"
     sennadir = "../data/senna/"
     
-    Excel2Json("../data/anotated_corpus_phrase_summarization.xls", "../data/data.json")
+    #Excel2Json("../data/anotated_corpus_phrase_summarization.xls", "../data/data.json")
     #fio.newPath(datadir)
     #getStudentResponses4Maui(excelfile, datadir)
     
-    #getStudentResponses4Senna(excelfile, sennadir)
+    getStudentResponses4Senna(excelfile, sennadir)
     
     #getCandidatePhrases("../data/phrases/")
     

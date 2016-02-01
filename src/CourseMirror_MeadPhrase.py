@@ -66,6 +66,8 @@ def WriteDocsent(excelfile, folder, sennadatadir, phrasedir, np=None):
                 elif np == 'chunk':
                     NPs = s.getNPrases()
                     NPs = phraseClusteringKmedoid.MalformedNPFlilter(NPs)
+                elif np == 'sentence':
+                    NPs = s.getSentence()
                 else:
                     print "wrong"
                     exit()
@@ -114,7 +116,7 @@ if __name__ == '__main__':
     
     #Step4: get PhraseMead input
     
-    for c in ['CS2001']: #["CS2001", "CS2610"]:
+    for c in ['IE256']: #["CS2001", "CS2610"]:
         course = c
         maxWeek = maxWeekDict[course]
         
@@ -122,10 +124,30 @@ if __name__ == '__main__':
         excelfile = "../data/CourseMirror/Reflection.json"
         phrasedir = "../data/"+course+"/np/"
         
+#         for np in ['syntax']:
+#             datadir = "../../mead/data/"+course+"_PhraseMead/"
+#             fio.DeleteFolder(datadir)
+#             Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+
         for np in ['syntax']:
-            datadir = "../../mead/data/"+course+"_PhraseMead/"
+            datadir = "../../mead/data/"+course+"_PhraseMeadMMR/"
             fio.DeleteFolder(datadir)
             Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+                
+#         for np in ['syntax']:
+#             datadir = "../../mead/data/"+course+"_PhraseLexRank/"
+#             fio.DeleteFolder(datadir)
+#             Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+        
+        for np in ['syntax']:
+            datadir = "../../mead/data/"+course+"_PhraseLexRankMMR/"
+            fio.DeleteFolder(datadir)
+            Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+                
+#         for np in ['sentence']:
+#             datadir = "../../mead/data/"+course+"_Mead/"
+#             fio.DeleteFolder(datadir)
+#             Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
             
     #Step5: get PhraseMead output
     
