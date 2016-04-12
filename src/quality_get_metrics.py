@@ -316,7 +316,7 @@ if __name__ == '__main__':
 #     get_metrics_H1(datadir)
 #     get_metrics_H2a(datadir)
 #     get_metrics_H2b(datadir)
-    get_metrics_H2c(datadir)
+    #get_metrics_H2c(datadir)
     #get_metrics_NewCourse(datadir)
     
     #get_distrubtion()

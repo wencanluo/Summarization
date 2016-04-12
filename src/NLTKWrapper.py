@@ -76,4 +76,5 @@ def getWordList(file):
     return words
 
 if __name__ == '__main__':
-    print splitSentence("[1] I love you. [2] Sent 2. [3] sentence 3")
+    print wordtokenizer("a + b,")
+    #print splitSentence("[1] I love you. [2] Sent 2. [3] sentence 3")

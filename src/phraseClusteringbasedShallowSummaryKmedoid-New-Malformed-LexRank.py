@@ -46,8 +46,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
             output = clusterdir + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method + '.' + np
             weightfile = clusterdir + str(week)+ '/' + type + '.' + np + '.' + method
-            #if not fio.IsExist(output):
-            if True:
+            if not fio.IsExist(output):
+            #if True:
                 phraseClusteringKmedoid.getPhraseClusterAll(sennafile, weightfile, output, ratio, MalformedFlilter=True, source=ids, np=np)
             
             NPCandidates, sources = phraseClusteringKmedoid.getNPs(sennafile, MalformedFlilter=True, source=ids, np=np)
@@ -115,7 +115,7 @@ def ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=No
     WriteTASummary(excelfile, datadir)
 
 def GetLexRankScore(datadir, np, outputdir):
-    sheets = range(0,12)
+    sheets = range(0,26)
     
     for type in ['POI', 'MP', 'LP']:
         for sheet in sheets:

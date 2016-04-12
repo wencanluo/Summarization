@@ -299,7 +299,31 @@ def GetRougeScoreMMR(datadir, models, outputdir): #only keep the average
         averagebody.append(row)
         
         fio.WriteMatrix(outputdir + "rouge." + model + ".txt", averagebody, header)
-           
+
+def getStudentNumber(excelfile):
+    header = ['ID', 'Gender', 'Point of Interest', 'Muddiest Point', 'Learning Point']
+    summarykey = "Top Answers"
+    
+    #sheets = range(0,25)
+    sheets = range(0,12)
+    
+    values = []
+    
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        orig = prData(excelfile, sheet)
+        
+        N = 0
+        for type in ['POI', 'MP', 'LP']:
+            summaries = getStudentResponse(orig, header, summarykey, type=type)
+            if len(summaries) >= N:
+                N = len(summaries)
+        
+        values.append(N)
+    
+    print values
+    print 'average', numpy.mean(values)
+               
 def getWordCount(summary, output):
     head, body = fio.ReadMatrix(summary, True)
     
@@ -1335,6 +1359,9 @@ if __name__ == '__main__':
     output = "../data/2011Spring_overivew.txt"
     summaryoutput = "../data/2011Spring_summary.txt"
     
+    getStudentNumber(excelfile)
+    exit(-1)
+    
     #PrintCluster()
     #exit()
     
@@ -1454,7 +1481,7 @@ if __name__ == '__main__':
 #               "C4_KLSumPhrase",
 #               "C4_TopicSumPhrase",
 #    
-            'C30_Mead',
+            #'C30_Mead',
 #             'C30_SumBasic',
 #             "C30_KLSum",
 #             "C30_TopicSumPhrase",
@@ -1487,9 +1514,17 @@ if __name__ == '__main__':
 #                 'ILP_Baseline_Sentence',
 #                 'ILP_Sentence_MC',
 #                 'ILP_Sentence_Supervised_FeatureWeightingAveragePerceptron',
+
+                'keyphrase',
+                'Mead',
+                'PhraseMead',
+                #'PhraseMeadMMR',
+                'PhraseLexRank',
+                #'PhraseLexRankMMR',
+                'ClusterARank',
             ]
     
-    GetRougeScore(datadir = "../../mead/data/", models = models, outputdir = "../data/" )
+    GetRougeScore(datadir = "../../mead/data/IE256_C16/", models = models, outputdir = "../data/" )
     CombineRouges(models = models, outputdir = "../data/")
     
 #     path =  "../../../../AbstractPhraseSummarization/data/IE256/"

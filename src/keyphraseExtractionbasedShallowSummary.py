@@ -8,6 +8,10 @@ import random
 import NLTKWrapper
 import SennaParser
 import porter
+
+prompt_dict = {'POI':'q1',
+               'MP':'q2'
+               }
                  
 def getShallowSummary(excelfile, folder, keyhphrasedir, K=30):
     sheets = range(0,25)
@@ -35,20 +39,23 @@ def getShallowSummary(excelfile, folder, keyhphrasedir, K=30):
                 
                 word_count = len(phrase.split())
                 total_word = total_word + word_count
-                #if total_word <= K:
-                if len(Summary) +1 <= K:
+                #if len(Summary) +1 <= K:
+                
+                if total_word <= K:
                     Summary.append(phrase)
+                else:
+                    total_word = total_word - word_count
             
             fio.SaveList(Summary, filename)
                         
 def ShallowSummary(excelfile, datadir, keyhphrasedir, K=30):
     getShallowSummary(excelfile, datadir, keyhphrasedir, K)
-    WriteTASummary(excelfile, datadir)
+    #WriteTASummary(excelfile, datadir)
         
 if __name__ == '__main__':
     excelfile = "../data/2011Spring.xls"
     keyhphrasedir = "../../Maui1.2/data/IE256/"
-    datadir = "../../mead/data/IE256_keyphrase/"  
+    datadir = "../../mead/data/IE256_C16/keyphrase/"  
     
     fio.DeleteFolder(datadir)
-    ShallowSummary(excelfile, datadir, keyhphrasedir, K=5)    
+    ShallowSummary(excelfile, datadir, keyhphrasedir, K=16)    

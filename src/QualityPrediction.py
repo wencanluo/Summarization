@@ -90,7 +90,25 @@ def getQualityLengthDistribution(excelfile, sheets=range(0,25), filters=None):
     print "All", "\t", len(all), '\t', numpy.min(all), "\t", numpy.max(all), "\t", numpy.median(all), "\t", numpy.average(all), "\t", numpy.std(all)
     
     print emptycount, float(emptycount)/len(all)
+
+def getQualityTextbyScore(excelfile, sheets=range(0,25), filters=None, output=None):
+    MPLectures = getQualitywithLecture(excelfile, sheets=sheets, filters=filters)
     
+    dict = {}
+    for i, MPs in enumerate(MPLectures):
+        for MP, score in MPs:
+            if score == 'a': continue
+            
+            if score not in dict:
+                dict[score] = []
+            
+            dict[score].append(MP)
+            
+    
+    for k, v in dict.items():
+        fio.SaveList(v, output + "log_"+str(k)+'.txt')
+        
+        
 def getQualityText(excelfile, outputdir, sheets=range(0,25)):
     MPLectures = getQualitywithLecture(excelfile, sheets)
     
@@ -5836,8 +5854,8 @@ def testH1_10fold():
     titledir = "E:/Dropbox/reflection project_LRDC/250 Sp11 CLIC All Lecs .2G/titles/"
     
     # H1
-#     wekafile = "../data/weka/quality_DT"
-#     WriteQuality2Weka_DT_10fold(excelfile, speciteller_datadir, titledir, wekafile, folds=folds)
+    wekafile = "../data/weka/quality_DT"
+    WriteQuality2Weka_DT_10fold(excelfile, speciteller_datadir, titledir, wekafile, folds=folds)
 #            
 #     wekafile = "../data/weka/quality_WC_Unigram"
 #     WriteQuality2Weka_WC_Unigam_10fold(excelfile, wekafile, folds=folds)
@@ -5913,17 +5931,17 @@ def testH2c():
 #     wekafile = "../data/weka/quality_CrossCourse_WC_Unigram_test.arff"
 #     WriteQuality2Weka_WC_Unigram(excelfile_2010, wekafile, sheets=range(0,4), filters=filters)
 #           
-#     wekafile = "../data/weka/quality_CrossCourse_Rubric_train.arff"
-#     WriteQuality2Weka_New(excelfile, speciteller_datadir, titledir, wekafile)
-#            
-#     wekafile = "../data/weka/quality_CrossCourse_Rubric_test.arff"
-#     WriteQuality2Weka_New(excelfile_2010, speciteller_datadir_2010, titledir_2010, wekafile, sheets=range(0,4), filters=filters)
+    wekafile = "../data/weka/quality_CrossCourse_Rubric_train.arff"
+    WriteQuality2Weka_New(excelfile, speciteller_datadir, titledir, wekafile)
+            
+    wekafile = "../data/weka/quality_CrossCourse_Rubric_test.arff"
+    WriteQuality2Weka_New(excelfile_2010, speciteller_datadir_2010, titledir_2010, wekafile, sheets=range(0,4), filters=filters)
 #     
-    wekafile = "../data/weka/quality_CrossCourse_Rubric_firstnode_train.arff"
-    WriteQuality2Weka_New_FirstNode_Train(excelfile, speciteller_datadir, titledir, wekafile)
-           
-    wekafile = "../data/weka/quality_CrossCourse_Rubric_firstnode_test"
-    WriteQuality2Weka_New_FirstNode_Test(excelfile_2010, speciteller_datadir_2010, titledir_2010, wekafile, sheets=range(0,4), filters=filters)
+#     wekafile = "../data/weka/quality_CrossCourse_Rubric_firstnode_train.arff"
+#     WriteQuality2Weka_New_FirstNode_Train(excelfile, speciteller_datadir, titledir, wekafile)
+#            
+#     wekafile = "../data/weka/quality_CrossCourse_Rubric_firstnode_test"
+#     WriteQuality2Weka_New_FirstNode_Test(excelfile_2010, speciteller_datadir_2010, titledir_2010, wekafile, sheets=range(0,4), filters=filters)
     
     #cross course end
    
@@ -5956,6 +5974,18 @@ def getLengthDistributionTable():
     
     getQualityLengthDistribution(excelfile_2010, sheets=range(0,4), filters=filters)
     
+def getTextTable():
+    
+    excelfile = "../data/2011Spring.xls"
+    output = '../data/2011Spring'
+    getQualityTextbyScore(excelfile, output=output)
+    
+    excelfile_2010 = "../data/2010Spring.xls"
+    output = '../data/2010Spring'
+    filters = [line.lower().strip() for line in fio.ReadFile('../data/filters.txt')]
+    
+    getQualityTextbyScore(excelfile_2010, sheets=range(0,4), filters=filters,output=output)
+    
     
 if __name__ == '__main__':
         
@@ -5964,22 +5994,20 @@ if __name__ == '__main__':
     titledir = "E:/Dropbox/reflection project_LRDC/250 Sp11 CLIC All Lecs .2G/titles/"
 
 
-    #testH1_10fold()
+    testH1_10fold()
     #testH2()
-#     testH2c()
+    #testH2c()
     #getH3label()
     
     #exit(0)
     
     #getQualityLengthDistribution(excelfile)
     dis = "../data/q_dis.txt"
-     
-    getQualityDistribution(excelfile, dis)
+    
+    getTextTable()
+    #getQualityDistribution(excelfile, dis)
     #getLengthDistributionTable()
     exit(0)
-    
-   
-    
     
     prob = "../data/MP.prob"
     

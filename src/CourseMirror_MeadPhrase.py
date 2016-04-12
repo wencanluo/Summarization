@@ -84,7 +84,7 @@ def WriteDocsent(excelfile, folder, sennadatadir, phrasedir, np=None):
 def WriteCluster(excelfile, folder, np=None):
     sheets = range(0,maxWeek)
     
-    for type in ['POI', 'MP', 'LP']:
+    for type in ['POI', 'MP']:#, 'LP'
         for sheet in sheets:
             week = sheet + 1
             path = folder + str(week)+ '/'
@@ -124,30 +124,31 @@ if __name__ == '__main__':
         excelfile = "../data/CourseMirror/Reflection.json"
         phrasedir = "../data/"+course+"/np/"
         
-#         for np in ['syntax']:
-#             datadir = "../../mead/data/"+course+"_PhraseMead/"
-#             fio.DeleteFolder(datadir)
-#             Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
-
+        coursename = 'IE256_C4/'
         for np in ['syntax']:
-            datadir = "../../mead/data/"+course+"_PhraseMeadMMR/"
+            datadir = "../../mead/data/"+coursename+"PhraseMead/"
+            fio.DeleteFolder(datadir)
+            Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+ 
+        for np in ['syntax']:
+            datadir = "../../mead/data/"+coursename+"PhraseMeadMMR/"
+            fio.DeleteFolder(datadir)
+            Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+                 
+        for np in ['syntax']:
+            datadir = "../../mead/data/"+coursename+"PhraseLexRank/"
+            fio.DeleteFolder(datadir)
+            Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
+         
+        for np in ['syntax']:
+            datadir = "../../mead/data/"+coursename+"PhraseLexRankMMR/"
             fio.DeleteFolder(datadir)
             Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
                 
-#         for np in ['syntax']:
-#             datadir = "../../mead/data/"+course+"_PhraseLexRank/"
-#             fio.DeleteFolder(datadir)
-#             Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
-        
-        for np in ['syntax']:
-            datadir = "../../mead/data/"+course+"_PhraseLexRankMMR/"
+        for np in ['sentence']:
+            datadir = "../../mead/data/"+coursename+"Mead/"
             fio.DeleteFolder(datadir)
             Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
-                
-#         for np in ['sentence']:
-#             datadir = "../../mead/data/"+course+"_Mead/"
-#             fio.DeleteFolder(datadir)
-#             Write2Mead(excelfile, datadir, sennadir, phrasedir, np=np)
             
     #Step5: get PhraseMead output
     

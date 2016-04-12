@@ -168,7 +168,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             
             output = clusterdir + str(week) +'/' + type + ".cluster.kmedoids." + str(ratio) + "." +method + '.' + np
             weightfile = clusterdir + str(week)+ '/' + type + '.' + np + '.' + method
-            if True:#not fio.IsExist(output):
+            #if True:#
+            if not fio.IsExist(output):
                 phraseClusteringKmedoid.getPhraseClusterAll(sennafile, weightfile, output, ratio, MalformedFlilter=True, source=ids, np=np)
             
             NPCandidates, sources = phraseClusteringKmedoid.getNPs(sennafile, MalformedFlilter=True, source=ids, np=np)
@@ -216,6 +217,8 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
                 if len(Summary) + 1 <= K:
                     Summary.append(phrase)
                     sumarysource.append(",".join(source))
+                else:
+                    total_word = total_word - word_count
             
             fio.SaveList(Summary, filename)
             fio.SaveList(sumarysource, filename + ".source")
@@ -227,7 +230,7 @@ def ShallowSummary(excelfile, datadir, sennadatadir, clusterdir, K=30, method=No
 def GetLexRankScore(datadir, np, outputdir):
     sheets = range(0,40)
     
-    for type in ['POI', 'MP', 'LP']:
+    for type in ['POI', 'MP']:
         for sheet in sheets:
             week = sheet + 1
             
@@ -339,22 +342,25 @@ if __name__ == '__main__':
         sennadir = "../data/"+course+"/senna/"
         excelfile = "../data/CourseMirror/Reflection.json"
         #phrasedir = "../data/"+course+"/phrases/"
-                  
+           
+        #clusterdir = "../data/"+course+"/np"+str(i)+"/"
         clusterdir = "../data/"+course+"/np/"
         fio.NewPath(clusterdir)
-          
+        
+        coursename = 'IE256_C5/'
+        
         for np in ['syntax']:
-            datadir = "../../mead/data/"+course+"_PhraseMead/"
+            datadir = "../../mead/data/"+coursename+"PhraseLexRank/"
             GetLexRankScore(datadir, np, clusterdir)
               
         for ratio in ["sqrt"]:
             for method in ['optimumComparerLSATasa']:
                 for np in ['syntax']:
                     for lex in ['lexrankmax']:
-                        datadir = "../../mead/data/"+course+"_ClusterARank/"   
+                        datadir = "../../mead/data/"+coursename+"ClusterARank/"   
                         fio.DeleteFolder(datadir)
-                        ShallowSummary(excelfile, datadir, sennadir, clusterdir, K=5, method=method, ratio=ratio, np=np, lex=lex)
-    
+                        ShallowSummary(excelfile, datadir, sennadir, clusterdir, K=16, method=method, ratio=ratio, np=np, lex=lex)
+
     #'''      
 #     for c in ['CS2001']: #"PHYS0175", 
 #         course = c

@@ -64,24 +64,28 @@ def getTotalWords(file):
     
     return total_word
                     
-def FormatOutputMeadMMR(datadir, rate = "word", R = 30, ratio = 1.0, w=[1,2,3,4,5,6,7,8]):
+def FormatOutputMeadMMR(datadir, rate = "word", R = 30, ratio = 1.0, w=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]):
     #get Summary for a paticular parameter
-    sheets = range(0,12)
+    sheets = range(0,26)
     w.reverse()
     
     for i, sheet in enumerate(sheets):
         week = i + 1
         
-        for type in ['POI', 'MP', 'LP']:
+        for type in ['POI', 'MP']:
             
             wordcount = []
             
             for r in w:
                 #read the output
                 path = datadir + str(week)+ '/'
-                filename = path + type + '.' + str(ratio)+ '.summary.'+str(r)+'.org'
+                #filename = path + type + '.' + str(ratio)+ '.summary.'+str(r)+'.org'
+                filename = path + type + '.summary.'+str(r)+'.org'
+                
+                if not fio.IsExist(filename): break
                 
                 N = getTotalWords(filename)
+                print N, R
                 
                 if N <= R:
                     lines = fio.ReadFile(filename)
@@ -90,8 +94,8 @@ def FormatOutputMeadMMR(datadir, rate = "word", R = 30, ratio = 1.0, w=[1,2,3,4,
                         summaries.append(Survey.NormalizeMeadSummary(line))
                     
                     #Format it
-                    import phraseClusteringKmedoid
-                    summaries = phraseClusteringKmedoid.MalformedNPFlilter(summaries)
+                    #import phraseClusteringKmedoid
+                    #summaries = phraseClusteringKmedoid.MalformedNPFlilter(summaries)
     
                     #Write it
                     newSummary = []
@@ -166,7 +170,7 @@ def FormatOutputMeadMMR2(datadir, rate = "word", R = 30):
 if __name__ == '__main__':
     
     rate = "word"
-    R = 30
+    R = 16
     
     excelfile = "../data/2011Spring.xls"
     sennadir = "../data/senna/"
@@ -175,11 +179,11 @@ if __name__ == '__main__':
     #for np in ['chunk', 'syntax', ]:#'candidate', 'candidatestemming']:
     for np in ['syntax', ]:#'candidate', 'candidatestemming']:
         #for model in ['C30_PhraseMead_syntax', 'C30_PhraseMeadLexRank_syntax', 'C30_LexRank_syntax']:
-        for model in ['C30_PhraseMeadMMR_syntax',]:
+        for model in ['IE256_C16/PhraseMeadMMR',]:
             datadir = "../../mead/data/"+model+"/"
             FormatOutputMeadMMR(datadir, rate, R, ratio=0.8, w=[1,2,3,4,5,6,7,8])
         
-        for model in ['C30_LexRankMMR_syntax']:
+        for model in ['IE256_C16/PhraseLexRankMMR']:
             datadir = "../../mead/data/"+model+"/"
             FormatOutputMeadMMR(datadir, rate, R, ratio=0.7, w=[1,2,3,4,5,6,7,8])
             #FormatOutputMeadMMR2(datadir, rate, R)

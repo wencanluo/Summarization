@@ -5,6 +5,7 @@ import fio
 import NLTKWrapper
 import json
 import os
+import numpy
 
 filters = ["?", "[blank]", 'n/a', 'blank',] #'none', "no", "nothing"
 #filters = []
@@ -161,19 +162,38 @@ def getStudentResponse(excelfile, course, week, type='POI'):
             return summaries
     return summaries
 
-def getStudentResponseList(excelfile, course, week, type='POI', withSource=False):
-    student_summaries = getStudentResponse(excelfile, course, week, type)
-    student_summaryList = []
+def getStudentTokenNum(excelfile, course):
+    sheets = range(0, maxWeek)
     
-    for id, summaryList in student_summaries.items():
-        for s in summaryList:
-            s = NormalizeResponse(s)
-            student_summaryList.append((s,id))
+    tokens = []
+    values = []
+    for i, sheet in enumerate(sheets):
+        week = i + 1
+        
+        N = 0
+        for type in ['POI', 'MP']:
+            responses = getStudentResponse(excelfile, course, week, type)
             
-    if withSource:
-        return student_summaryList
-    else:
-        return [summary[0] for summary in student_summaryList]
+            if len(responses) == 0: continue
+            
+            if len(responses) >= N:
+                N = len(responses)
+            
+            TokenN = 0
+            for k,v in responses.items():
+                vv = NormalizeResponse(v[0])
+                #TokenN += len(vv.split())
+                tokens.append(len(vv.split()))
+        
+        if N > 0:
+            values.append(N)
+    
+    print values
+    print numpy.mean(values)
+    
+    print tokens
+    print numpy.mean(tokens)
+          
                         
 def getStudentSummaryNum(orig, header, summarykey, type='POI'):
     if type=='POI':
@@ -354,7 +374,7 @@ if __name__ == '__main__':
     
     
 #     #Step1: Prepare Senna Input
-    for c in ['IE312']:#PHYS0175
+    for c in ['IE256']:#PHYS0175
         course = c
         maxWeek = maxWeekDict[course]
            
@@ -364,13 +384,15 @@ if __name__ == '__main__':
         
         maridir = "../../Maui1.2/data/IE256/"
         
-        fio.NewPath(sennadir)
-        getStudentResponses4Senna(excelfile, sennadir)
-        #fio.NewPath(maridir)
-        #getStudentResponses4Mari(excelfile, maridir)
+        getStudentTokenNum(excelfile, course)
         
-        outputdir = '../data/annotation/'+course+'/'
-        getStudentResponses4Annotation(excelfile, outputdir)
+#         fio.NewPath(sennadir)
+#         getStudentResponses4Senna(excelfile, sennadir)
+#         #fio.NewPath(maridir)
+#         #getStudentResponses4Mari(excelfile, maridir)
+#         
+#         outputdir = '../data/annotation/'+course+'/'
+#         getStudentResponses4Annotation(excelfile, outputdir)
     #Step2: get Senna output
     
     print "done"
