@@ -206,12 +206,10 @@ def extractData(refs, lecs, output):
     lectures = json.load(f)
     f.close()
     
-    head = ['cid', 'lecture_number', 'date', 'user', 'submit', 'submitT', 'Lq1', 'Lq2']
+    head = ['cid', 'lecture_number', 'date', 'user', 'submit', 'Lq1', 'Lq2']
     body = []
     
-    times = {}
-    d = 5*60
-    
+
     for r in reflections['results']:
         row = []
         
@@ -224,34 +222,10 @@ def extractData(refs, lecs, output):
         date = getDate(lectures, cid, lecture_number)
         row.append(date)
         
-        row.append(r['user'])
+        row.append(r['user'].lower())
         
         row.append('Y') #sumbit
-        
-        due = getDueTime(lectures, cid, lecture_number)
-        
-        t = r['TimeStamp']
-        t = time.strptime(t, "%Y-%m-%d %H:%M:%S")
-        t = time.mktime(t)
-        
-#         try:
-#             submitT = t - due
-#         except Exception as e:
-#             print cid, lecture_number
-#             print e
-        if due == None:
-            print cid, lecture_number
-        submitT = t - due
-        
-        if submitT > -2000:
-            key = int(submitT/d)
-            
-            if key not in times:
-                 times[key] = 0
-            times[key] = times[key] + 1
-        
-        row.append(submitT) #in seconds
-        
+              
         if 'q1' in r:
             row.append(len(NLTKWrapper.wordtokenizer(r['q1'], punct=True)))
         else:
@@ -261,30 +235,10 @@ def extractData(refs, lecs, output):
             row.append(len(NLTKWrapper.wordtokenizer(r['q2'], punct=True)))
         else:
             row.append(0)
-        #row.append(len(NLTKWrapper.wordtokenizer(r['q3'], punct=True)))
         
         body.append(row)
     
     fio.WriteMatrix(output, body, head)
-    
-    N = 0
-    for k, v in times.items():
-        N = N + v
-    
-    for k in times:
-        times[k] = float(times[k]) / N * 100
-    
-    fio.PrintDict(times)
-    
-    keys = times.keys()
-    
-    values = []
-    for i in range(-4, 60):
-        if i in times:
-            values.append(times[i])
-        else:
-            values.append(0)
-    fio.PrintList(values, '\n')
     
 def extractDataLength(refs, lecs, course, output):
     f = open(refs,'r')
@@ -446,16 +400,16 @@ def getUserSubmisstionInfo(datafile, lecturefile, output):
     user_index = head.index('user')
     lecture_index = head.index('lecture_number')
     
-    for cid in ['PHYS0175', 'IE256']:
+    for cid in ['ENGR_132']:
         users = getUniqValueWithFilter(head, body, 'cid', cid, user_index)
         lectures = getUniqValueWithFilter(head, body, 'cid', cid, lecture_index)
         lectures = sorted([int(lec) for lec in lectures])
         lectures = [str(lec) for lec in lectures]
         
-        newhead = ['user', 'cid', 'lecture_number', 'date', 'submit', 'submitT', 'Lq1', 'Lq2']
+        newhead = ['user', 'cid', 'lecture_number', 'date', 'submit', 'Lq1', 'Lq2']
         newbody = []
         
-        ratioHead = ['user', 'SumbmitN', 'ratio', 'Ave_submitT', 'Ave_Lq1', 'Ave_Lq2', 'Std_submitT', 'Std_Lq1', 'Std_Lq2']
+        ratioHead = ['user', 'SumbmitN', 'ratio', 'Ave_Lq1', 'Ave_Lq2', 'Std_Lq1', 'Std_Lq2']
         ratioBody = []
         for user in users:
             ratioRow = [user]
@@ -470,10 +424,10 @@ def getUserSubmisstionInfo(datafile, lecturefile, output):
                 
                 trow = findReflection(body, course_index, lecture_index, user_index, cid, lec, user)
                 if trow == None:
-                    newrow = newrow + ['N', 0, 0, 0]
+                    newrow = newrow + ['N', 0, 0]
                 else:
-                    newrow = newrow + trow[-4:]
-                    Ave.append(newrow[-3:])
+                    newrow = newrow + trow[-3:]
+                    Ave.append(newrow[-2:])
                     count = count + 1
                 
                 newbody.append(newrow)
@@ -481,11 +435,11 @@ def getUserSubmisstionInfo(datafile, lecturefile, output):
             ratioRow.append(count)
             ratioRow.append(float(count) / len(lectures))
 
-            for i in range(3):
+            for i in range(2):
                 values = [float(xx[i]) for xx in Ave]
                 ratioRow.append(numpy.average(values))
             
-            for i in range(3):
+            for i in range(2):
                 values = [float(xx[i]) for xx in Ave]
                 ratioRow.append(numpy.std(values))
                 
@@ -496,32 +450,14 @@ def getUserSubmisstionInfo(datafile, lecturefile, output):
         
 if __name__ == '__main__':
     
-    reflect_raw = "../../data/CourseMirror/Reflection.json"
-    reflect_raw_time = "../../data/CourseMirror/Reflection_time.json"
-    lecture_raw = "../../data/CourseMirror/Lecture.json"
-    lecture_raw_time = "../../data/CourseMirror/Lecture_time.json"
-    
-    google_reflections = '../../data/CourseMirror/Google_reflections.json'
-    excels = ["CourseMIRROR PHYS0175 Reflections (Responses).xls",
-              "CourseMIRROR IE256 Reflections (Responses).xls",
-              ]
-    #CourseMirrorSurvey.GoogleStudentResponsetoJson(excels, google_reflections)
-    
-    #CombineTimeStamp(google_reflections, reflect_raw, reflect_raw_time)
-    #AddDueTimeforLecture(lecture_raw, lecture_raw_time)
-    
-    get_time_distribution(google_reflections, 'IE256', lecture_raw, 'IE256_time_distribution.txt')
+    reflect_raw = "../../data/CourseMirror/reflections.json"
+    lecture_raw = "../../data/CourseMirror/lectures.json"
     
     datafile = "user_lecture.txt"
-    #extractData(reflect_raw_time, lecture_raw_time, datafile)
-    
-    #extractDataLength("reflection_time.json", 'lecture_time.json', "CS2610", "CS2610_Length.txt")
-    
-    outputprefix = "all_user_lecture"
-    #getSubmisstionRatio(datafile, lecture_raw_time, outputprefix)
+    extractData(reflect_raw, lecture_raw, datafile)
     
     outputprefix = "all_users"
-    #getUserSubmisstionInfo(datafile, lecture_raw_time, outputprefix)
+    getUserSubmisstionInfo(datafile, lecture_raw, outputprefix)
     print "done"
     
     
